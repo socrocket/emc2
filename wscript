@@ -2,7 +2,7 @@
 # vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 filetype=python :
 top = '../../../'
 REPOSITORY_PATH = "core/common/sr_register"
-REPOSITORY_NAME = "SoCRocket Register implementation"
+REPOSITORY_NAME = "SoCRocket Register Implementation"
 REPOSITORY_VERSION = [3,0,0]
 REPOSITORY_DESC = """Based on the Cadence SystemC Register proposal"""
 

@@ -5,18 +5,31 @@
 ///
 ///
 /// @date 2010-2014
-/// @copyright All rights reserved.
-///            Any reproduction, use, distribution or disclosure of this
-///            program, without the express, prior written consent of the
-///            authors is strictly prohibited.
 /// @author Rolf Meyer
+///
+/// @copyright
+///   Licensed under the Apache License, Version 2.0 (the "License");
+///   you may not use this file except in compliance with the License.
+///   You may obtain a copy of the License at
+///
+///       http://www.apache.org/licenses/LICENSE-2.0
+///
+///   Unless required by applicable law or agreed to in writing, software
+///   distributed under the License is distributed on an "AS IS" BASIS,
+///   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+///   See the License for the specific language governing permissions and
+///   limitations under the License.
+///
+/// This file contains the implementation of the sr_register base classes, 
+/// which can be used to model registers and register banks in a TLM modules.
+/// The sr_register classes are not part of the SCIREG API standard.
+/// Instead, it extends it as a possible register implementation using the
+/// SCIREG API standard.
 #ifndef CORE_COMMON_SR_REGISTER_H_
 #define CORE_COMMON_SR_REGISTER_H_ 
 
-#include "core/common/systemc.h"
-#include "core/common/sc_register.h"
-#include "core/common/base.h"
-#include "core/common/sr_report.h"
+#include "systemc.h"
+#include "sc_register.h"
 
 /// lsb0 mode is used in field position specification.
 /// (lsb0 defines the 0 as the least significant bit. It is the default
@@ -161,13 +174,11 @@ class sr_register : public sc_register_b<DATA_TYPE> {
 
     void bus_read(DATA_TYPE& i) const {
       raise_callback(SR_PRE_READ);
-      srInfo()("value", i)(__PRETTY_FUNCTION__);
       i = this->read();
       raise_callback(SR_POST_READ);
     }
     void bus_write(DATA_TYPE i) {
       raise_callback(SR_PRE_WRITE);
-      srInfo()("value", i)("mask", m_write_mask)(__PRETTY_FUNCTION__);
       this->write(i & m_write_mask);
       raise_callback(SR_POST_WRITE);
     }
@@ -186,7 +197,6 @@ class sr_register : public sc_register_b<DATA_TYPE> {
     }
 
     sr_register<DATA_TYPE> &operator = (const DATA_TYPE &val) {
-      srInfo()("value", val)("mask", m_write_mask)(__PRETTY_FUNCTION__);
       this->write(val);
       return *this;
     }
@@ -246,7 +256,6 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       } else {
         i = 0;
       }
-      srDebug()("offset", offset)("value", i)(__PRETTY_FUNCTION__);
       return true;
     }
     bool bus_write(ADDR_TYPE offset, DATA_TYPE val) {
@@ -254,7 +263,6 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       if(reg) {
         reg->bus_write(val);
       }
-      srDebug()("offset", offset)("value", val)(__PRETTY_FUNCTION__);
       return true;
     }
     
@@ -265,7 +273,6 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       } else {
         i = 0;
       }
-      srDebug()("offset", offset)("value", i)(__PRETTY_FUNCTION__);
       return true;
     }
     
@@ -274,7 +281,6 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       if(reg) {
         reg->bus_write(val);
       } 
-      srDebug()("offset", offset)("value", val)(__PRETTY_FUNCTION__);
       return true;
     }
     
