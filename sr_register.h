@@ -1,12 +1,9 @@
 // vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 :
-/// @addtogroup common
+/// @addtogroup sr_register
 /// @{
 /// @file sr_register.h
-///
-///
-/// @date 2010-2014
+/// @date 2010-2015
 /// @author Rolf Meyer
-///
 /// @copyright
 ///   Licensed under the Apache License, Version 2.0 (the "License");
 ///   you may not use this file except in compliance with the License.

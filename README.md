@@ -43,6 +43,7 @@ The bus interface implementation is responsible for handeling error, delay and e
 
 License
 -------
+
 Due to the fact that the original implementation of Cadence was published under [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)
 license. We follow the example and publish this code under Apache-2.0 license as well.
 

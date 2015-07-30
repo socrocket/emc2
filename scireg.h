@@ -1,12 +1,10 @@
 // vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 :
-/// @addtogroup common
+/// @addtogroup sr_register
 /// @{
 /// @file scireg.h
-///
 /// @date 2011-2012
 /// @author Cadence Design Systems, Inc.
 /// @author STMicroelectronics
-///
 /// @copyright
 ///   Licensed under the Apache License, Version 2.0 (the "License");
 ///   you may not use this file except in compliance with the License.
@@ -19,12 +17,11 @@
 ///   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ///   See the License for the specific language governing permissions and
 ///   limitations under the License.
-///
-#ifndef CORE_COMMON_SCIREG_H_
-#define CORE_COMMON_SCIREG_H_
 /// This file contains the SCIREG API ("SystemC Inspect Region API") which is a SystemC tool to model API
 /// that enables tools to discover and monitor the various registers, register banks, fields, and memories
 /// in a design. 
+#ifndef CORE_COMMON_SCIREG_H_
+#define CORE_COMMON_SCIREG_H_
 #include <algorithm>
 #include <vector>
 #include "systemc"

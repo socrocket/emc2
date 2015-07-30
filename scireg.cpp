@@ -1,12 +1,10 @@
 // vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 :
-/// @addtogroup common
+/// @addtogroup sr_register
 /// @{
 /// @file scireg.cpp
-///
-/// @date 2011-2012
+/// @date 2011-2015
 /// @author Cadence Design Systems, Inc.
 /// @author STMicroelectronics
-///
 /// @copyright
 ///   Licensed under the Apache License, Version 2.0 (the "License");
 ///   you may not use this file except in compliance with the License.
@@ -19,7 +17,6 @@
 ///   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ///   See the License for the specific language governing permissions and
 ///   limitations under the License.
-///
 #include <cstdlib>
 #include "scireg.h"
 
