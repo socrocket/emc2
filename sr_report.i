@@ -2,7 +2,7 @@
 /// @addtogroup sr_report
 /// @{
 /// @file sr_report.i
-/// @date 2013-2014
+/// @date 2013-2015
 /// @author Rolf Meyer
 /// @copyright
 ///   Licensed under the Apache License, Version 2.0 (the "License");

@@ -2,7 +2,7 @@
 /// @addtogroup common
 /// @{
 /// @file report.h
-/// @date 2010-2014
+/// @date 2010-2015
 /// @author Rolf Meyer
 /// @copyright
 ///   Licensed under the Apache License, Version 2.0 (the "License");
