@@ -9,10 +9,10 @@
 ///            Any reproduction, use, distribution or disclosure of this
 ///            program, without the express, prior written consent of the 
 ///            authors is strictly prohibited.
-/// @author 
+/// @author Rolf Meyer
 ///
-#ifndef __SR_PARAM_T_h__
-#define __SR_PARAM_T_h__
+#ifndef SR_PARAM_T_H_
+#define SR_PARAM_T_H_
 
 // included by gs_params.h
 // #include "gs_param_base" is done there
@@ -340,5 +340,5 @@ protected:
 
 };
 
-#endif
+#endif  // SR_PARAM_T_H_
 /// @}

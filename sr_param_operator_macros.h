@@ -2,18 +2,14 @@
 /// @addtogroup common
 /// @{
 /// @file sr_param_operator_macros.h
-/// 
-///
 /// @date 2013-2014
 /// @copyright All rights reserved.
 ///            Any reproduction, use, distribution or disclosure of this
 ///            program, without the express, prior written consent of the 
 ///            authors is strictly prohibited.
-/// @author 
-///
-
-#ifndef __SR_PARAM_OPERATOR_MACROS_H__
-#define __SR_PARAM_OPERATOR_MACROS_H__
+/// @author Rolf Meyer
+#ifndef SR_PARAM_OPERATOR_MACROS_H_
+#define SR_PARAM_OPERATOR_MACROS_H_
 
 // /////////////////////////////////////////////////////////////////// //
 // This file defines macros for the template specializations of sr_param
