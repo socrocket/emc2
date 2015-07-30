@@ -10,11 +10,11 @@ def build(self):
     self(
         target            = 'sr_register',
         features          = 'cxx cxxstlib pyembed venv_package',
-        source            = ['api/scireg.i', 'scireg.cpp'],
+        source            = ['scireg.i', 'scireg.cpp'],
         export_includes   = self.top_dir,
         includes          = self.top_dir,
         swig_flags        = '-c++ -python -Wall',
-        use               = 'SYSTEMC TLM PYTHON',
+        use               = 'usi SYSTEMC TLM PYTHON',
         install_path      = '${PREFIX}/lib',
   )
 

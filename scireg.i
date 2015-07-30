@@ -84,12 +84,12 @@ USI_REGISTER_MODULE(scireg)
 }
 
 %{
-#include "core/common/scireg.h"
+#include "core/common/sr_register/scireg.h"
 #include <map>
 class usi_scireg_parent;
 %}
 
-%include "core/common/scireg.h"
+%include "core/common/sr_register/scireg.h"
 
 void scireg_initialize();
 
