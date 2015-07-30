@@ -3,19 +3,27 @@
 /// @{
 /// @file sr_registry.h
 /// 
-/// @date 2013-2014
-/// @copyright All rights reserved.
-///            Any reproduction, use, distribution or disclosure of this
-///            program, without the express, prior written consent of the 
-///            authors is strictly prohibited.
+/// @date 2013-2015
 /// @author Rolf Meyer
+/// @copyright
+///   Licensed under the Apache License, Version 2.0 (the "License");
+///   you may not use this file except in compliance with the License.
+///   You may obtain a copy of the License at
+///
+///       http://www.apache.org/licenses/LICENSE-2.0
+///
+///   Unless required by applicable law or agreed to in writing, software
+///   distributed under the License is distributed on an "AS IS" BASIS,
+///   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+///   See the License for the specific language governing permissions and
+///   limitations under the License.
 #ifndef COMMON_SR_REGISTRY_H_
 #define COMMON_SR_REGISTRY_H_
 
 #include <string>
 #include <map>
 #include <set>
-#include "core/common/systemc.h"
+#include "systemc.h"
 
 class SrModuleRegistry {
   public:
