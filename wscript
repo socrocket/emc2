@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 # vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 filetype=python :
-top = '../../../'
-REPOSITORY_PATH = "core/common/sr_report"
-REPOSITORY_NAME = "SoCRocket SystemC Reporting Extensions"
+top = '../../..'
+REPOSITORY_PATH = "core/common/sr_signal"
+REPOSITORY_NAME = "SoCRocket TLM Signals"
 REPOSITORY_VERSION = [3,0,0]
-REPOSITORY_DESC = """Key/Value extended reporting capabilities for SystemC"""
+REPOSITORY_DESC = """High level signaling library"""
 
 def build(self):
+    """
     self(
         target            = 'sr_report',
         features          = 'cxx cxxstlib pyembed venv_package',
@@ -16,5 +17,6 @@ def build(self):
         swig_flags        = '-c++ -python -Wall',
         use               = 'usi SYSTEMC TLM PYTHON',
         install_path      = '${PREFIX}/lib',
-  )
+    )
+    """
 
