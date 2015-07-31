@@ -48,7 +48,7 @@ USI_REGISTER_MODULE(scireg)
     $1 = new scireg_ns::vector_byte();
   }
   $1->resize(uint64_t($2));
-  memcpy(&$1->at(0), PyString_AsString($input), uint64_t($2));
+  memcpy(&$1->at(0), PyBytes_AsString($input), uint64_t($2));
 }
 
 %typemap(argout) (scireg_ns::vector_byte &v, sc_dt::uint64 size) {
@@ -58,7 +58,7 @@ USI_REGISTER_MODULE(scireg)
 }
 
 %typemap(typecheck) (const scireg_ns::vector_byte &v, sc_dt::uint64 size) {
-  $1 = PyString_Check($input)? 1 : 0;
+  $1 = PyBytes_Check($input) ? 1 : 0;
 }
 
 %typemap(in) (scireg_ns::vector_byte &v, sc_dt::uint64 size) {
@@ -87,7 +87,7 @@ USI_REGISTER_MODULE(scireg)
        PyErr_SetFromErrno(PyExc_IOError);
        return NULL;
    }
-   $result = PyString_FromStringAndSize(reinterpret_cast<char *>(&$1->at(0)),uint64_t($2));
+   $result = PyBytes_FromStringAndSize(reinterpret_cast<char *>(&$1->at(0)),uint64_t($2));
    delete $1;
 }
 
@@ -97,7 +97,7 @@ USI_REGISTER_MODULE(scireg)
 
 %typemap(argout) const char *&s {
    Py_XDECREF($result);   /* Blow away any previous result */
-   $result = PyString_FromString(*$1);
+   $result = PyBytes_FromString(*$1);
 }
 
 %{
