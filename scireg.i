@@ -27,15 +27,15 @@
 USI_REGISTER_MODULE(scireg)
 
 %typemap(in) sc_dt::uint64 {
-  $1 = sc_dt::uint64(PyInt_AsLong($input));
+  $1 = sc_dt::uint64(PyLong_AsLong($input));
 }
 
 %typemap(typecheck) sc_dt::uint64 {
-  $1 = PyInt_Check($input)? 1 : 0;
+  $1 = PyLong_Check($input)? 1 : 0;
 }
 
 %typemap(out) sc_dt::uint64 {
-  $result = PyInt_FromLong(uint64_t($1));
+  $result = PyLong_FromLong(uint64_t($1));
 }
 
 %typemap(in) (const scireg_ns::vector_byte &v, sc_dt::uint64 size) {
@@ -62,11 +62,11 @@ USI_REGISTER_MODULE(scireg)
 }
 
 %typemap(in) (scireg_ns::vector_byte &v, sc_dt::uint64 size) {
-  if (!PyInt_Check($input)) {
+  if (!PyLong_Check($input)) {
     PyErr_SetString(PyExc_ValueError, "Expecting an integer");
     return NULL;
   }
-  $2 = sc_dt::uint64(uint64(PyInt_AsLong($input)));
+  $2 = sc_dt::uint64(uint64(PyLong_AsLong($input)));
   if ($2 < 0) {
     PyErr_SetString(PyExc_ValueError, "Positive integer expected");
     return NULL;
@@ -78,7 +78,7 @@ USI_REGISTER_MODULE(scireg)
 }
 
 %typemap(typecheck) (scireg_ns::vector_byte &v, sc_dt::uint64 size) {
-  $1 = PyInt_Check($input)? 1 : 0;
+  $1 = PyLong_Check($input)? 1 : 0;
 }
 
 %typemap(argout) (scireg_ns::vector_byte &v, sc_dt::uint64 size) {
