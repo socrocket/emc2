@@ -34,7 +34,7 @@ class SrModuleRegistry {
     SrModuleRegistry(std::string group, std::string type, factory_f factory, isinstance_f isinstance, std::string file);
     void included();
     static sc_core::sc_object *create_object_by_name(std::string group, std::string type, std::string name);
-    static std::string get_type_of(sc_core::sc_object *obj);
+    static bool is_type(std::string group, std::string type, sc_core::sc_object *obj);
     static std::set<std::string> get_module_files(std::string group);
     static std::set<std::string> get_module_names(std::string group);
     static std::set<std::string> get_group_names();

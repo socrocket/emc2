@@ -18,6 +18,7 @@ def build(self):
         target            = 'sr_registry',
         features          = features,
         source            = source,
+        pysource          = 'klasses.py',
         export_includes   = self.top_dir,
         includes          = self.top_dir,
         swig_flags        = '-c++ -python -Wall',
