@@ -108,155 +108,155 @@ class sr_report : public sc_core::sc_report {
 
     sr_report(
         sc_core::sc_severity severity,
-	      const sc_core::sc_msg_def* msg_def,
-	      const char* msg,
-	      const char* file,
-	      int line,
-	      int verbosity_level,
+        const sc_core::sc_msg_def* msg_def,
+        const char* msg,
+        const char* file,
+        int line,
+        int verbosity_level,
         const sc_core::sc_actions &actions) :
       sc_core::sc_report(
         severity, msg_def, msg,
-	      file, line, verbosity_level),
+        file, line, verbosity_level),
       enabled(false),
       actions(actions) {
     };
 
     ~sr_report() throw() {
-        pairs.clear();
+      pairs.clear();
     }
 
     sr_report &operator=(const sr_report& other) {
-        sr_report copy(other);
-        swap(copy);
-        return *this;
+      sr_report copy(other);
+      swap(copy);
+      return *this;
     }
 
     void swap(sr_report & that) {
-        using std::swap;
-        sc_core::sc_report::swap(that);
-        swap(enabled, that.enabled);
-        swap(actions, that.actions);
-        swap(pairs,   that.pairs);
+      using std::swap;
+      sc_core::sc_report::swap(that);
+      swap(enabled, that.enabled);
+      swap(actions, that.actions);
+      swap(pairs,   that.pairs);
     } 
 
     inline void set_msg(const char *msg) {
-        char* result;
-        result = (char *)new char[strlen(msg)+1];
-        strcpy(result, msg);
-        if(this->msg && *this->msg) {
-            delete this->msg;
-        }
+      char* result;
+      result = (char *)new char[strlen(msg)+1];
+      strcpy(result, msg);
+      if(this->msg && *this->msg) {
+          delete this->msg;
+      }
 
-        this->msg = result;
+      this->msg = result;
     }
 
     inline sr_report &operator()(const std::string &name, int8_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, int16_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, int32_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, uint8_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, uint16_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, uint32_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, int64_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, sc_dt::int64 value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, (int64_t)value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, uint64_t value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, sc_dt::uint64 value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, (uint64_t)value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, std::string value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
     
     inline sr_report &operator()(const std::string &name, const char value[]) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, std::string(value)));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, char value[]) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, std::string(value)));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, bool value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, double value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
     }
 
     inline sr_report &operator()(const std::string &name, sc_core::sc_time value) {
-      if(enabled) {
+      if( __builtin_expect( enabled, 0 ) ) {
         pairs.push_back(v::pair(name, value));
       }
       return *this;
@@ -301,18 +301,15 @@ class sr_report_handler : public sc_core::sc_report_handler {
         }
       }
 
-      sc_msg_def *md = mdlookup(msg_type_);
-
       // If the severity of the report is SC_INFO and the specified verbosity 
       // level is greater than the maximum verbosity level of the simulator then 
       // return without any action.
-
-      if ((severity_ == sc_core::SC_INFO) && (verbosity_ > verbosity_level)) {
+      if ( __builtin_expect( (severity_ == sc_core::SC_INFO) && (verbosity_ > verbosity_level), 1 ) ) {
         return null;
       }
 
       // Process the report:
-
+      sc_msg_def *md = mdlookup(msg_type_);
       if (!md) {
         md = add_msg_type(msg_type_);
       }
@@ -337,14 +334,14 @@ class sr_report_handler : public sc_core::sc_report_handler {
       std::map< const sc_core::sc_object *, std::pair<sc_core::sc_severity, int> >::iterator iter = sr_report_handler::filter.find(obj);
       //sr_report_handler::filter_t::iterator iter = sr_report_handler::filter.find(obj); // deprecated with GCC 5
       if(iter != sr_report_handler::filter.end()) {
-          sr_report_handler::filter.erase(iter);
+        sr_report_handler::filter.erase(iter);
       }
     }
 
     using sc_core::sc_report_handler::handler;
 
     static void default_handler(const sc_core::sc_report &rep, const sc_core::sc_actions &actions);
-        
+
   friend void sr_report::operator()(const std::string &name);
   private:
     static sr_report rep;
@@ -356,7 +353,7 @@ class sr_report_handler : public sc_core::sc_report_handler {
 };
 
 void sr_report::operator()(const std::string &name) {
-  if (this != &sr_report_handler::null && enabled) {
+  if ( __builtin_expect( this != &sr_report_handler::null && enabled, 0 )  ) {
     if(name != "") {
       set_msg(name.c_str());
     }
