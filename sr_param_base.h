@@ -12,13 +12,6 @@
 #include <map>
 #include "core/common/base.h"
 
-inline gs::cnf::gs_param_array *sr_exp(gs::cnf::gs_param_array *param) {
-  if(param) {
-    sr_hierarchy_push(param);
-  }
-  return param;
-}
-
 class sr_param_base : public gs::cnf::gs_param_base {
   public:
     explicit sr_param_base(
@@ -29,11 +22,8 @@ class sr_param_base : public gs::cnf::gs_param_base {
       gs::cnf::gs_param_base(
         n, 
         register_at_db, 
-        sr_exp(parent_array),
+        parent_array,
         force_top_level_name) {
-      if (parent_array) {
-        sr_hierarchy_pop();
-      }
     }
 
     class easy_init {

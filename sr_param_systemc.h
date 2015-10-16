@@ -62,7 +62,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_INT_BASE;
     }
 
@@ -124,7 +124,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_INT;
     }
 
@@ -185,7 +185,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_UINT_BASE;
     }
 
@@ -246,7 +246,7 @@ class sr_param< sc_dt::sc_uint<W> >
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_UINT;
     }
 
@@ -308,7 +308,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_SIGNED;
     }
 
@@ -370,7 +370,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_BIGINT;
     }
 
@@ -431,7 +431,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_UNSIGNED;
     }
 
@@ -493,7 +493,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_BIGUINT;
     }
 
@@ -574,7 +574,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_BIT;
     }
 
@@ -713,7 +713,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_LOGIC;
     }
 
@@ -805,7 +805,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_TIME;
     }
 
@@ -1016,7 +1016,7 @@ public:
     }
 
     /// Overloads sr_param_base::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_SC_EVENT;
     }
 

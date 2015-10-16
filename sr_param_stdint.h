@@ -31,7 +31,7 @@ class sr_param<uint8_t>
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_UCHAR;
     }
 
@@ -118,7 +118,7 @@ class sr_param<int8_t>
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_CHAR;
     }
 
@@ -198,7 +198,7 @@ public:
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_USHORT;
     }
 
@@ -274,7 +274,7 @@ class sr_param<int16_t>
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_INT;
     }
 
@@ -353,7 +353,7 @@ public:
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_UINT;
     }
 
@@ -427,7 +427,7 @@ class sr_param<int32_t>
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_INT;
     }
 
@@ -522,7 +522,7 @@ public:
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_ULONGLONG;
     }
 
@@ -596,7 +596,7 @@ public:
     }
 
     /// Overloads sr_param::getType
-    const gs::cnf::Param_type getType() const {
+    gs::cnf::Param_type getType() const {
         return gs::cnf::PARTYPE_LONGLONG;
     }
 
