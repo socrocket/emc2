@@ -43,7 +43,7 @@ class signal_base : public sc_core::sc_object {
         /// Returns the MODULE instance of the parent object.
         /// It only works if the parent object is an sc_object and from type MODULE.
         virtual MODULE *get_module() {
-            sc_core::sc_object *obj = get_parent();
+            sc_core::sc_object *obj = get_parent_object();
             MODULE *mod = dynamic_cast<MODULE *> (obj);
             if (!mod) {
                 // Error Message: MODULE is not an sc_object/systemc_module.
