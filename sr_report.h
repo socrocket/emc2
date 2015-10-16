@@ -102,7 +102,9 @@ class pair {
 
 class sr_report : public sc_core::sc_report {
   public:
+#if SYSTEMC_VERSION != 20140417
     sr_report() : sc_core::sc_report(), enabled(false) {};
+#endif
     sr_report(const sr_report &copy) : sc_core::sc_report(copy), enabled(copy.enabled), actions(copy.actions), pairs(copy.pairs) {}
     explicit sr_report(const sc_core::sc_report &copy) : sc_core::sc_report(copy), enabled(true) {}
 
