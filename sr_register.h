@@ -22,8 +22,8 @@
 /// The sr_register classes are not part of the SCIREG API standard.
 /// Instead, it extends it as a possible register implementation using the
 /// SCIREG API standard.
-#ifndef CORE_COMMON_SR_REGISTER_H_
-#define CORE_COMMON_SR_REGISTER_H_ 
+#ifndef CORE_COMMON_SR_REGISTER_SR_REGISTER_H_
+#define CORE_COMMON_SR_REGISTER_SR_REGISTER_H_ 
 
 #include "systemc.h"
 #include "sc_register.h"
