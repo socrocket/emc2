@@ -100,6 +100,15 @@ USI_REGISTER_MODULE(scireg)
    $result = PyBytes_FromString(*$1);
 }
 
+%typemap(in, numinputs=0) scireg_ns::scireg_region_type & (scireg_ns::scireg_region_type tmp) {
+  $1 = &tmp;
+}
+
+%typemap(argout) scireg_ns::scireg_region_type & {
+   Py_XDECREF($result);   /* Blow away any previous result */
+   $result = PyLong_FromLong(uint32_t(*$1));
+}
+
 %{
 #include "core/common/sr_register/scireg.h"
 #include <map>
