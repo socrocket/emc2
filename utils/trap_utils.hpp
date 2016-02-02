@@ -1,44 +1,37 @@
-/***************************************************************************\
- *
- *
- *            ___        ___           ___           ___
- *           /  /\      /  /\         /  /\         /  /\
- *          /  /:/     /  /::\       /  /::\       /  /::\
- *         /  /:/     /  /:/\:\     /  /:/\:\     /  /:/\:\
- *        /  /:/     /  /:/~/:/    /  /:/~/::\   /  /:/~/:/
- *       /  /::\    /__/:/ /:/___ /__/:/ /:/\:\ /__/:/ /:/
- *      /__/:/\:\   \  \:\/:::::/ \  \:\/:/__\/ \  \:\/:/
- *      \__\/  \:\   \  \::/~~~~   \  \::/       \  \::/
- *           \  \:\   \  \:\        \  \:\        \  \:\
- *            \  \ \   \  \:\        \  \:\        \  \:\
- *             \__\/    \__\/         \__\/         \__\/
- *
- *
- *
- *
- *   This file is part of TRAP.
- *
- *   TRAP is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Lesser General Public License as published by
- *   the Free Software Foundation; either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Lesser General Public License for more details.
- *
- *   You should have received a copy of the GNU Lesser General Public License
- *   along with this program; if not, write to the
- *   Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *   or see <http://www.gnu.org/licenses/>.
- *
- *
- *
- *   (c) Luca Fossati, fossati@elet.polimi.it, fossati.l@gmail.com
- *
-\***************************************************************************/
+/***************************************************************************//**
+*            ___        ___           ___           ___
+*           /  /\      /  /\         /  /\         /  /\
+*          /  /:/     /  /::\       /  /::\       /  /::\
+*         /  /:/     /  /:/\:\     /  /:/\:\     /  /:/\:\
+*        /  /:/     /  /:/~/:/    /  /:/~/::\   /  /:/~/:/
+*       /  /::\    /__/:/ /:/___ /__/:/ /:/\:\ /__/:/ /:/
+*      /__/:/\:\   \  \:\/:::::/ \  \:\/:/__\/ \  \:\/:/
+*      \__\/  \:\   \  \::/~~~~   \  \::/       \  \::/
+*           \  \:\   \  \:\        \  \:\        \  \:\
+*            \  \ \   \  \:\        \  \:\        \  \:\
+*             \__\/    \__\/         \__\/         \__\/
+*
+* This file is part of TRAP.
+*
+* TRAP is free software; you can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation; either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with this program; if not, write to the
+* Free Software Foundation, Inc.,
+* 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+* or see <http://www.gnu.org/licenses/>.
+*
+* (c) Luca Fossati, fossati@elet.polimi.it, fossati.l@gmail.com
+*
+*******************************************************************************/
 
 #ifndef TRAP_UTILS_HPP
 #define TRAP_UTILS_HPP
@@ -64,24 +57,26 @@
 #ifdef MAKE_STRING
 #undef MAKE_STRING
 #endif
-#define MAKE_STRING( msg )  ( ((std::ostringstream&)((std::ostringstream() << '\x0') << msg)).str().substr(1) )
+#define MAKE_STRING(msg)  (((std::ostringstream &)((std::ostringstream() << '\x0') << msg)).str().substr(1))
 
-namespace trap{
+namespace trap {
 void throw_exception_helper(std::string message);
-};
+} // namespace trap
 
 #ifdef THROW_EXCEPTION
 #undef THROW_EXCEPTION
 #endif
-#define THROW_EXCEPTION( msg ) ( trap::throw_exception_helper(MAKE_STRING( "At: function " << __PRETTY_FUNCTION__ << " file: " << __FILE__ << ":" << __LINE__ << " --> " << msg )) )
+#define THROW_EXCEPTION(msg) (trap::throw_exception_helper(MAKE_STRING("At: function " << __PRETTY_FUNCTION__ << \
+  " file: " << __FILE__ << ":" << __LINE__ << " --> " << msg)))
 
-namespace trap{
+namespace trap {
 void throw_error_helper(std::string message);
-};
+} // namespace trap
 
 #ifdef THROW_ERROR
 #undef THROW_ERROR
 #endif
-#define THROW_ERROR( msg ) ( trap::throw_error_helper(MAKE_STRING( "At: function " << __PRETTY_FUNCTION__ << " file: " << __FILE__ << ":" << __LINE__ << " --> " << msg << std::endl )) )
+#define THROW_ERROR(msg) (trap::throw_error_helper(MAKE_STRING("At: function " << __PRETTY_FUNCTION__ << " file: " << \
+  __FILE__ << ":" << __LINE__ << " --> " << msg << std::endl)))
 
 #endif
