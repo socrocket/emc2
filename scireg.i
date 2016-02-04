@@ -41,14 +41,15 @@ USI_REGISTER_MODULE(scireg)
 %typemap(in) scireg_ns::scireg_callback & {
   PyObject *callback = NULL;
   unsigned int typeinfo = 0;
+  uint64_t offset = 0, size = 0;
   scireg_ns::scireg_callback_type type = scireg_ns::SCIREG_READ_ACCESS;
   if (PyTuple_Check($input)) {
-    if (!PyArg_ParseTuple($input,"OI",&callback, &typeinfo) || !PyCallable_Check(callback)) {
-      PyErr_SetString(PyExc_TypeError,"tuple must have 2 elements: callable function and callback type");
+    if (!PyArg_ParseTuple($input,"OIkk",&callback, &typeinfo, &offset, &size) || !PyCallable_Check(callback)) {
+      PyErr_SetString(PyExc_TypeError,"tuple must have 4 elements: callable function, callback type, offset and size");
       return NULL;
     }
     type = static_cast<scireg_ns::scireg_callback_type>(typeinfo);
-    $1 = new SciregCallbackAdapter(callback, type);
+    $1 = new SciregCallbackAdapter(callback, type, offset, size);
   } else {
     PyErr_SetString(PyExc_TypeError,"expected a tuple with callable function and callback type");
     return NULL;
@@ -57,8 +58,9 @@ USI_REGISTER_MODULE(scireg)
 
 %typemap(typecheck) scireg_ns::scireg_callback & {
   PyObject *callback;
-  unsigned int typeinfo = 0;
-  $1 = PyArg_ParseTuple($input,"OI",callback, &typeinfo) && PyCallable_Check(callback);
+  unsigned int typeinfo = 0
+  uint64_t offset = 0, size = 0;
+  $1 = PyArg_ParseTuple($input,"OIkk",callback, &typeinfo, &offset, &size) && PyCallable_Check(callback);
 }
 
 %typemap(in) (const scireg_ns::vector_byte &v, sc_dt::uint64 size) {
@@ -155,7 +157,9 @@ class SciregCallbackAdapter : public scireg_ns::scireg_callback {
         }
 
         void do_callback(scireg_ns::scireg_region_if &region) {
-          PyObject *args = PyTuple_New(1);
+          PyObject *args = PyTuple_New(3);
+          PyTuple_SetItem(args, 0, PyLong_FromLong(this->offset));
+          PyTuple_SetItem(args, 0, PyLong_FromLong(this->size));
           PyTuple_SetItem(args, 0, SWIG_NewPointerObj(SWIG_as_voidptr(&region), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
           PythonModule::block_threads();
           PyObject *result = PyObject_Call(callback, args, NULL);
