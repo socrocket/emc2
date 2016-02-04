@@ -38,6 +38,29 @@ USI_REGISTER_MODULE(scireg)
   $result = PyLong_FromLong(uint64_t($1));
 }
 
+%typemap(in) scireg_ns::scireg_callback & {
+  PyObject *callback = NULL;
+  unsigned int typeinfo = 0;
+  scireg_ns::scireg_callback_type type = scireg_ns::SCIREG_READ_ACCESS;
+  if (PyTuple_Check($input)) {
+    if (!PyArg_ParseTuple($input,"OI",&callback, &typeinfo) || !PyCallable_Check(callback)) {
+      PyErr_SetString(PyExc_TypeError,"tuple must have 2 elements: callable function and callback type");
+      return NULL;
+    }
+    type = static_cast<scireg_ns::scireg_callback_type>(typeinfo);
+    $1 = new SciregCallbackAdapter(callback, type);
+  } else {
+    PyErr_SetString(PyExc_TypeError,"expected a tuple with callable function and callback type");
+    return NULL;
+  }
+}
+
+%typemap(typecheck) scireg_ns::scireg_callback & {
+  PyObject *callback;
+  unsigned int typeinfo = 0;
+  $1 = PyArg_ParseTuple($input,"OI",callback, &typeinfo) && PyCallable_Check(callback);
+}
+
 %typemap(in) (const scireg_ns::vector_byte &v, sc_dt::uint64 size) {
   if(!PyString_Check($input)) {
     PyErr_SetString(PyExc_ValueError, "Expecting a String");
@@ -113,6 +136,39 @@ USI_REGISTER_MODULE(scireg)
 #include "core/common/sr_register/scireg.h"
 #include <map>
 class usi_scireg_parent;
+
+class SciregCallbackAdapter : public scireg_ns::scireg_callback {
+    public:
+        SciregCallbackAdapter(PyObject *call, scireg_ns::scireg_callback_type type = scireg_ns::SCIREG_READ_ACCESS, uint64_t offset = 0, uint64_t size = 0) {
+            if(!PyCallable_Check(call)) {
+                PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+            }
+            this->type = type;
+            this->offset = offset;
+            this->size = size;
+            this->callback = call;
+            Py_XINCREF(callback);
+        }
+
+        ~SciregCallbackAdapter() {
+            Py_XDECREF(callback);
+        }
+
+        void do_callback(scireg_ns::scireg_region_if &region) {
+          PyObject *args = PyTuple_New(1);
+          PyTuple_SetItem(args, 0, SWIG_NewPointerObj(SWIG_as_voidptr(&region), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
+          PythonModule::block_threads();
+          PyObject *result = PyObject_Call(callback, args, NULL);
+          PythonModule::unblock_threads();
+
+          Py_DECREF(args);
+          Py_DECREF(result);
+        }
+
+    private:
+        PyObject *callback;
+};
+
 %}
 
 %include "core/common/sr_register/scireg.h"

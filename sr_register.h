@@ -90,12 +90,12 @@ class sr_register_callback_base {
     virtual void call() = 0;
 };
 
-class sr_register_scireg_callback : public sc_register_callback_base {
+class sr_register_scireg_callback : public sr_register_callback_base {
   public:
     sr_register_scireg_callback(scireg_ns::scireg_callback &callback, scireg_ns::scireg_region_if &region) : m_callback(callback), m_region(region) {}
     virtual ~sr_register_scireg_callback() {}
     virtual void call() {
-      m_callback->do_callback(region);
+      m_callback.do_callback(m_region);
     }
   private:
     scireg_ns::scireg_callback &m_callback;
@@ -203,6 +203,36 @@ class sr_register : public sc_register_b<DATA_TYPE> {
 
     operator DATA_TYPE() {
       return this->read();
+    }
+
+    /// Add/Delete Callback objects associated with this region
+    virtual scireg_ns::scireg_response scireg_add_callback(scireg_ns::scireg_callback& cb) {
+      if(cb.type == scireg_ns::SCIREG_READ_ACCESS || cb.type == scireg_ns::SCIREG_STATE_CHANGE) {
+        callback_map_t::iterator iter = m_callbacks.find(SR_PRE_READ);
+        if(iter != m_callbacks.end()) {
+          iter->second.push_back(new sr_register_scireg_callback(cb, *this));
+        } else {
+          std::pair<sr_register_callback_type, callback_vector_t> pair;
+          pair.first = SR_PRE_READ;
+          pair.second.push_back(new sr_register_scireg_callback(cb, *this));
+          m_callbacks.insert(pair);
+        }
+      } else if(cb.type == scireg_ns::SCIREG_WRITE_ACCESS || cb.type == scireg_ns::SCIREG_STATE_CHANGE) {
+        callback_map_t::iterator iter = m_callbacks.find(SR_POST_WRITE);
+        if(iter != m_callbacks.end()) {
+          iter->second.push_back(new sr_register_scireg_callback(cb, *this));
+        } else {
+          std::pair<sr_register_callback_type, callback_vector_t> pair;
+          pair.first = SR_POST_WRITE;
+          pair.second.push_back(new sr_register_scireg_callback(cb, *this));
+          m_callbacks.insert(pair);
+        }
+      }
+      return scireg_ns::SCIREG_SUCCESS;
+    }
+
+    virtual scireg_ns::scireg_response scireg_remove_callback(scireg_ns::scireg_callback &cb) {
+      return scireg_ns::SCIREG_UNSUPPORTED;
     }
 
     sr_register<DATA_TYPE> &operator = (const DATA_TYPE &val) {
@@ -396,36 +426,6 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       } else {
         return scireg_ns::SCIREG_FAILURE;
       }
-    }
-
-    /// Add/Delete Callback objects associated with this region
-    virtual scireg_ns::scireg_response scireg_add_callback(scireg_ns::scireg_callback &cb) {
-    sr_register &callback(sr_register_callback_type type, OWNER *owner, typename sr_register_callback<OWNER>::callback_t callback) {
-      if(cb.type & (scireg_ns::SCIREG_READ_ACCESS | scireg_ns::SCIREG_STATE_CHANGE)) {
-        callback_map_t::iterator iter = m_callbacks.find(SR_PRE_READ);
-        if(iter != m_callbacks.end()) {
-          iter->second.push_back(new sr_register_scireg_callback(cb, *this));
-        } else {
-          std::pair<sr_register_callback_type, callback_vector_t> pair;
-          pair.first = SR_PRE_READ;
-          pair.second.push_back(new sr_register_scireg_callback(cb, *this));
-          m_callbacks.insert(pair);
-        }
-      } else if(cb.type & (scireg_ns::SCIREG_WRITE_ACCESS | scireg_ns::SCIREG_STATE_CHANGE)) {
-        callback_map_t::iterator iter = m_callbacks.find(SR_POST_WRITE);
-        if(iter != m_callbacks.end()) {
-          iter->second.push_back(new sr_register_scireg_callback(cb, *this));
-        } else {
-          std::pair<sr_register_callback_type, callback_vector_t> pair;
-          pair.first = SR_POST_WRITE;
-          pair.second.push_back(new sr_register_scireg_callback(cb, *this));
-          m_callbacks.insert(pair);
-        }
-      }
-      return scireg_ns::SCIREG_SUCCESS;
-    }
-    virtual scireg_response scireg_remove_callback(scireg_ns::scireg_callback &cb) {
-      return scireg_ns::SCIREG_UNSUPPORTED;
     }
 
 
