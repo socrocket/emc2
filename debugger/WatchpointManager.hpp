@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,10 +36,6 @@
 #ifndef WATCHPOINTMANAGER_HPP
 #define WATCHPOINTMANAGER_HPP
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
 #if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
@@ -62,6 +58,10 @@
 #define  template_map std::map
 #endif
 #endif
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace trap {
 

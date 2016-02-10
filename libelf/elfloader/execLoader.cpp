@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -33,22 +33,21 @@
 *
 *******************************************************************************/
 
-#include <string>
-#include <map>
-#include <iostream>
-#include <fstream>
-
-#include "trap_utils.hpp"
+#include "execLoader.hpp"
+#include "elfFrontend.hpp"
+#include "utils/trap_utils.hpp"
 
 extern "C" {
 #include <gelf.h>
 }
 
-#include "elfFrontend.hpp"
-#include "execLoader.hpp"
-
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+
+#include <string>
+#include <map>
+#include <iostream>
+#include <fstream>
 
 trap::ExecLoader::ExecLoader(std::string fileName, bool plainFile) : plainFile(plainFile), elfFrontend(NULL), programData(NULL) {
   if (plainFile) {

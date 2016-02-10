@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,14 +36,15 @@
 #ifndef MEMORYLT_HPP
 #define MEMORYLT_HPP
 
+#include "utils/trap_utils.hpp"
+
 #include <systemc.h>
 #include <tlm.h>
 #include <tlm_utils/simple_target_socket.h>
+
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <map>
-
-#include <trap_utils.hpp>
 
 namespace trap {
 

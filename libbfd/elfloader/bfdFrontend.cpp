@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -32,6 +32,9 @@
 * (c) Luca Fossati, fossati@elet.polimi.it, fossati.l@gmail.com
 *
 *******************************************************************************/
+
+#include "elfFrontend.hpp"
+#include <utils/trap_utils.hpp>
 
 extern "C" {
 #include <bfd.h>
@@ -69,10 +72,6 @@ extern "C" {
 #include <vector>
 #include <list>
 #include <iostream>
-
-#include "trap_utils.hpp"
-
-#include "elfFrontend.hpp"
 
 #define DMGL_NO_OPTS     0              /* For readability... */
 #define DMGL_PARAMS      (1 << 0)       /* Include function args */

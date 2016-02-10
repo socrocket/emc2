@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -35,12 +35,12 @@
 #ifndef ABIIF_HPP
 #define ABIIF_HPP
 
-#include <vector>
+#include "instructionBase.hpp"
+#include "utils/trap_utils.hpp"
 
 #include <boost/circular_buffer.hpp>
 
-#include "trap_utils.hpp"
-#include "instructionBase.hpp"
+#include <vector>
 
 namespace trap {
 

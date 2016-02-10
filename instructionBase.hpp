@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,11 +36,11 @@
 #ifndef INSTRUCTIONBASE_HPP
 #define INSTRUCTIONBASE_HPP
 
+#include <boost/lexical_cast.hpp>
+
 #include <ostream>
 #include <sstream>
 #include <string>
-
-#include <boost/lexical_cast.hpp>
 
 namespace trap {
 

@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,13 +36,13 @@
 #ifndef TRAP_UTILS_HPP
 #define TRAP_UTILS_HPP
 
+#include "customExceptions.hpp"
+
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <exception>
 #include <stdexcept>
-
-#include "customExceptions.hpp"
 
 #ifndef __GNUC__
 #ifndef __PRETTY_FUNCTION__

@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,31 +36,31 @@
 #ifndef EXECLOADER_HPP
 #define EXECLOADER_HPP
 
-#include <string>
-
-#include <iostream>
-#include <fstream>
-
 extern "C" {
-#include <gelf.h>
+#include <bfd.h>
 }
 
-#include "elfFrontend.hpp"
-
+#include <string>
 
 namespace trap {
 
 class ExecLoader {
   private:
+  ///Variable holding the binary image of the application according to the BFD format
+  bfd * execImage;
   ///Specifies whether a normal binary file (ELF; COFF, etc.) or a plain file (just the
   ///opcodes of the instructions) was used.
   bool plainFile;
-  ///Keeps reference to the main elf parser
-  ELFFrontend *elfFrontend;
-  ///Holds the data of the program to be executed in case it is a simply
-  ///sequence of instructions (i.e. not an ELF structured file)
-  unsigned char *programData;
-  std::ifstream plainExecFile;
+  ///Variables holding info on the program being loaded
+  unsigned char * programData;
+  unsigned int progDim;
+  unsigned int dataStart;
+
+  ///examines the bfd in order to find the sections containing data
+  ///to be loaded; at the same time it fills the programData
+  ///array
+  void loadProgramData();
+  std::string getMatchingFormats (char **p);
   public:
   ///Initializes the loader of executable files by creating
   ///the corresponding bfd image of the executable file
@@ -77,7 +77,7 @@ class ExecLoader {
   ///Returns the dimension of the loaded program
   unsigned int getProgDim();
   ///Returns a pointer to the array contianing the program data
-  unsigned char*getProgData();
+  unsigned char * getProgData();
 }; // class ExecLoader
 
 } // namespace trap

@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+import os
+
+def build(bld):
+    bld(
+        features = 'cxx',
+        target = 'elfloader',
+        source = 'elfFrontend.cpp execLoader.cpp',
+        includes = '. ../..',
+        use = 'ELF_LIB BOOST BOOST_FILESYSTEM',
+        install_path = None
+    )
+
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'elfloader'), 'elfFrontend.hpp execLoader.hpp')

@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -33,13 +33,13 @@
 *
 *******************************************************************************/
 
-#ifndef ELFFRONTEND_H
-#define ELFFRONTEND_H
+#ifndef BFDFRONTEND_H
+#define BFDFRONTEND_H
 
-// Part of the code of this class is taken from the binutils sources
+//Part of the code of this class is taken from the binutils sources
 
 extern "C" {
-#include <gelf.h>
+#include <bfd.h>
 }
 
 #ifdef __GNUC__
@@ -72,40 +72,52 @@ extern "C" {
 
 namespace trap {
 
+struct Section {
+  struct bfd_section *descriptor;
+  bfd_byte * data;
+  bfd_vma startAddr;
+  bfd_size_type datasize;
+  std::string name;
+  int type;
+}; // struct Section
+
 class ELFFrontend {
   private:
+  //Contains the list of all the symbols in the binary file
+  asymbol **sy;
   ///Size of each assembly instruction in bytes
   unsigned int wordsize;
-  ///Name of the executable file
+  ///Descriptor of the binary file
+  bfd * execImage;
   std::string execName;
-  ///runtime representation of the ELF file
-  Elf *elf_pointer;
-  ///file descriptor representing the open elf file
-  int elfFd;
 
   ///Variables holding what read from the file
   template_map<unsigned int, std::list<std::string> > addrToSym;
   template_map<unsigned int, std::string> addrToFunction;
   std::map<std::string, unsigned int> symToAddr;
   template_map<unsigned int, std::pair<std::string, unsigned int> > addrToSrc;
-  unsigned int entryPoint;
-  unsigned char *programData;
 
-  // end address and start address (not necessarily the entry point) of the loadable part of the binary file
+  //end address and start address (not necessarily the entry point) of the loadable part of the binary file
   std::pair<unsigned int, unsigned int> codeSize;
 
-  static std::map<std::string, ELFFrontend *> curInstance;
-  // Private constructor: we want pepole to be only able to use getInstance
-  // to get an instance of the frontend
-  ELFFrontend(std::string binaryName);
+  ///Contains a list of the sections which contain executable code
+  std::vector<Section> secList;
 
-  // Methods for reading the binary instructions from the executable file and
-  // for interpreting the symbol table
-  void readProgramData();
-  void readSymbols();
+  ///Accesses the BFD internal structures in order to get correspondence among machine code and
+  ///the source code
+  void readSrc();
+  ///Accesses the BFD internal structures in order to get the symbols
+  void readSyms();
+  ///In case it is not possible to open the BFD because it is not possible to determine
+  ///it target, this function extracts the list of possible targets
+  std::string getMatchingFormats (char **p) const;
+  static std::map<std::string, ELFFrontend *> curInstance;
+  //Private constructor: we want pepole to be only able to use getInstance
+  //to get an instance of the frontend
+  ELFFrontend(std::string binaryName);
   public:
   ~ELFFrontend();
-  static ELFFrontend&getInstance(std::string fileName);
+  static ELFFrontend & getInstance(std::string fileName);
   static void reset();
   ///Given an address, it returns the symbols found there,(more than one
   ///symbol can be mapped to an address). Note
@@ -132,14 +144,10 @@ class ELFFrontend {
   unsigned int getBinaryEnd() const;
   ///Returns the start address of the loadable code
   unsigned int getBinaryStart() const;
-  ///Returns the entry point of the executable code
-  unsigned int getEntryPoint() const;
   ///Given an address, it sets fileName to the name of the source file
   ///which contains the code and line to the line in that file. Returns
   ///false if the address is not valid
   bool getSrcFile(unsigned int address, std::string &fileName, unsigned int &line) const;
-  ///Returns a pointer to the array contianing the program data
-  unsigned char*getProgData();
 }; // class ELFFrontend
 
 } // namespace trap

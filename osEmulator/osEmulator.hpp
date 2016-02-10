@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,10 +36,22 @@
 #ifndef OSEMULATOR_HPP
 #define OSEMULATOR_HPP
 
-#include <map>
-#include <string>
+#include "syscCallB.hpp"
+#include "ABIIf.hpp"
+#include "instructionBase.hpp"
+#include "ToolsIf.hpp"
+
+#ifndef EXTERNAL_BFD
+#include "elfloader/elfFrontend.hpp"
+#else
+#include "bfdWrapper.hpp"
+#define BFDFrontend BFDWrapper
+#endif
 
 #include <systemc.h>
+
+#include <map>
+#include <string>
 
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
@@ -63,19 +75,6 @@
 #define  template_map std::map
 #endif
 #endif
-
-#include "ABIIf.hpp"
-#include "ToolsIf.hpp"
-
-#ifndef EXTERNAL_BFD
-#include "elfFrontend.hpp"
-#else
-#include "bfdWrapper.hpp"
-#define BFDFrontend BFDWrapper
-#endif
-
-#include "syscCallB.hpp"
-#include "instructionBase.hpp"
 
 namespace trap {
 

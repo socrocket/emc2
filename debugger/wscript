@@ -5,9 +5,9 @@ import sys, os
 
 def build(bld):
     if bld.env['LICENSE'] == 'gpl':
-        elfInclude = '../libbfd_objloader/bfdFrontend'
+        elfInclude = '../libbfd'
     else:
-        elfInclude = '../libelf_objloader/bfdFrontend'
+        elfInclude = '../libelf'
 
     uselib_custom = ''
     cppflags_custom = ''
@@ -15,12 +15,13 @@ def build(bld):
         cppflags_custom = ' -D__USE_W32_SOCKETS'
         uselib_custom = ' WINSOCK'
 
-    bld.objects(source='GDBConnectionManager.cpp',
-        includes = '. ' + elfInclude + ' ../utils ..',
-        use = 'SYSTEMC BOOST BOOST_REGEX BOOST_THREAD' + uselib_custom,
+    bld.objects(
         target = 'debugger',
-        install_path = None,
-        defines = cppflags_custom
+        source = 'GDBConnectionManager.cpp',
+        includes = '. .. ' + elfInclude,
+        defines = cppflags_custom,
+        use = 'SYSTEMC BOOST BOOST_REGEX BOOST_THREAD' + uselib_custom,
+        install_path = None
     )
 
-    bld.install_files(os.path.join(bld.env.PREFIX, 'include'), 'GDBStub.hpp GDBConnectionManager.hpp BreakpointManager.hpp WatchpointManager.hpp')
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'debugger'), 'GDBStub.hpp GDBConnectionManager.hpp BreakpointManager.hpp WatchpointManager.hpp')

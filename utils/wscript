@@ -4,10 +4,11 @@
 import os
 
 def build(bld):
-    bld.objects(source='trap_utils.cpp',
-        includes = '.',
+    bld.objects(
         target = 'utils',
+        source = 'trap_utils.cpp',
+        includes = '. ..',
         install_path = None
     )
 
-    bld.install_files(os.path.join(bld.env.PREFIX, 'include'), 'trap_utils.hpp customExceptions.hpp')
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'utils'), 'trap_utils.hpp customExceptions.hpp')

@@ -4,11 +4,17 @@
 import os
 
 def build(bld):
-    bld.objects(source='profInfo.cpp',
-        use = 'ELF_LIB SYSTEMC BOOST',
-        includes = '. ../utils ../bfdFrontend',
+    if bld.env['LICENSE'] == 'gpl':
+        elfInclude = '../libbfd'
+    else:
+        elfInclude = '../libelf'
+
+    bld.objects(
         target = 'profiler',
+        source = 'profInfo.cpp',
+        includes = '. .. ' + elfInclude,
+        use = 'ELF_LIB SYSTEMC BOOST',
         install_path = None
     )
 
-    bld.install_files(os.path.join(bld.env.PREFIX, 'include'), 'profiler.hpp profInfo.hpp')
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'profiler'), 'profiler.hpp profInfo.hpp')

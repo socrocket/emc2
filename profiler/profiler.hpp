@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,6 +36,14 @@
 #ifndef PROFILER_HPP
 #define PROFILER_HPP
 
+#include "profInfo.hpp"
+#include "elfloader/elfFrontend.hpp"
+#include "ABIIf.hpp"
+#include "instructionBase.hpp"
+#include "ToolsIf.hpp"
+
+#include <systemc.h>
+
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
 #if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 3)
@@ -64,14 +72,6 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-
-#include <systemc.h>
-
-#include "ToolsIf.hpp"
-#include "ABIIf.hpp"
-#include "instructionBase.hpp"
-#include "elfFrontend.hpp"
-#include "profInfo.hpp"
 
 namespace trap {
 

@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -37,13 +37,12 @@
 #include <map>
 #include <iostream>
 
-#include "trap_utils.hpp"
+#include "execLoader.hpp"
+#include "utils/trap_utils.hpp"
 
 extern "C" {
 #include <bfd.h>
 }
-
-#include "execLoader.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

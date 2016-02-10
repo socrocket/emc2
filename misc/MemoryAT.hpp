@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -36,15 +36,16 @@
 #ifndef MEMORYAT_HPP
 #define MEMORYAT_HPP
 
+#include "utils/trap_utils.hpp"
+
 #include <systemc.h>
 #include <tlm.h>
 #include <tlm_utils/simple_target_socket.h>
 #include <tlm_utils/peq_with_cb_and_phase.h>
+
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <cstring>
-
-#include <trap_utils.hpp>
 
 DECLARE_EXTENDED_PHASE(internal_ph);
 

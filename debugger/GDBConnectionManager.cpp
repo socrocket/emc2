@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -37,6 +37,14 @@
 #define _WIN32_WINNT 0x0501
 #endif
 
+#include "GDBConnectionManager.hpp"
+#include "utils/trap_utils.hpp"
+
+#include <boost/asio.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread/condition.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <csignal>
 #ifndef SIGTRAP
 #define SIGTRAP 5
@@ -54,14 +62,6 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include <boost/asio.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
-
-#include "trap_utils.hpp"
-
-#include "GDBConnectionManager.hpp"
 
 trap::GDBConnectionManager::GDBConnectionManager(bool endianess) : endianess(endianess), killed(false) {
   this->socket = NULL;

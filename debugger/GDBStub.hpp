@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -57,19 +57,15 @@
 #define SIGQUIT 3
 #endif
 
-#include <systemc.h>
-
-#include <vector>
-
-#include "trap_utils.hpp"
-
-#include "ABIIf.hpp"
-#include "ToolsIf.hpp"
-#include "instructionBase.hpp"
-
 #include "BreakpointManager.hpp"
 #include "WatchpointManager.hpp"
 #include "GDBConnectionManager.hpp"
+#include "ABIIf.hpp"
+#include "instructionBase.hpp"
+#include "ToolsIf.hpp"
+#include "utils/trap_utils.hpp"
+
+#include <systemc.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/circular_buffer.hpp>
@@ -78,6 +74,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
+
+#include <vector>
 
 extern int exitValue;
 namespace trap {

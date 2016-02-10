@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -40,9 +40,10 @@
 #pragma warning( disable : 4244 )
 #endif
 
-#include "trap_utils.hpp"
-
+#include "elfloader/elfFrontend.hpp"
 #include "ABIIf.hpp"
+#include "utils/trap_utils.hpp"
+
 #include <systemc.h>
 
 #include <iostream>
@@ -78,9 +79,6 @@ extern int errno;
 #include <sys/times.h>
 #endif
 #include <ctime>
-
-#include "elfFrontend.hpp"
-
 
 namespace trap {
 

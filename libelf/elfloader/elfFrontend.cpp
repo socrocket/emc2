@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -33,12 +33,17 @@
 *
 *******************************************************************************/
 
+#include "elfFrontend.hpp"
+#include "utils/trap_utils.hpp"
+
 extern "C" {
 #include <gelf.h>
 }
 
-// **************************** HAVE_ABI____CXA_DEMANGLE
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
+// **************************** HAVE_ABI____CXA_DEMANGLE
 #ifdef HAVE_CXXABI_H
 #include <cxxabi.h>
 #endif
@@ -82,13 +87,6 @@ extern "C" {
 #include <vector>
 #include <list>
 #include <iostream>
-
-#include "trap_utils.hpp"
-
-#include "elfFrontend.hpp"
-
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 std::map<std::string, trap::ELFFrontend *> trap::ELFFrontend::curInstance;
 

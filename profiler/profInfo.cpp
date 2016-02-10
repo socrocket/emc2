@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/*******************************************************************************
 *            ___        ___           ___           ___
 *           /  /\      /  /\         /  /\         /  /\
 *          /  /:/     /  /::\       /  /::\       /  /::\
@@ -37,9 +37,9 @@
 
 #include <systemc.h>
 
-#include <string>
-
 #include <boost/lexical_cast.hpp>
+
+#include <string>
 
 ///Total number of instructions executed
 unsigned long long trap::ProfInstruction::numTotalCalls = 0;
