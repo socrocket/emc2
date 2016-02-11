@@ -134,6 +134,23 @@ USI_REGISTER_MODULE(scireg)
    $result = PyLong_FromLong(uint32_t(*$1));
 }
 
+%typemap(in, numinputs=0) std::vector<scireg_ns::scireg_mapped_region> & (std::vector<scireg_ns::scireg_mapped_region> tmp) {
+  $1 = &tmp;
+}
+
+%typemap(argout) std::vector<scireg_ns::scireg_mapped_region> & {
+  Py_XDECREF($result);   /* Blow away any previous result */
+  $result = PyList_New(0);
+  for(std::vector<scireg_ns::scireg_mapped_region>::iterator iter = $1->begin(); iter != $1->end(); ++iter) {
+    PyObject *obj = PyTuple_New(3);
+    PyTuple_SetItem(obj, 0, SWIG_NewPointerObj(SWIG_as_voidptr(iter->region), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
+    PyTuple_SetItem(obj, 1, PyBytes_FromString(iter->name));
+    PyTuple_SetItem(obj, 2, PyLong_FromLong(iter->offset));
+    PyList_Append($result, obj);
+    Py_XDECREF(obj);
+  }
+}
+
 %{
 #include "core/common/sr_register/scireg.h"
 #include <map>
