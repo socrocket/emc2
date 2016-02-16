@@ -8,13 +8,11 @@ def build(bld):
         elfInclude = '../libbfd'
     else:
         elfInclude = '../libelf'
-
     bld.objects(
-        target = 'profiler',
-        source = 'profiler_elements.cpp',
+        target = 'osemu',
+        source = 'osemu_base.cpp',
         includes = '. .. ' + elfInclude,
-        use = 'ELF_LIB SYSTEMC BOOST',
+        use = 'ELF_LIB SYSTEMC BOOST BOOST_REGEX',
         install_path = None
     )
-
-    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'profiler'), 'profiler.hpp profiler_elements.hpp')
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'osemu'), 'osemu_base.hpp syscall.hpp osemu.hpp')

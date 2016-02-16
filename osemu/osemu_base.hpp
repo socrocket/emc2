@@ -7,7 +7,7 @@
 *  _/      _/    _/     _/      _/    _/
 * _/      _/      _/  _/        _/   _/
 *
-* @file     trap.hpp
+* @file     osemu_base.hpp
 * @brief    This file is part of the TRAP runtime library.
 * @details
 * @author   Luca Fossati
@@ -37,9 +37,37 @@
 * (c) Luca Fossati, fossati@elet.polimi.it, fossati.l@gmail.com
 *
 *******************************************************************************/
-#ifndef TRAP_HPP
-#define TRAP_HPP
+#ifndef TRAP_OSEMULATOR_BASE_H
+#define TRAP_OSEMULATOR_BASE_H
 
-#define TRAP_REVISION 825
+#include <map>
+#include <set>
+#include <vector>
+#include <string>
 
+namespace trap {
+
+/**
+ * @brief OSEmulatorBase
+ */
+class OSEmulatorBase {
+  public:
+  void set_env(const std::string name, const std::string value);
+  void set_sysconf(const std::string name, int value);
+  void set_program_args(const std::vector<std::string> args);
+  void correct_flags(int& val);
+  void reset();
+
+  public:
+  std::map<std::string, std::string> env;
+  std::map<std::string, int> sysconf;
+  std::vector<std::string> program_args;
+  static unsigned num_programs;
+  static std::vector<unsigned> group_ids;
+  unsigned heap_ptr;
+}; // class OSEmulatorBase
+
+} // namespace trap
+
+/// ****************************************************************************
 #endif

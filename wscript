@@ -9,6 +9,6 @@ def build(bld):
     else:
         bld.recurse(os.path.join('libelf', 'elfloader'))
 
-    bld.recurse('debugger misc osEmulator profiler utils')
+    bld.recurse('common debugger modules osemu profiler')
 
-    bld.install_files(os.path.join(bld.env.PREFIX, 'include'), 'ABIIf.hpp instructionBase.hpp trap.hpp ToolsIf.hpp')
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include'), 'trap.hpp')

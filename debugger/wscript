@@ -17,11 +17,11 @@ def build(bld):
 
     bld.objects(
         target = 'debugger',
-        source = 'GDBConnectionManager.cpp',
+        source = 'gdb_connection_manager.cpp',
         includes = '. .. ' + elfInclude,
         defines = cppflags_custom,
         use = 'SYSTEMC BOOST BOOST_REGEX BOOST_THREAD' + uselib_custom,
         install_path = None
     )
 
-    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'debugger'), 'GDBStub.hpp GDBConnectionManager.hpp BreakpointManager.hpp WatchpointManager.hpp')
+    bld.install_files(os.path.join(bld.env.PREFIX, 'include', 'debugger'), 'gdb_stub.hpp gdb_connection_manager.hpp breakpoint_manager.hpp watchpoint_manager.hpp')
