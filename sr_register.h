@@ -17,16 +17,17 @@
 ///   See the License for the specific language governing permissions and
 ///   limitations under the License.
 ///
-/// This file contains the implementation of the sr_register base classes, 
+/// This file contains the implementation of the sr_register base classes,
 /// which can be used to model registers and register banks in a TLM modules.
 /// The sr_register classes are not part of the SCIREG API standard.
 /// Instead, it extends it as a possible register implementation using the
 /// SCIREG API standard.
 #ifndef CORE_COMMON_SR_REGISTER_SR_REGISTER_H_
-#define CORE_COMMON_SR_REGISTER_SR_REGISTER_H_ 
+#define CORE_COMMON_SR_REGISTER_SR_REGISTER_H_
 
 #include "systemc.h"
 #include "sc_register.h"
+#include "core/common/base.h"
 
 /// lsb0 mode is used in field position specification.
 /// (lsb0 defines the 0 as the least significant bit. It is the default
@@ -186,6 +187,15 @@ class sr_register : public sc_register_b<DATA_TYPE> {
       i = this->read();
       raise_callback(SR_POST_READ);
     }
+
+    DATA_TYPE bus_read() const {
+      DATA_TYPE i;
+      raise_callback(SR_PRE_READ);
+      i = this->read();
+      raise_callback(SR_POST_READ);
+      return i;
+    }
+
     void bus_write(DATA_TYPE i) {
       raise_callback(SR_PRE_WRITE);
       this->write(i & m_write_mask);
@@ -256,7 +266,7 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
   public:
     typedef typename std::map<ADDR_TYPE, sr_register<DATA_TYPE> *> register_map_t;
 
-    sr_register_bank(const char* name) : 
+    sr_register_bank(const char* name) :
       sc_register_bank<ADDR_TYPE, DATA_TYPE>(name, 0) {
     }
 
@@ -304,7 +314,7 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       }
       return true;
     }
-    
+
     bool bus_read_dbg(ADDR_TYPE offset, DATA_TYPE& i) const {
       const sr_register<DATA_TYPE> *reg = get_sr_register(offset);
       if(reg) {
@@ -314,19 +324,19 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
       }
       return true;
     }
-    
+
     bool bus_write_dbg(ADDR_TYPE offset, DATA_TYPE val) {
       sr_register<DATA_TYPE> *reg = get_sr_register(offset);
       if(reg) {
         reg->bus_write(val);
-      } 
+      }
       return true;
     }
-    
+
     bool is_valid_offset(ADDR_TYPE offset) const {
       return get_sr_register(offset) != NULL;
     }
-    
+
     bool supports_action_type(ADDR_TYPE offset, sc_register_access_type mode) {
       sr_register<DATA_TYPE> *reg = get_sr_register(offset);
       return reg != NULL && reg->access_mode() & mode;
@@ -434,5 +444,5 @@ class sr_register_bank : public sc_register_bank<ADDR_TYPE, DATA_TYPE> {
     register_map_t m_register;
 };
 
-#endif  // CORE_COMMON_SR_REGISTER_H_ 
+#endif  // CORE_COMMON_SR_REGISTER_H_
 /// @}
