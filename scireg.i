@@ -177,7 +177,7 @@ class SciregCallbackAdapter : public scireg_ns::scireg_callback {
           PyObject *args = PyTuple_New(3);
           PyTuple_SetItem(args, 0, PyLong_FromLong(this->offset));
           PyTuple_SetItem(args, 1, PyLong_FromLong(this->size));
-          PyTuple_SetItem(args, 2, SWIG_NewPointerObj(SWIG_as_voidptr(&region), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
+          PyTuple_SetItem(args, 2, SWIG_NewPointerObj(SWIG_as_voidptr((static_cast<scireg_ns::scireg_region_if*>(&region))), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
           PythonModule::block_threads();
           PyObject *result = PyObject_Call(callback, args, NULL);
           PythonModule::unblock_threads();
