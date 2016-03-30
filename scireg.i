@@ -180,10 +180,14 @@ class SciregCallbackAdapter : public scireg_ns::scireg_callback {
           PyTuple_SetItem(args, 2, SWIG_NewPointerObj(SWIG_as_voidptr((static_cast<scireg_ns::scireg_region_if*>(&region))), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
           PythonModule::block_threads();
           PyObject *result = PyObject_Call(callback, args, NULL);
-          PythonModule::unblock_threads();
 
+          if(PyErr_Occurred() || !result) {
+            PyErr_Print();
+          } else {
+            Py_XDECREF(result);
+          }
+          PythonModule::unblock_threads();
           Py_DECREF(args);
-          Py_DECREF(result);
         }
 
     private:
