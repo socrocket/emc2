@@ -1,27 +1,28 @@
-// vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 :
-/// @addtogroup sr_register
-/// @{
-/// @file scireg.h
-/// @date 2011-2012
-/// @author Cadence Design Systems, Inc.
-/// @author STMicroelectronics
-/// @copyright
-///   Licensed under the Apache License, Version 2.0 (the "License");
-///   you may not use this file except in compliance with the License.
-///   You may obtain a copy of the License at
-///
-///       http://www.apache.org/licenses/LICENSE-2.0
-///
-///   Unless required by applicable law or agreed to in writing, software
-///   distributed under the License is distributed on an "AS IS" BASIS,
-///   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-///   See the License for the specific language governing permissions and
-///   limitations under the License.
-/// This file contains the SCIREG API ("SystemC Inspect Region API") which is a SystemC tool to model API
-/// that enables tools to discover and monitor the various registers, register banks, fields, and memories
-/// in a design. 
-#ifndef CORE_COMMON_SCIREG_H_
-#define CORE_COMMON_SCIREG_H_
+/***************************************************************************//**
+* @file     scireg.hpp
+* @brief
+* @details  Defines an interface for registers and register fields.
+* @author   Cadence Design Systems, Inc.
+* @author   STMicroelectronics
+* @date     2011-2012 STMicroelectronics, Cadence Design Systems, Inc.
+* @copyright
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
+*******************************************************************************/
+#ifndef TRAP_SCIREG_H
+#define TRAP_SCIREG_H
+
 #include <algorithm>
 #include <vector>
 #include "systemc"
@@ -221,5 +222,5 @@ class scireg_region_if {
 
 }
 
-#endif  // CORE_COMMON_SCIREG_H_
-///@}
+/// ****************************************************************************
+#endif
