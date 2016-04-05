@@ -24,7 +24,7 @@
 /// Instead, this user register class is provided as an example of how the
 /// SCIREG API standard can be used.
 #ifndef CORE_COMMON_SC_REGISTER_H_
-#define CORE_COMMON_SC_REGISTER_H_ 
+#define CORE_COMMON_SC_REGISTER_H_
 
 #include <string>
 #include <vector>
@@ -60,7 +60,7 @@ enum sc_register_access_type {
 class sc_register_field_base;
 
 /// A template base class derived from sc_register_field_base.
-/// T is the data type of register value. 
+/// T is the data type of register value.
 /// read/write methods of a register field is defined in this class.
 template<typename T>
 class sc_register_field_b;
@@ -87,13 +87,13 @@ class sc_register;
 /// User register class is derived from sc_register<>.
 /// It adds sc_register_field<> members.
 
-/// Register field 
-/// sc_register_field_base is a non-template base class of register field. 
+/// Register field
+/// sc_register_field_base is a non-template base class of register field.
 /// Its method gives the declarative information of the field.
 /// This separates field's declarative and simulation API. The declarative
 /// API is in base class, and simulation API is in derived class.
 class sc_register_field_base : public scireg_ns::scireg_region_if {
-  public: 
+  public:
     sc_register_field_base(const char* nm) : m_name(nm), m_desc() {}
 
     sc_register_field_base(const char* nm, const char* desc) : m_name(nm), m_desc() {
@@ -185,7 +185,7 @@ class sc_rf_valuecode {
 /// T is the data type of the register that contains this field.
 template<typename T>
 class sc_register_field_b : public sc_register_field_base {
-  public: 
+  public:
     sc_register_field_b(const char* nm, sc_register_b<T> *r)
       : sc_register_field_base(nm),
         m_reg( r ),
@@ -219,37 +219,37 @@ class sc_register_field_b : public sc_register_field_base {
     /// added by bpriya for debugging
 
     /// return mnemonic and desc, if any, for current value of field
-    const char* get_value_mnemonic() const { 
-       return get_value_mnemonic(read()); 
+    const char* get_value_mnemonic() const {
+       return get_value_mnemonic(read());
     }
-    const char* get_value_desc() const { 
-      return get_value_desc(read()); 
+    const char* get_value_desc() const {
+      return get_value_desc(read());
     }
 
-    /// sc_object style print() - print current value of field 
+    /// sc_object style print() - print current value of field
     /// using hex format
     virtual void print(::std::ostream& os) const {
       os << "0x" << ::std::hex << read() << '\0';
       return;
     }
 
-    scireg_ns::scireg_response scireg_read(scireg_ns::vector_byte& v, sc_dt::uint64 size, sc_dt::uint64 offset) const { 
+    scireg_ns::scireg_response scireg_read(scireg_ns::vector_byte& v, sc_dt::uint64 size, sc_dt::uint64 offset) const {
       if (offset != 0) /* || (size != sizeof(T))) */
-        return scireg_ns::SCIREG_FAILURE; 
+        return scireg_ns::SCIREG_FAILURE;
 
       v.resize(sizeof(T));
 
       *(T *)&v[0] = read();
-      return scireg_ns::SCIREG_SUCCESS; 
+      return scireg_ns::SCIREG_SUCCESS;
     }
 
     scireg_ns::scireg_response scireg_write(const scireg_ns::vector_byte& v, sc_dt::uint64 size, sc_dt::uint64 offset) {
       if ((offset != 0) || (size != sizeof(T)))
-        return scireg_ns::SCIREG_FAILURE; 
+        return scireg_ns::SCIREG_FAILURE;
 
       T t = *(T *)&v[0];
       write(t);
-      return scireg_ns::SCIREG_SUCCESS; 
+      return scireg_ns::SCIREG_SUCCESS;
     }
 
   protected:
@@ -262,7 +262,7 @@ class sc_register_field_b : public sc_register_field_base {
     const sc_rf_valuecode* get_value_code(const T& v) const ;
     const char* get_value_mnemonic(const T& v) const ;
     const char* get_value_desc(const T& v) const ;
-    
+
   protected:
     sc_register_b<T> *m_reg;
     /// Value-encoding map
@@ -319,14 +319,14 @@ class sc_register_field : public sc_register_field_b<T> {
     T                      m_mask;
 };
 
-/// Register 
-class sc_register_base : public sc_core::sc_prim_channel , public scireg_ns::scireg_region_if { 
+/// Register
+class sc_register_base : public sc_core::sc_prim_channel , public scireg_ns::scireg_region_if {
   public:
     sc_register_base() : sc_core::sc_prim_channel(sc_core::sc_gen_unique_name("register")), m_desc() {}
 
     sc_register_base(const char* name) : sc_core::sc_prim_channel(name), m_desc() {}
 
-    sc_register_base(const char* name, const char* desc) 
+    sc_register_base(const char* name, const char* desc)
         : sc_prim_channel(name), m_desc() {
       if (desc) {
         ::std::string d(desc);
@@ -349,7 +349,7 @@ class sc_register_base : public sc_core::sc_prim_channel , public scireg_ns::sci
     virtual sc_register_access_mode access_mode() const = 0;
 
     virtual const sc_register_field_vec &get_all_fields() const = 0;
-    
+
     static const char* access_type_to_str(sc_register_access_type accessType);
     static const char* access_mode_to_str(sc_register_access_mode accessMode);
 
@@ -411,13 +411,13 @@ class sc_register_base : public sc_core::sc_prim_channel , public scireg_ns::sci
 /// A register's base class, argumented with T (datatype), implements
 /// register APIs.
 ///
-/// Register's read()/write() methods are defined in this class, instead of 
-/// in sc_register<T,M>, reduces the number of specialazations of these 
+/// Register's read()/write() methods are defined in this class, instead of
+/// in sc_register<T,M>, reduces the number of specialazations of these
 /// methods.
 template<typename T>
 class sc_register_b : public sc_register_base {
   public:
-    sc_register_b(const char* name, const T& reset_val) 
+    sc_register_b(const char* name, const T& reset_val)
       : sc_register_base(name),
         m_reset_val(reset_val),
         m_probe_event(0)
@@ -438,8 +438,8 @@ class sc_register_b : public sc_register_base {
     // read() and write() methods
     // Register access control is enforced in the sc_module that instantiates
     // sc_register.
-    virtual const T& read() const; 
-    virtual void write(const T&); 
+    virtual const T& read() const;
+    virtual void write(const T&);
 
     // Other methods declaraed in sc_prim_channel.
     void update() {}
@@ -454,8 +454,8 @@ class sc_register_b : public sc_register_base {
     void add_field(sc_register_field_base *f ) { m_fields.push_back(f); }
 
     // -- for reg_field read/write, access value with mask.
-    virtual const T& mask_read( const T&, unsigned int) const; 
-    virtual void mask_write(const T&, const T&, unsigned int); 
+    virtual const T& mask_read( const T&, unsigned int) const;
+    virtual void mask_write(const T&, const T&, unsigned int);
 
   protected:
     void check_and_init();
@@ -463,23 +463,26 @@ class sc_register_b : public sc_register_base {
   public:
     virtual const T& get_mask() const { return m_mask; }
 
-    scireg_ns::scireg_response scireg_read(scireg_ns::vector_byte& v, sc_dt::uint64 size, sc_dt::uint64 offset) const { 
+    scireg_ns::scireg_response scireg_read(scireg_ns::vector_byte& v, sc_dt::uint64 size, sc_dt::uint64 offset) const {
       if ((offset != 0) || (size != sizeof(T)))
-        return scireg_ns::SCIREG_FAILURE; 
+        return scireg_ns::SCIREG_FAILURE;
 
       v.resize(sizeof(T));
 
-      *(T *)&v[0] = read();
-      return scireg_ns::SCIREG_SUCCESS; 
+      //*(T *)&v[0] = read(); // avoid to trigger callbacks while reading from callback
+      *(T *)&v[0] = m_cur_val;
+      return scireg_ns::SCIREG_SUCCESS;
     }
 
     scireg_ns::scireg_response scireg_write(const scireg_ns::vector_byte& v, sc_dt::uint64 size, sc_dt::uint64 offset) {
       if ((offset != 0) || (size != sizeof(T)))
-        return scireg_ns::SCIREG_FAILURE; 
+        return scireg_ns::SCIREG_FAILURE;
 
-      T t = *(T *)&v[0];
-      write(t);
-      return scireg_ns::SCIREG_SUCCESS; 
+      //T t = *(T *)&v[0];
+      //write(t); avoid endless recursion while writing from callback
+      m_cur_val = ((*(T *)&v[0]) & get_mask());
+
+      return scireg_ns::SCIREG_SUCCESS;
     }
 
     sc_dt::uint64 scireg_get_bit_width() const { return 8 * sizeof(T); }
@@ -511,7 +514,7 @@ class sc_register_b : public sc_register_base {
 template< typename T, sc_register_access_mode M >
 class sc_register : public sc_register_b<T> {
   private:
-    sc_register(const char *name, const T& reset_val ) 
+    sc_register(const char *name, const T& reset_val )
       : sc_register_b<T>(name, reset_val)
     {}
 
@@ -524,7 +527,7 @@ class sc_register : public sc_register_b<T> {
 
 };
 
-/// Register Bank 
+/// Register Bank
 typedef std::vector<sc_register_base *> sc_register_vec;
 
 class sc_register_bank_base : public sc_core::sc_object , public scireg_ns::scireg_region_if {
@@ -652,7 +655,7 @@ class sc_register_bank : public sc_register_bank_base {
 
 // inline functions
 
-// static functions 
+// static functions
 inline const char*
 sc_register_base::access_type_to_str(sc_register_access_type accessType) {
   if(accessType==SC_REG_READ) return "Read-Access-Type";
@@ -678,7 +681,7 @@ sc_register_bank_base::add_associate_busport(sc_core::sc_object* obj) {
 }
 
 template< typename ADDR_TYPE, typename DATA_TYPE >
-inline void 
+inline void
 sc_register_bank<ADDR_TYPE,DATA_TYPE>::print_offset(sc_register_base* reg,
                                                     ::std::ostream& os) const {
   ADDR_TYPE offs;
@@ -693,16 +696,23 @@ sc_register_bank<ADDR_TYPE,DATA_TYPE>::print_offset(sc_register_base* reg,
 // sc_register class
 template<class T>
 inline const T&
-sc_register_b<T>::read() const { 
+sc_register_b<T>::read() const {
   // check read access against mode, this->access_mode()
-
+  scireg_ns::scireg_callback* p;
+  ::std::vector<scireg_ns::scireg_callback*>::const_iterator it;
+  for (it = scireg_callback_vec.begin(); it != scireg_callback_vec.end(); ++it)
+  {
+    p = *it;
+    if (p->type == scireg_ns::SCIREG_READ_ACCESS)
+      p->do_callback(*const_cast<scireg_ns::scireg_region_if *>(static_cast<const scireg_ns::scireg_region_if *>(this)));
+  }
   return m_cur_val;
 }
 
 template<typename T>
 inline const T&
-sc_register_b<T>::mask_read(const T& mask, unsigned int rightShiftBits ) const { 
-  static T v; 
+sc_register_b<T>::mask_read(const T& mask, unsigned int rightShiftBits ) const {
+  static T v;
   v = (m_cur_val & mask) >> rightShiftBits;
   return v;
 }
@@ -711,10 +721,10 @@ template<typename T>
 inline void
 sc_register_b<T>::write( const T& v ) {
   // check write access against mode, this->access_mode().
-  // Mask the value so only bits allocated to fields are set. 
+  // Mask the value so only bits allocated to fields are set.
   // The unused bits are set to 0.
   T old_val = m_cur_val;
-  m_cur_val = (v & get_mask()); 
+  m_cur_val = (v & get_mask());
   if (m_probe_event && (m_cur_val != old_val))
     m_probe_event->notify();
 
@@ -733,7 +743,7 @@ sc_register_b<T>::write( const T& v ) {
 
 template<typename T>
 inline void
-sc_register_b<T>::mask_write( const T& v, const T& mask, unsigned int leftShiftBits ) { 
+sc_register_b<T>::mask_write( const T& v, const T& mask, unsigned int leftShiftBits ) {
   //m_cur_val = ((v << leftShiftBits) & mask) | (m_cur_val & ~mask);
   this->write( ((v << leftShiftBits) & mask) | (m_cur_val & ~mask) );
 }
@@ -741,7 +751,7 @@ sc_register_b<T>::mask_write( const T& v, const T& mask, unsigned int leftShiftB
 template<typename T>
 inline void
 sc_register_b<T>::check_and_init() {
-  // Check fields' bit positions - must not have overlapping; must within 
+  // Check fields' bit positions - must not have overlapping; must within
   // the the bit span of T.
   // Determine register bit-width.
   // Generate register mask from its fields' bit ranges.
@@ -814,7 +824,7 @@ sc_register_field_b<T>::~sc_register_field_b() {
 // Extract field value. value of the field is returned in [(bit_width-1):0] of T.
 template<typename T>
 inline const T&
-sc_register_field_b<T>::read() const { 
+sc_register_field_b<T>::read() const {
   return( m_reg->mask_read(get_mask(),get_shift_bits()) );
 }
 
@@ -827,15 +837,15 @@ sc_register_field_b<T>::write(const T& v) {
 }
 
 template<typename T>
-inline void 
+inline void
 sc_register_field_b<T>::add_value_code(const T& v, const ::std::string& n) {
   ::std::string d;
   add_value_code(v, n, d);
 }
 
 template<typename T>
-inline void 
-sc_register_field_b<T>::add_value_code(const T& v, 
+inline void
+sc_register_field_b<T>::add_value_code(const T& v,
                                       const ::std::string& n,
                                       const ::std::string& desc) {
   sc_rf_valuecode *vc = new sc_rf_valuecode(n, desc);
@@ -847,7 +857,7 @@ inline const sc_rf_valuecode*
 sc_register_field_b<T>::get_value_code(const T& v) const {
   return( ((::std::map<T, sc_rf_valuecode*>)m_value_encoding_map)[v] );
 }
-  
+
 template<typename T>
 inline const char*
 sc_register_field_b<T>::get_value_mnemonic(const T& v) const {
@@ -855,7 +865,7 @@ sc_register_field_b<T>::get_value_mnemonic(const T& v) const {
   if (!vc) return NULL;
   else     return vc->mnemonic();
 }
-  
+
 template<typename T>
 inline const char*
 sc_register_field_b<T>::get_value_desc(const T& v) const {
@@ -879,7 +889,7 @@ void sc_register_field_b<unsigned char>::print(::std::ostream& os) const {
 template< sc_register_access_mode M >
 class sc_register<unsigned char, M> : public sc_register_b<unsigned char> {
   public:
-    sc_register(const char *name, const unsigned char& reset_val ) 
+    sc_register(const char *name, const unsigned char& reset_val )
       : sc_register_b<unsigned char>(name, reset_val)
     {}
 
@@ -894,7 +904,7 @@ class sc_register<unsigned char, M> : public sc_register_b<unsigned char> {
 template< sc_register_access_mode M >
 class sc_register<unsigned short, M> : public sc_register_b<unsigned short> {
   public:
-    sc_register(const char *name, const unsigned short& reset_val ) 
+    sc_register(const char *name, const unsigned short& reset_val )
       : sc_register_b<unsigned short>(name, reset_val)
     {}
 
@@ -909,7 +919,7 @@ class sc_register<unsigned short, M> : public sc_register_b<unsigned short> {
 template< sc_register_access_mode M >
 class sc_register<unsigned int, M>: public sc_register_b<unsigned int> {
   public:
-    sc_register(const char *name, const unsigned int& reset_val ) 
+    sc_register(const char *name, const unsigned int& reset_val )
       : sc_register_b<unsigned int>(name, reset_val)
     {}
 
@@ -924,7 +934,7 @@ class sc_register<unsigned int, M>: public sc_register_b<unsigned int> {
 template< sc_register_access_mode M >
 class sc_register<unsigned long long, M> : public sc_register_b<unsigned long long> {
   public:
-    sc_register(const char *name, const unsigned long long& reset_val ) 
+    sc_register(const char *name, const unsigned long long& reset_val )
       : sc_register_b<unsigned long long>(name, reset_val)
     {}
 
