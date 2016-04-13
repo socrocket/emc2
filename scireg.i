@@ -174,11 +174,11 @@ class SciregCallbackAdapter : public scireg_ns::scireg_callback {
         }
 
         void do_callback(scireg_ns::scireg_region_if &region) {
+          PythonModule::block_threads();
           PyObject *args = PyTuple_New(3);
           PyTuple_SetItem(args, 0, PyLong_FromLong(this->offset));
           PyTuple_SetItem(args, 1, PyLong_FromLong(this->size));
           PyTuple_SetItem(args, 2, SWIG_NewPointerObj(SWIG_as_voidptr((static_cast<scireg_ns::scireg_region_if*>(&region))), SWIGTYPE_p_scireg_ns__scireg_region_if, 0));
-          PythonModule::block_threads();
           PyObject *result = PyObject_Call(callback, args, NULL);
 
           if(PyErr_Occurred() || !result) {
@@ -186,8 +186,8 @@ class SciregCallbackAdapter : public scireg_ns::scireg_callback {
           } else {
             Py_XDECREF(result);
           }
-          PythonModule::unblock_threads();
           Py_DECREF(args);
+          PythonModule::unblock_threads();
         }
 
     private:
