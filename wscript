@@ -7,6 +7,25 @@ REPOSITORY_VERSION = [3,0,0]
 REPOSITORY_DESC = """High level signaling library"""
 
 def build(self):
+    features = 'cxx cxxstlib'
+    source = []
+
+    if True:
+        source += ['sr_signal.i']
+        features += ' pyembed venv_package'
+
+    self(
+        target            = 'sr_signal',
+        features          = features,
+        source            = source,
+        #pysource          = 'klasses.py',
+        export_includes   = self.top_dir,
+        includes          = [self.top_dir, '.'],
+        swig_flags        = '-c++ -python -Wall',
+        use               = 'usi SYSTEMC TLM PYTHON',
+        install_path      = '${PREFIX}/lib',
+  )
+
     """
     self(
         target            = 'sr_report',

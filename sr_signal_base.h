@@ -32,7 +32,7 @@ class signal_base : public sc_core::sc_object {
     public:
         /// Default constructor
         signal_base(sc_core::sc_module_name mn = NULL) :
-            sc_core::sc_object() {
+            sc_core::sc_object(mn) {
         }
 
         /// default destructor.

@@ -18,6 +18,7 @@
 #define SR_SIGNAL_IFS_H
 
 #include <stdint.h>
+#include <typeinfo>
 
 namespace sr_signal {
 
@@ -56,6 +57,22 @@ class signal_if {
 template<class TYPE>
 class signal_in_if;
 
+/// Abstract bind interface
+/// The interface allows to check the type of the template classes without
+/// knowwing the instacnes (tamplete parameters)
+class signal_bind_if {
+    public:
+        /// Describes weather the socket is initiator (true) or receiver (false).
+        virtual bool signal_direction() = 0;
+        
+        /// String to compare member type
+        virtual const char *signal_type() = 0;
+
+        virtual bool signal_bind(signal_bind_if *, int = 0, int = 0) = 0;
+        
+        virtual ~signal_bind_if() {}
+};
+
 /// Signal output bind interface.
 /// This interface implements the bind functionality of an output signal.
 /// It's seperated from the signal output interface due to a second need in
@@ -63,10 +80,28 @@ class signal_in_if;
 /// but only a subclass implements the output interface for each channel.
 /// @see selector
 template<class TYPE>
-class signal_out_bind_if {
+class signal_out_bind_if : virtual public signal_bind_if {
     public:
         /// Virtual destructor
         virtual ~signal_out_bind_if() {
+        }
+
+        /// Define that we are an outgoing interface
+        virtual bool signal_direction() {
+            return true;
+        }
+
+        /// Return type as a string
+        virtual const char *signal_type() {
+            return typeid(TYPE).name();
+        }
+
+        /// Uncertian bind function.
+        /// If type and direction is a macht we will bind
+        /// To bind we use the teplate specific methods.
+        /// Therefore it will be bound on the in interface not here.
+        virtual bool signal_bind(signal_bind_if *other, int outchannel = 0, int inchannel = 0) {
+            return other->signal_bind(this, inchannel, outchannel);
         }
 
         /// Abstract bind method interface.
@@ -76,6 +111,8 @@ class signal_out_bind_if {
         /// @param t       Input interface to bind with.
         /// @param channel The channel which has to be bind.
         virtual signal_out_bind_if<TYPE> *bind(signal_in_if<TYPE> &t, const unsigned int &channel = 0) = 0;
+
+
 };
 
 /// Signal output interface
@@ -122,10 +159,33 @@ class signal_out_if : virtual public signal_if<TYPE> ,
 /// If the write function of an output signal is called all connected input signals
 /// shall call their update functions.
 template<class TYPE>
-class signal_in_if : virtual public signal_if<TYPE> {
+class signal_in_if : virtual public signal_if<TYPE>, virtual public signal_bind_if {
     public:
         /// Virtual destructor
         virtual ~signal_in_if() {
+        }
+
+        /// Define that we are an outgoing interface
+        virtual bool signal_direction() {
+            return false;
+        }
+
+        /// Return type as a string
+        virtual const char *signal_type() {
+            return typeid(TYPE).name();
+        }
+
+        /// Uncertian bind function.
+        /// If type and direction is a macht we will bind
+        /// To bind we use the teplate specific methods.
+        virtual bool signal_bind(signal_bind_if *other, int inchannel = 0, int outchannel = 0) {
+            if(other->signal_direction() && (std::strcmp(other->signal_type(), this->signal_type()) == 0)) {
+                signal_out_bind_if<TYPE> *out = dynamic_cast<signal_out_bind_if<TYPE> *>(other);
+                if(out) {
+                    this->bind(*out->bind(*this, outchannel), inchannel);
+                }
+            }
+            return false;
         }
 
         /// Abstract bind method interface.
