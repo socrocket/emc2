@@ -26,6 +26,7 @@
 #include <vector>
 #include "systemc"
 
+#ifndef NC_SYSTEMC // Only use this file if we are not running in incisiv
 namespace scireg_ns {
 
 class scireg_region_if;
@@ -221,5 +222,6 @@ class scireg_region_if {
 
 }
 
+#endif  // We do not run in incisive
 #endif  // CORE_COMMON_SCIREG_H_
 ///@}
