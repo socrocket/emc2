@@ -20,7 +20,7 @@ def build(self):
         source            = source,
         #pysource          = 'klasses.py',
         export_includes   = self.top_dir,
-        includes          = [self.top_dir, '.'],
+        includes          = [self.top_dir, '.', self.repository_root.abspath()],
         swig_flags        = '-c++ -python -Wall',
         use               = 'usi SYSTEMC TLM PYTHON',
         install_path      = '${PREFIX}/lib',

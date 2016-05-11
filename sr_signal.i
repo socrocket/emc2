@@ -26,7 +26,6 @@ class USISignal {
   public:
     USISignal(sc_core::sc_object *obj) : m_obj(NULL) {
       m_obj = dynamic_cast<sr_signal::signal_bind_if *>(obj);
-
     }
 
     bool signal_direction() {
