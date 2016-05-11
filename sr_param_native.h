@@ -270,7 +270,15 @@ public:
             GS_PARAM_DUMP_WITHNAME("gs_param", "getValue: set value true");
             target_val = true;
         }
+        else if (strcmp( str.c_str(), "True" ) == 0) {
+            GS_PARAM_DUMP_WITHNAME("gs_param", "getValue: set value true");
+            target_val = true;
+        }
         else if (strcmp( str.c_str(), "false" ) == 0) {
+            GS_PARAM_DUMP_WITHNAME("gs_param", "getValue: set value false");
+            target_val = false;
+        }
+        else if (strcmp( str.c_str(), "False" ) == 0) {
             GS_PARAM_DUMP_WITHNAME("gs_param", "getValue: set value false");
             target_val = false;
         }
