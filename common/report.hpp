@@ -40,22 +40,9 @@
 #ifndef TRAP_REPORT_HPP
 #define TRAP_REPORT_HPP
 
-#include <cstdlib>
 #include <iostream>
-#include <sstream>
-#include <string>
 #include <exception>
 #include <stdexcept>
-
-#ifndef __GNUC__
-#ifndef __PRETTY_FUNCTION__
-#ifdef __FUNCDNAME__
-#define __PRETTY_FUNCTION__ __FUNCDNAME__
-#else
-#define __PRETTY_FUNCTION__ "NONAME"
-#endif
-#endif
-#endif
 
 namespace trap {
 
@@ -72,7 +59,7 @@ struct MemAccessType {
 /// ****************************************************************************
 
 /**
- * @brief annul_exception
+ * @brief Exceptions
  */
 class annul_exception : public std::runtime_error {
   public:
@@ -82,36 +69,69 @@ class annul_exception : public std::runtime_error {
 
 /// ****************************************************************************
 
-#ifdef MAKE_STRING
-#undef MAKE_STRING
-#endif
-#define MAKE_STRING(msg) (((std::ostringstream&)((std::ostringstream() << '\x0') << msg)).str().substr(1))
-
-/// ****************************************************************************
-
 /**
- * @brief throw_exception_helper
+ * @brief Logging
  */
-void throw_exception_helper(std::string message);
+enum class LogLevel : unsigned {
+  EXCEPTION,
+  ERROR,
+  WARNING,
+  INFO,
+  TRACE
+};
 
-#ifdef THROW_EXCEPTION
-#undef THROW_EXCEPTION
-#endif
-#define THROW_EXCEPTION(msg) (trap::throw_exception_helper(MAKE_STRING("At function " << __PRETTY_FUNCTION__ << \
-  ", file " << __FILE__ << ":" << __LINE__ << ": " << msg)))
+inline std::ostream& operator<<(std::ostream& os, const LogLevel level) {
+  static const char* const level_str[] = {
+    "EXCEPTION",
+    "ERROR",
+    "WARNING",
+    "INFO",
+    "TRACE"};
+  return os << level_str[(unsigned)level];
+}
 
-/// ****************************************************************************
+class Log {
+  public:
+  Log() {}
+  ~Log() {
+    *os << std::endl;
+  }
 
-/**
- * @brief throw_error_helper
- */
-void throw_error_helper(std::string message);
+  private:
+  Log(const Log&);
+  Log& operator=(const Log&);
 
-#ifdef THROW_ERROR
-#undef THROW_ERROR
-#endif
-#define THROW_ERROR(msg) (trap::throw_error_helper(MAKE_STRING("At function " << __PRETTY_FUNCTION__ << ", file " << \
-  __FILE__ << ":" << __LINE__ << ": " << msg << std::endl)))
+  public:
+  static void set_level(LogLevel level_) { level = level_; }
+
+  static LogLevel& get_level() { return level; }
+
+  static void set_stream(std::ostream& os_) { os = &os_; }
+
+  static std::ostream& get_stream(LogLevel level, const char *file_, int line_) {
+    *os << "[" << level << "]: " << file_ << ':' << line_ << ": ";
+    return *os;
+  }
+
+  protected:
+  static LogLevel level;
+  static std::ostream* os;
+}; // class Log
+
+#define LOG(level) \
+if (level > Log::get_level()); \
+else Log().get_stream(level, __FILE__, __LINE__)
+
+#define THROW_EXCEPTION(msg) \
+Log().get_stream(LogLevel::EXCEPTION, __FILE__, __LINE__);
+
+#define THROW_ERROR(msg) \
+if (LogLevel::ERROR > Log::get_level()); \
+else Log().get_stream(LogLevel::ERROR, __FILE__, __LINE__)
+
+#define THROW_WARNING(msg) \
+if (LogLevel::WARNING > Log::get_level()); \
+else Log().get_stream(LogLevel::WARNING, __FILE__, __LINE__)
 
 } // namespace trap
 

@@ -6,6 +6,7 @@ import os
 def build(bld):
     bld.objects(
         target = 'common',
+        cxxflags = '-std=c++11',
         source = 'report.cpp',
         includes = '. ..',
         install_path = None

@@ -39,55 +39,12 @@
 *******************************************************************************/
 #include "report.hpp"
 
-#include <cstdlib>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <exception>
-#include <stdexcept>
-//#ifdef __GNUC__
-//extern "C" {
-//#include <execinfo.h>
-//}
-//#endif
+namespace trap {
 
-/**
- * @brief throw_exception_helper()
- */
-void trap::throw_exception_helper(std::string message) {
-  throw std::runtime_error(message);
-}
+std::ostream* Log::os = &std::cout;
+LogLevel Log::level = LogLevel::ERROR;
+
+} // namespace trap
 
 /// ****************************************************************************
 
-/**
- * @brief throw_error_helper()
- */
-void trap::throw_error_helper(std::string message) {
-  std::cerr << message << std::endl;
-  ::exit(0);
-}
-
-/*#ifdef __GNUC__
-void throw_exception_helper(std::string message) {
-  void* array[25];
-  int n_size = backtrace(array, 25);
-  char** symbols = backtrace_symbols(array, n_size);
-  std::ostringstream trace_os;
-
-  if (symbols != NULL) {
-    for (int i = 0; i < n_size; i++) {
-      trace_os << symbols[i] << std::endl;
-    }
-    trace_os << std::endl;
-    free(symbols);
-  }
-  trace_os << message;
-
-  throw std::runtime_error(trace_os.str());
-}
-#else
-void throw_exception_helper(std::string message) {
-  throw std::runtime_error(message);
-}
-#endif*/
