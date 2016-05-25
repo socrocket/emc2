@@ -43,8 +43,6 @@
 #include "modules/instruction.hpp"
 #include "common/report.hpp"
 
-#include <boost/circular_buffer.hpp>
-
 #include <vector>
 
 namespace trap {

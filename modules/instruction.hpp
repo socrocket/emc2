@@ -41,8 +41,6 @@
 #ifndef TRAP_INSTRUCTIONBASE_HPP
 #define TRAP_INSTRUCTIONBASE_HPP
 
-#include <boost/lexical_cast.hpp>
-
 #include <ostream>
 #include <sstream>
 #include <string>

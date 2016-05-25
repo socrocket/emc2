@@ -127,11 +127,11 @@ trap::Log().get_stream(trap::LogLevel::EXCEPTION, __FILE__, __LINE__);
 
 #define THROW_ERROR(msg) \
 if (trap::LogLevel::ERROR <= trap::Log::get_level()) \
-trap::Log().get_stream(trap::LogLevel::ERROR, __FILE__, __LINE__)
+trap::Log().get_stream(trap::LogLevel::ERROR, __FILE__, __LINE__);
 
 #define THROW_WARNING(msg) \
 if (trap::LogLevel::WARNING <= trap::Log::get_level()) \
-trap::Log().get_stream(trap::LogLevel::WARNING, __FILE__, __LINE__)
+trap::Log().get_stream(trap::LogLevel::WARNING, __FILE__, __LINE__);
 
 } // namespace trap
 
