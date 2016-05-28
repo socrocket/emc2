@@ -18,8 +18,10 @@
 ///   See the License for the specific language governing permissions and
 ///   limitations under the License.
 #include "sr_registry.h"
+#include <dlfcn.h>
 
 SrModuleRegistry::map_map_t *SrModuleRegistry::m_members = NULL;
+SrModuleRegistry::lib_map_t *SrModuleRegistry::m_libs = NULL;
 
 void SrModuleRegistry::included() {
 }
@@ -87,6 +89,34 @@ std::set<std::string> SrModuleRegistry::get_group_names() {
     result.insert(item->first);
   }
   return result;
+}
+
+bool SrModuleRegistry::load(std::string name) {
+  if(!SrModuleRegistry::m_libs) {
+    SrModuleRegistry::m_libs = new lib_map_t();
+  }
+  void * handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+  if(!handle) {
+    return false;
+  }
+  SrModuleRegistry::m_libs->insert(std::make_pair(name, handle));
+  return true;
+}
+
+bool SrModuleRegistry::unload(std::string name) {
+  if(!SrModuleRegistry::m_libs) {
+    SrModuleRegistry::m_libs = new lib_map_t();
+  }
+  SrModuleRegistry::lib_map_t::iterator item = SrModuleRegistry::m_libs->find(name);
+  if(item == SrModuleRegistry::m_libs->end()) {
+    return false;
+  }
+  int ret = dlclose(item->second);
+  if(!ret) {
+    return false;
+  }
+  SrModuleRegistry::m_libs->erase(item);
+  return true;
 }
 
 /// @}

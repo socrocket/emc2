@@ -27,6 +27,7 @@
 
 class SrModuleRegistry {
   public:
+    typedef std::map<std::string, void *> lib_map_t;
     typedef std::map<std::string, SrModuleRegistry *> map_t;
     typedef std::map<std::string, map_t> map_map_t;
     typedef sc_core::sc_object *(*factory_f)(sc_core::sc_module_name);
@@ -38,10 +39,13 @@ class SrModuleRegistry {
     static std::set<std::string> get_module_files(std::string group);
     static std::set<std::string> get_module_names(std::string group);
     static std::set<std::string> get_group_names();
+    static bool load(std::string name);
+    static bool unload(std::string name);
 
   private:
     static map_t &get_group(std::string group);
     static map_map_t *m_members;
+    static lib_map_t *m_libs;
     factory_f m_factory;
     isinstance_f m_isinstance;
     const std::string m_file;

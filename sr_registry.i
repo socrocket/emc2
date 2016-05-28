@@ -37,6 +37,8 @@ bool is_type(std::string group, std::string type, sc_core::sc_object *obj);
 std::set<std::string> get_module_files(std::string group);
 std::set<std::string> get_module_names(std::string group);
 std::set<std::string> get_group_names();
+bool load(std::string name);
+bool unload(std::string name);
 
 %{
 #include "core/common/sr_registry/sr_registry.h"
@@ -60,6 +62,15 @@ std::set<std::string> get_module_names(std::string group) {
 std::set<std::string> get_group_names() {
   return SrModuleRegistry::get_group_names();
 }
+
+bool load(std::string name) {
+  return SrModuleRegistry::load(name);
+}
+
+bool unload(std::string name) {
+  return SrModuleRegistry::unload(name);
+}
+
 %}
 
 
