@@ -95,8 +95,10 @@ bool SrModuleRegistry::load(std::string name) {
   if(!SrModuleRegistry::m_libs) {
     SrModuleRegistry::m_libs = new lib_map_t();
   }
-  void * handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+  //void * handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
+  void * handle = dlopen(name.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   if(!handle) {
+    std::cerr << "Could not open file: " << dlerror() << std::endl;
     return false;
   }
   SrModuleRegistry::m_libs->insert(std::make_pair(name, handle));
