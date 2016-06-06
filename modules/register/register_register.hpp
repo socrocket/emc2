@@ -196,7 +196,7 @@ class Register
   virtual bool add_field(std::string name, unsigned highpos, unsigned lowpos, RegisterAccessMode access_mode = REGISTER_RW_ACCESS) {
 
     // Create field object.
-    RegisterField<DATATYPE>* field = new RegisterField<DATATYPE>((this->name() + std::string("_") + name), *this, highpos, lowpos, access_mode);
+    RegisterField<DATATYPE>* field = new RegisterField<DATATYPE>((this->basename() + std::string("_") + name), *this, highpos, lowpos, access_mode);
 
     if (!field) return false;
     return add_field(field);
@@ -487,6 +487,10 @@ class Register
   virtual Register& operator^=(const DATATYPE& data) {
     this->write_dbg(this->read_dbg() ^ data);
     return *this;
+  }
+
+  void clock_cycle() {
+    this->m_strategy->clock_cycle();
   }
 
   /// @} Access and Modification Methods
