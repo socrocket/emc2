@@ -169,14 +169,9 @@ class RegisterBank
     return register_iterator(this, this->size());
   }
 
-  /// TODO: This needs to be implemented properly. We could expand the map node
-  /// type to std::tuple(enum class, register_interface_type*, unsigned), where
-  /// the key is a user defined enum class passed as a template parameter
-  /// and containing register names. Since I'm not using this class anyway, I
-  /// can't be bothered.
   register_node_type& operator[](index_type index) {
     assert(this->m_regs.size());
-    return *this->m_regs.begin();
+    return this->m_regs[index];
   }
 
   unsigned size() const { return this->m_regs.size(); }
@@ -334,6 +329,8 @@ class RegisterBank
   /// @{
 
   void execute_callbacks(const scireg_ns::scireg_callback_type& type, const uint32_t& offset = 0, const uint32_t& size = 0) {
+    // TODO: I could implement callback hooks for banks, to be called here in
+    // addition to the register callbacks.
     for(typename register_container_type::iterator reg_it = this->m_regs.begin(); reg_it != this->m_regs.end(); ++reg_it) {
       if (reg_it->second == 1)
           reg_it->first->execute_callbacks(type, 0, sizeof(DATATYPE));

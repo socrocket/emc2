@@ -230,6 +230,8 @@ class RegisterField
 
   public:
   void execute_callbacks(const scireg_ns::scireg_callback_type& type, const uint32_t& offset = 0, const uint32_t& size = 0) {
+    // TODO: I could implement callback hooks for fields, to be called here in
+    // addition to the register callbacks.
     if (offset == this->m_lowpos && size == this->size())
       this->m_reg.execute_callbacks(type, offset, size);
   }

@@ -71,6 +71,7 @@ class Register
   typedef typename RegisterInterface<DATATYPE, RegisterField<DATATYPE> >::child_iterator field_iterator;
   typedef unsigned index_type;
   typedef std::vector<scireg_ns::scireg_callback*> callback_container_type;
+  typedef bool (*clock_cycle_func_t)();
 
   /// @name Constructors and Destructors
   /// @{
@@ -79,7 +80,9 @@ class Register
   // Initially assumes the register does not define fields. Masks are set for
   // the register as a whole. If/when fields are added later on with insert(),
   // the masks are overwritten by the OR of the field masks.
-  Register(std::string name, amba_layer_ids abstraction = amba_LT, bool is_const = false, unsigned offset = 0, unsigned delay = 0, const DATATYPE& reset_val = (DATATYPE)0, const DATATYPE& used_mask = (DATATYPE)~0, const DATATYPE& read_mask = (DATATYPE)~0, const DATATYPE& write_mask = (DATATYPE)~0)
+  // TODO: Bundle abstraction-specific parameters in a struct. This makes the
+  // interface more consistent and eases maintenance.
+  Register(std::string name, amba_layer_ids abstraction = amba_LT, unsigned num_pipe_stages = 1, bool is_const = false, unsigned offset = 0, unsigned delay = 0, const DATATYPE& reset_val = (DATATYPE)0, const DATATYPE& used_mask = (DATATYPE)~0, const DATATYPE& read_mask = (DATATYPE)~0, const DATATYPE& write_mask = (DATATYPE)~0, clock_cycle_func_t clock_cycle_func = NULL)
     : sc_core::sc_object(name.c_str()),
       m_value(reset_val),
       m_reset_value(reset_val),
@@ -93,37 +96,43 @@ class Register
     assert(!((is_const && offset) || (is_const && delay)));
 
     if (abstraction > amba_CT) {
-      if (is_const)
+      if (is_const) {
+        assert(!(delay || offset));
         this->m_strategy = new RegisterTLMConst<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask, this->m_reset_value);
-      else if (offset && delay)
+      } else if (offset && delay) {
         this->m_strategy = new RegisterTLMDelayOffset<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask, this->m_delay, this->m_offset);
-      else if (offset)
+      } else if (offset) {
         this->m_strategy = new RegisterTLMOffset<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask, this->m_offset);
-      else if (delay)
+      } else if (delay) {
         this->m_strategy = new RegisterTLMDelay<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask, this->m_delay);
-      else
+      } else {
         this->m_strategy = new RegisterTLM<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask);
+      }
     } else {
-      assert(!delay);
-      /*if (is_const)
-        this->m_strategy = new RegisterCAConst<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask);
-      else
-        this->m_strategy = new RegisterCA<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask);*/
+      if (is_const) {
+        assert(!(delay || offset));
+        this->m_strategy = new RegisterTLMConst<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask, this->m_reset_value);
+      } else {
+        this->m_strategy = new RegisterCA<DATATYPE>(this->m_value, this->m_used_mask, this->m_read_mask, this->m_write_mask, num_pipe_stages, clock_cycle_func);
+      }
     }
   }
 
   virtual ~Register() {
     delete this->m_strategy;
 
-    for(typename callback_container_type::iterator cb_it = this->m_callbacks.begin(); cb_it != this->m_callbacks.end(); ++cb_it) {
-      delete *cb_it;
-    }
-    this->m_callbacks.clear();
-
     for(typename field_container_type::iterator field_it = this->m_fields.begin(); field_it != this->m_fields.end(); ++field_it) {
       delete *field_it;
     }
     this->m_fields.clear();
+
+    typename callback_container_type::iterator cb_it;
+    for (unsigned i = 0; i < 3; ++i) {
+      for(cb_it = this->m_callbacks[i].begin(); cb_it != this->m_callbacks[i].end(); ++cb_it) {
+        delete *cb_it;
+      }
+      this->m_callbacks[i].clear();
+    }
   }
 
   /// @} Constructors and Destructors
@@ -199,6 +208,8 @@ class Register
     RegisterField<DATATYPE>* field = new RegisterField<DATATYPE>((this->basename() + std::string("_") + name), *this, highpos, lowpos, access_mode);
 
     if (!field) return false;
+
+    execute_callbacks(scireg_ns::SCIREG_STATE_CHANGE);
     return add_field(field);
   }
 
@@ -237,6 +248,7 @@ class Register
     else
       this->m_write_mask &= ~field_mask;
 
+    execute_callbacks(scireg_ns::SCIREG_STATE_CHANGE);
     return true;
   }
 
@@ -265,7 +277,6 @@ class Register
 
     bytes.resize(size);
     DATATYPE data = (this->read_dbg() >> offset) & ((1 << (size << 3)) - 1);
-    // TODO: Is this cast correct for different endianness scenarios?
     *(DATATYPE*)&bytes[0] = data;
     return scireg_ns::SCIREG_SUCCESS;
   }
@@ -294,7 +305,6 @@ class Register
     if ((offset + (size << 3)) > (sizeof(DATATYPE) << 3))
       return scireg_ns::SCIREG_FAILURE;
 
-    // TODO: Is this cast correct for different endianness scenarios?
     DATATYPE data = *(DATATYPE*)&bytes[0];
     this->write((data & ((1 << (size << 3)) - 1)) << offset);
     return scireg_ns::SCIREG_SUCCESS;
@@ -500,15 +510,15 @@ class Register
 
   /// Add/Delete Callback objects associated with this region.
   scireg_ns::scireg_response scireg_add_callback(scireg_ns::scireg_callback& cb) {
-    this->m_callbacks.push_back(&cb);
+    this->m_callbacks[cb.type].push_back(&cb);
     return scireg_ns::SCIREG_SUCCESS;
   }
 
   scireg_ns::scireg_response scireg_remove_callback(scireg_ns::scireg_callback& cb) {
     callback_container_type::iterator cb_it;
-    cb_it = std::find(this->m_callbacks.begin(), this->m_callbacks.end(), &cb);
-    if (cb_it != this->m_callbacks.end())
-      this->m_callbacks.erase(cb_it);
+    cb_it = std::find(this->m_callbacks[cb.type].begin(), this->m_callbacks[cb.type].end(), &cb);
+    if (cb_it != this->m_callbacks[cb.type].end())
+      this->m_callbacks[cb.type].erase(cb_it);
     return scireg_ns::SCIREG_SUCCESS;
   }
 
@@ -517,13 +527,10 @@ class Register
 
     scireg_ns::scireg_callback* callback;
     callback_container_type::iterator cb_it;
-    for (cb_it = this->m_callbacks.begin(); cb_it != this->m_callbacks.end(); ++cb_it) {
+    for (cb_it = this->m_callbacks[type].begin(); cb_it != this->m_callbacks[type].end(); ++cb_it) {
       callback = *cb_it;
-      // TODO: Does a read imply scireg_ns::SCIREG_STATE_CHANGE?
-      //if (((callback->type == type) || (callback->type == scireg_ns::SCIREG_STATE_CHANGE)) && ...
-      if ((callback->type == type)
-      && (((callback->offset >= offset) && (callback->offset <= offset + size))
-        || ((offset >= callback->offset) && (offset <= callback->offset + callback->size))))
+      if (((callback->offset >= offset) && (callback->offset <= offset + size))
+        || ((offset >= callback->offset) && (offset <= callback->offset + callback->size)))
         callback->do_callback(*this);
     }
   }
@@ -591,7 +598,8 @@ class Register
   const unsigned m_delay;
   RegisterAbstraction<DATATYPE>* m_strategy;
   field_container_type m_fields;
-  callback_container_type m_callbacks;
+  // Creating a container for each callback type saves us the search.
+  callback_container_type m_callbacks[3];
 
   /// @} Data
 }; // class Register
