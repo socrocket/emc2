@@ -1,0 +1,1 @@
+-target C -name_length 200 -significance_length 31 -user_config ./my_macros.h -node Main::main -target_dir D:/Bachelor-SVN/Programmcode/scade/KCG D:/Bachelor-SVN/Programmcode/scade/KCG\kcg_xml_filter_out.scade 
