@@ -41,7 +41,7 @@ bool load(std::string name);
 bool unload(std::string name);
 
 %{
-#include "core/common/sr_registry/sr_registry.h"
+#include "sr_registry.h"
 
 sc_core::sc_object *create_object_by_name(std::string group, std::string type, std::string name) {
   return SrModuleRegistry::create_object_by_name(group, type, name);

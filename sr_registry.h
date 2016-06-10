@@ -23,7 +23,7 @@
 #include <string>
 #include <map>
 #include <set>
-#include "systemc.h"
+#include <systemc.h>
 
 class SrModuleRegistry {
   public:
