@@ -23,8 +23,8 @@
 /// This user register register class is not part of the SCIREG API standard.
 /// Instead, this user register class is provided as an example of how the
 /// SCIREG API standard can be used.
-#ifndef CORE_COMMON_SC_REGISTER_H_
-#define CORE_COMMON_SC_REGISTER_H_
+#ifndef SC_REGISTER_H_
+#define SC_REGISTER_H_
 
 #include <string>
 #include <vector>

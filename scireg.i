@@ -152,7 +152,7 @@ USI_REGISTER_MODULE(scireg)
 }
 
 %{
-#include "core/common/sr_register/scireg.h"
+#include "scireg.h"
 #include <map>
 class usi_scireg_parent;
 
@@ -196,7 +196,7 @@ class SciregCallbackAdapter : public scireg_ns::scireg_callback {
 
 %}
 
-%include "core/common/sr_register/scireg.h"
+%include "core/sr_register/scireg.h"
 
 void scireg_initialize();
 
