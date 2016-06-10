@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 filetype=python :
-top = '../../..'
-REPOSITORY_PATH = "core/common/sr_param"
+top = '../..'
+REPOSITORY_PATH = "core/sr_param"
 REPOSITORY_NAME = "SoCRocket Extended CCI Parameter"
 REPOSITORY_VERSION = [3,0,0]
 REPOSITORY_DESC = """Extended GreenControl gs_params"""
