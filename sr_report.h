@@ -16,8 +16,8 @@
 ///   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ///   See the License for the specific language governing permissions and
 ///   limitations under the License.
-#ifndef COMMON_SR_REPORT_H_
-#define COMMON_SR_REPORT_H_
+#ifndef SR_REPORT_H_
+#define SR_REPORT_H_
 
 #include <boost/any.hpp>
 #include <systemc.h>
@@ -506,5 +506,5 @@ void sr_report::operator()(const std::string &name) {
       sc_core::SC_MAX_SEVERITY, NULL, id, "command", \
       0x0FFFFFFF, __FILE__, __LINE__)("typename", type)
 
-#endif  // COMMON_SR_REPORT_H_
+#endif  // SR_REPORT_H_
 /// @}

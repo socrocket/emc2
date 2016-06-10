@@ -41,7 +41,7 @@ void remove_sc_object_from_filter(sc_core::sc_object *obj);
 
 
 %{
-#include "core/common/sr_report/sr_report.h"
+#include "sr_report.h"
 
 void set_filter_to_whitelist(bool value) {
   sr_report_handler::set_filter_to_whitelist(value);
