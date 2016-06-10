@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 filetype=python :
-top = '../../..'
-REPOSITORY_PATH = "core/common/sr_signal"
+top = '../..'
+REPOSITORY_PATH = "core/sr_signal"
 REPOSITORY_NAME = "SoCRocket TLM Signals"
 REPOSITORY_VERSION = [3,0,0]
 REPOSITORY_DESC = """High level signaling library"""
