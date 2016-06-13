@@ -7,22 +7,20 @@ REPOSITORY_VERSION = [3,0,0]
 REPOSITORY_DESC = """Stores SystemC Models in Groups to Dynamiclay create and identify"""
 
 def build(self):
-    features = 'cxx cxxstlib'
-    source = ['sr_registry.cpp']
-
-    if True:
-        source += ['sr_registry.i']
-        features += ' pyembed venv_package'
-
     self(
         target            = 'sr_registry',
-        features          = features,
-        source            = source,
-        pysource          = '__init__.py',
+        features          = 'cxx cxxstlib pyembed venv_package',
+        source            = [
+            'sr_registry.cpp',
+            'sr_registry.i',
+        ],
+        pysource          = [
+            '__init__.py',
+        ],
         export_includes   = self.top_dir,
         includes          = [self.top_dir, '.', self.repository_root.abspath()],
         swig_flags        = '-c++ -python -Wall',
         use               = 'usi SYSTEMC TLM PYTHON',
         install_path      = '${PREFIX}/lib',
-  )
+    )
 
