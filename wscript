@@ -13,7 +13,7 @@ def build(self):
   self(
         target       = 'sr_microblaze',
         features     = 'cxx cxxshlib',
-        source = [
+        sources = [
             'microblaze/intunit/instructions.cpp',
             'microblaze/intunit/registers.cpp',
             'microblaze/intunit/alias.cpp',
@@ -24,7 +24,7 @@ def build(self):
 #            'microblaze/intunit/externalPins.cpp',
             'microblaze/microblaze.cpp',
         ],
-        include = self.top_dir,
+        includes = self.top_dir,
         defines = 'ENABLE_HISTORY', 
         use          = [
                         'sr_gaisler',
@@ -35,4 +35,5 @@ def build(self):
                         'common',
                         'AMBA', 'GREENSOCS', 'TLM', 'SYSTEMC', 'BOOST'
                        ],
-    )
+        idx=99,
+  )
