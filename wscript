@@ -24,18 +24,5 @@ def build(self):
         swig_flags        = '-c++ -python -Wall',
         use               = 'usi SYSTEMC TLM PYTHON',
         install_path      = '${PREFIX}/lib',
-  )
-
-    """
-    self(
-        target            = 'sr_report',
-        features          = 'cxx cxxstlib pyembed venv_package',
-        source            = ['sr_report.i', 'sr_report.cpp'],
-        export_includes   = self.top_dir,
-        includes          = self.top_dir,
-        swig_flags        = '-c++ -python -Wall',
-        use               = 'usi SYSTEMC TLM PYTHON',
-        install_path      = '${PREFIX}/lib',
     )
-    """
 
