@@ -1,0 +1,276 @@
+$**************  SCADETOC Version 6.1.2 (build i9) **************
+** Generation date: 2011-03-07T21:45:02
+** Command: scade -code "D:\Bachelor-SVN\Programmcode\scade\myFlightCtrlModel.etp" -node Main::main -conf KCG
+*************************************************************$
+*** Generated Files Information (GENFIL): KCG- Generated files
+ ~kcg.log
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg.log, line 0, character 0
+ ~kcg_xml_filter_out.scade
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_xml_filter_out.scade, line 0, character 0
+ ~kcg_s2c_config.txt
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_s2c_config.txt, line 0, character 0
+ ~kcg_trace.xml
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_trace.xml, line 0, character 0
+ ~kcg_metrics.txt
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_metrics.txt, line 0, character 0
+ ~main_Main.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\main_Main.c, line 0, character 0
+ ~controller_Controller.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\controller_Controller.c, line 0, character 0
+ ~calculateMotorSpeed_Controller_CalculateMotorSpeed.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calculateMotorSpeed_Controller_CalculateMotorSpeed.c, line 0, character 0
+ ~motorLimitation_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\motorLimitation_Functions.c, line 0, character 0
+ ~attitudeController_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\attitudeController_Controller_AttitudeController.c, line 0, character 0
+ ~PIDControllerTheta_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\PIDControllerTheta_Controller_AttitudeController.c, line 0, character 0
+ ~getPsiSetpoint_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getPsiSetpoint_Controller_AttitudeController.c, line 0, character 0
+ ~PIDControllerPhiPsi_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\PIDControllerPhiPsi_Controller_AttitudeController.c, line 0, character 0
+ ~dampingTerm_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\dampingTerm_Controller_AttitudeController.c, line 0, character 0
+ ~derivativeTerm_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\derivativeTerm_Controller_AttitudeController.c, line 0, character 0
+ ~integralTerm_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\integralTerm_Controller_AttitudeController.c, line 0, character 0
+ ~proportionalTerm_Controller_AttitudeController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\proportionalTerm_Controller_AttitudeController.c, line 0, character 0
+ ~heightController_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\heightController_Controller_HeightController.c, line 0, character 0
+ ~getHeightSetpoint_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getHeightSetpoint_Controller_HeightController.c, line 0, character 0
+ ~getOffsetGasPosition_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getOffsetGasPosition_Controller_HeightController.c, line 0, character 0
+ ~rcAdjustingReal_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\rcAdjustingReal_Functions.c, line 0, character 0
+ ~PIDHeightController_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\PIDHeightController_Controller_HeightController.c, line 0, character 0
+ ~derivativeTermHC_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\derivativeTermHC_Controller_HeightController.c, line 0, character 0
+ ~integralTermHC_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\integralTermHC_Controller_HeightController.c, line 0, character 0
+ ~proportionalTermHC_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\proportionalTermHC_Controller_HeightController.c, line 0, character 0
+ ~dampingTermHC_Controller_HeightController.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\dampingTermHC_Controller_HeightController.c, line 0, character 0
+ ~setpoints_Controller_Setpoint.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\setpoints_Controller_Setpoint.c, line 0, character 0
+ ~calcSetpoints_Controller_Setpoint.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcSetpoints_Controller_Setpoint.c, line 0, character 0
+ ~getPsiStartValue_Controller_Setpoint.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getPsiStartValue_Controller_Setpoint.c, line 0, character 0
+ ~limitationBlock_Controller_Setpoint.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\limitationBlock_Controller_Setpoint.c, line 0, character 0
+ ~minMaxLimitation_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\minMaxLimitation_Functions.c, line 0, character 0
+ ~rotationMatrix_Controller_Setpoint.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\rotationMatrix_Controller_Setpoint.c, line 0, character 0
+ ~setOffsets_Controller_Setpoint.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\setOffsets_Controller_Setpoint.c, line 0, character 0
+ ~rcAdjusting_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\rcAdjusting_Functions.c, line 0, character 0
+ ~signalprocessing_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\signalprocessing_Controller_Signalprocessing.c, line 0, character 0
+ ~calcAngleValues_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcAngleValues_Controller_Signalprocessing.c, line 0, character 0
+ ~calcDiscreteAngleChanges_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcDiscreteAngleChanges_Controller_Signalprocessing.c, line 0, character 0
+ ~angleIntegration_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleIntegration_Controller_Signalprocessing.c, line 0, character 0
+ ~angleLimitationBlock_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleLimitationBlock_Controller_Signalprocessing.c, line 0, character 0
+ ~offsetCorrectionBlock_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\offsetCorrectionBlock_Controller_Signalprocessing.c, line 0, character 0
+ ~offsetCorrection_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\offsetCorrection_Functions.c, line 0, character 0
+ ~driftCorrectionAngles_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\driftCorrectionAngles_Controller_Signalprocessing.c, line 0, character 0
+ ~kalmanFilter90_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kalmanFilter90_Functions.c, line 0, character 0
+ ~angleLimitation90_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleLimitation90_Functions.c, line 0, character 0
+ ~kalmanFilter180_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kalmanFilter180_Functions.c, line 0, character 0
+ ~angleLimitation180_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleLimitation180_Functions.c, line 0, character 0
+ ~angleTransformation_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleTransformation_Controller_Signalprocessing.c, line 0, character 0
+ ~angleTransformationPhiPsi_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleTransformationPhiPsi_Controller_Signalprocessing.c, line 0, character 0
+ ~accelerationAngles_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationAngles_Controller_Signalprocessing.c, line 0, character 0
+ ~accAnglePhiCorrection_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accAnglePhiCorrection_Functions.c, line 0, character 0
+ ~accelerationAnglePhi_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationAnglePhi_Controller_Signalprocessing.c, line 0, character 0
+ ~accelerationAngleTheta_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationAngleTheta_Controller_Signalprocessing.c, line 0, character 0
+ ~accLimitation_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accLimitation_Functions.c, line 0, character 0
+ ~radian2degree_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\radian2degree_Functions.c, line 0, character 0
+ ~calcHeightValues_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcHeightValues_Controller_Signalprocessing.c, line 0, character 0
+ ~accelerationGeoZ_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationGeoZ_Controller_Signalprocessing.c, line 0, character 0
+ ~accelerationIntegrationZ_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationIntegrationZ_Controller_Signalprocessing.c, line 0, character 0
+ ~driftCorrectionHeight_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\driftCorrectionHeight_Controller_Signalprocessing.c, line 0, character 0
+ ~kalmanFilterHeight_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kalmanFilterHeight_Functions.c, line 0, character 0
+ ~calcUnitsFromAnalog_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcUnitsFromAnalog_Controller_Signalprocessing.c, line 0, character 0
+ ~setOffsets_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\setOffsets_Controller_Signalprocessing.c, line 0, character 0
+ ~sinCosValues_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\sinCosValues_Controller_Signalprocessing.c, line 0, character 0
+ ~degree2radian_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\degree2radian_Functions.c, line 0, character 0
+ ~meanSquareFilterBlock_Controller_Signalprocessing.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\meanSquareFilterBlock_Controller_Signalprocessing.c, line 0, character 0
+ ~meanSquareFilter_Functions.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\meanSquareFilter_Functions.c, line 0, character 0
+ ~main_Main.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\main_Main.h, line 0, character 0
+ ~controller_Controller.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\controller_Controller.h, line 0, character 0
+ ~calculateMotorSpeed_Controller_CalculateMotorSpeed.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calculateMotorSpeed_Controller_CalculateMotorSpeed.h, line 0, character 0
+ ~motorLimitation_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\motorLimitation_Functions.h, line 0, character 0
+ ~attitudeController_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\attitudeController_Controller_AttitudeController.h, line 0, character 0
+ ~PIDControllerTheta_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\PIDControllerTheta_Controller_AttitudeController.h, line 0, character 0
+ ~getPsiSetpoint_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getPsiSetpoint_Controller_AttitudeController.h, line 0, character 0
+ ~PIDControllerPhiPsi_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\PIDControllerPhiPsi_Controller_AttitudeController.h, line 0, character 0
+ ~dampingTerm_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\dampingTerm_Controller_AttitudeController.h, line 0, character 0
+ ~derivativeTerm_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\derivativeTerm_Controller_AttitudeController.h, line 0, character 0
+ ~integralTerm_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\integralTerm_Controller_AttitudeController.h, line 0, character 0
+ ~proportionalTerm_Controller_AttitudeController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\proportionalTerm_Controller_AttitudeController.h, line 0, character 0
+ ~heightController_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\heightController_Controller_HeightController.h, line 0, character 0
+ ~getHeightSetpoint_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getHeightSetpoint_Controller_HeightController.h, line 0, character 0
+ ~getOffsetGasPosition_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getOffsetGasPosition_Controller_HeightController.h, line 0, character 0
+ ~rcAdjustingReal_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\rcAdjustingReal_Functions.h, line 0, character 0
+ ~PIDHeightController_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\PIDHeightController_Controller_HeightController.h, line 0, character 0
+ ~derivativeTermHC_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\derivativeTermHC_Controller_HeightController.h, line 0, character 0
+ ~integralTermHC_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\integralTermHC_Controller_HeightController.h, line 0, character 0
+ ~proportionalTermHC_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\proportionalTermHC_Controller_HeightController.h, line 0, character 0
+ ~dampingTermHC_Controller_HeightController.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\dampingTermHC_Controller_HeightController.h, line 0, character 0
+ ~setpoints_Controller_Setpoint.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\setpoints_Controller_Setpoint.h, line 0, character 0
+ ~calcSetpoints_Controller_Setpoint.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcSetpoints_Controller_Setpoint.h, line 0, character 0
+ ~getPsiStartValue_Controller_Setpoint.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\getPsiStartValue_Controller_Setpoint.h, line 0, character 0
+ ~limitationBlock_Controller_Setpoint.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\limitationBlock_Controller_Setpoint.h, line 0, character 0
+ ~minMaxLimitation_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\minMaxLimitation_Functions.h, line 0, character 0
+ ~rotationMatrix_Controller_Setpoint.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\rotationMatrix_Controller_Setpoint.h, line 0, character 0
+ ~setOffsets_Controller_Setpoint.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\setOffsets_Controller_Setpoint.h, line 0, character 0
+ ~rcAdjusting_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\rcAdjusting_Functions.h, line 0, character 0
+ ~signalprocessing_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\signalprocessing_Controller_Signalprocessing.h, line 0, character 0
+ ~calcAngleValues_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcAngleValues_Controller_Signalprocessing.h, line 0, character 0
+ ~calcDiscreteAngleChanges_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcDiscreteAngleChanges_Controller_Signalprocessing.h, line 0, character 0
+ ~angleIntegration_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleIntegration_Controller_Signalprocessing.h, line 0, character 0
+ ~angleLimitationBlock_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleLimitationBlock_Controller_Signalprocessing.h, line 0, character 0
+ ~offsetCorrectionBlock_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\offsetCorrectionBlock_Controller_Signalprocessing.h, line 0, character 0
+ ~offsetCorrection_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\offsetCorrection_Functions.h, line 0, character 0
+ ~driftCorrectionAngles_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\driftCorrectionAngles_Controller_Signalprocessing.h, line 0, character 0
+ ~kalmanFilter90_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kalmanFilter90_Functions.h, line 0, character 0
+ ~angleLimitation90_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleLimitation90_Functions.h, line 0, character 0
+ ~kalmanFilter180_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kalmanFilter180_Functions.h, line 0, character 0
+ ~angleLimitation180_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleLimitation180_Functions.h, line 0, character 0
+ ~angleTransformation_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleTransformation_Controller_Signalprocessing.h, line 0, character 0
+ ~angleTransformationPhiPsi_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\angleTransformationPhiPsi_Controller_Signalprocessing.h, line 0, character 0
+ ~accelerationAngles_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationAngles_Controller_Signalprocessing.h, line 0, character 0
+ ~accAnglePhiCorrection_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accAnglePhiCorrection_Functions.h, line 0, character 0
+ ~accelerationAnglePhi_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationAnglePhi_Controller_Signalprocessing.h, line 0, character 0
+ ~accelerationAngleTheta_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationAngleTheta_Controller_Signalprocessing.h, line 0, character 0
+ ~accLimitation_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accLimitation_Functions.h, line 0, character 0
+ ~radian2degree_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\radian2degree_Functions.h, line 0, character 0
+ ~calcHeightValues_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcHeightValues_Controller_Signalprocessing.h, line 0, character 0
+ ~accelerationGeoZ_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationGeoZ_Controller_Signalprocessing.h, line 0, character 0
+ ~accelerationIntegrationZ_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\accelerationIntegrationZ_Controller_Signalprocessing.h, line 0, character 0
+ ~driftCorrectionHeight_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\driftCorrectionHeight_Controller_Signalprocessing.h, line 0, character 0
+ ~kalmanFilterHeight_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kalmanFilterHeight_Functions.h, line 0, character 0
+ ~calcUnitsFromAnalog_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\calcUnitsFromAnalog_Controller_Signalprocessing.h, line 0, character 0
+ ~setOffsets_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\setOffsets_Controller_Signalprocessing.h, line 0, character 0
+ ~sinCosValues_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\sinCosValues_Controller_Signalprocessing.h, line 0, character 0
+ ~degree2radian_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\degree2radian_Functions.h, line 0, character 0
+ ~meanSquareFilterBlock_Controller_Signalprocessing.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\meanSquareFilterBlock_Controller_Signalprocessing.h, line 0, character 0
+ ~meanSquareFilter_Functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\meanSquareFilter_Functions.h, line 0, character 0
+ ~kcg_types.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_types.h, line 0, character 0
+ ~kcg_consts.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_consts.h, line 0, character 0
+ ~kcg_sensors.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_sensors.h, line 0, character 0
+ ~kcg_imported_functions.h
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_imported_functions.h, line 0, character 0
+ ~kcg_types.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_types.c, line 0, character 0
+ ~kcg_consts.c
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\kcg_consts.c, line 0, character 0
+*** Generated Files Information (GENFIL): Code Generator Generated files
+ ~sc2c.log
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\sc2c.log, line 0, character 0
+ ~sc2c_integration_files.txt
+  at file D:\Bachelor-SVN\Programmcode\scade\KCG\sc2c_integration_files.txt, line 0, character 0
+$**************  SCADETOC Version 6.1.2 (build i9) **************
+** Generation date: 2011-03-07T21:45:06
+** sc2c.log
+*************************************************************$
