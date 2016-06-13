@@ -26,4 +26,5 @@ def build(self):
                         'common',
                         'AMBA', 'GREENSOCS', 'TLM', 'SYSTEMC', 'BOOST'
                        ],
-    )
+        idx=99,
+  )
