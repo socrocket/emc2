@@ -18,7 +18,7 @@ def build(self):
         target            = 'sr_signal',
         features          = features,
         source            = source,
-        #pysource          = 'klasses.py',
+        pysource          = ['__init__.py'],
         export_includes   = self.top_dir,
         includes          = [self.top_dir, '.', self.repository_root.abspath()],
         swig_flags        = '-c++ -python -Wall',
