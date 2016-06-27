@@ -37,6 +37,7 @@
 #include "core/common/trapgen/ToolsIf.hpp"
 #include <tlm_utils/tlm_quantumkeeper.h>
 #include <instructionBase.hpp>
+#include "core/common/sr_param.h"
 
 #include <systemc.h>
 #include <iostream>
@@ -125,7 +126,7 @@ namespace core_microblaze_lt {
     bool resetCalled;
     Decoder decoder;
     std::ofstream histFile;
-    bool historyEnabled;
+    sr_param<bool> historyEnabled;
     bool instrExecuting;
     Instruction * * INSTRUCTIONS;
     template_map<unsigned int, CacheElem> instrCache;

@@ -13,7 +13,7 @@ def build(self):
   self(
         target       = 'sr_microblaze',
         features     = 'cxx cxxshlib',
-        sources = [
+        source = [
             'microblaze/intunit/instructions.cpp',
             'microblaze/intunit/registers.cpp',
             'microblaze/intunit/alias.cpp',

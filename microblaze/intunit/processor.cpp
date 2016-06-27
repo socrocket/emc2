@@ -41,6 +41,7 @@
 #include <fstream>
 #include <boost/circular_buffer.hpp>
 #include <string>
+#include "core/common/verbose.h"
 
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__
@@ -75,31 +76,24 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
     unsigned int numCycles = 0;
     this->instrExecuting = true;
     unsigned int curPC = this->PC;
-#ifdef ENABLE_HISTORY
-    HistoryInstrType instrQueueElem;
-    if (this->historyEnabled) {
-
-      instrQueueElem.address = curPC;
-    }
-#endif
-    std::cerr << "Current PC: " << std::hex << std::showbase << curPC << std::endl;
     template_map< unsigned int, CacheElem >::iterator cachedInstr = this->instrCache.find(curPC);
     if (cachedInstr != instrCacheEnd) {
       Instruction * curInstrPtr = cachedInstr->second.instr;
       // I can call the instruction, I have found it
       if (curInstrPtr != NULL) {
-#ifdef ENABLE_HISTORY
         if (this->historyEnabled) {
-          instrQueueElem.name = curInstrPtr->getInstructionName();
-          instrQueueElem.mnemonic = curInstrPtr->getMnemonic();
+          srInfo()
+            ("Address",curPC)
+            ("Name",curInstrPtr->getInstructionName())
+            ("Mnemonic",curInstrPtr->getMnemonic())
+            ("Instruction History");
         }
-#endif
         try {
 #ifndef DISABLE_TOOLS
           if (!(this->toolManager.newIssue(curPC, curInstrPtr))) {
 #endif
             numCycles = curInstrPtr->behavior();
-            curInstrPtr->printTrace();
+//            curInstrPtr->printTrace();
 #ifndef DISABLE_TOOLS
           }
           else {
@@ -109,7 +103,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
 #endif
         }
         catch(annull_exception &etc) {
-          curInstrPtr->printTrace();
+//          curInstrPtr->printTrace();
           std::cerr << "Skipped Instruction " << curInstrPtr->getInstructionName()
             << std::endl << std::endl;
           numCycles = 0;
@@ -120,18 +114,19 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         int instrId = this->decoder.decode(bitString);
         Instruction * instr = this->INSTRUCTIONS[instrId];
         instr->setParams(bitString);
-#ifdef ENABLE_HISTORY
         if (this->historyEnabled) {
-          instrQueueElem.name = instr->getInstructionName();
-          instrQueueElem.mnemonic = instr->getMnemonic();
+          srInfo()
+            ("Address",curPC)
+            ("Name",curInstrPtr->getInstructionName())
+            ("Mnemonic",curInstrPtr->getMnemonic())
+            ("Instruction History");
         }
-#endif
         try {
 #ifndef DISABLE_TOOLS
           if (!(this->toolManager.newIssue(curPC, instr))) {
 #endif
             numCycles = instr->behavior();
-            instr->printTrace();
+//            instr->printTrace();
 #ifndef DISABLE_TOOLS
           }
           else {
@@ -141,7 +136,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
 #endif
         }
         catch(annull_exception &etc) {
-          instr->printTrace();
+//          instr->printTrace();
           std::cerr << "Skipped Instruction " << instr->getInstructionName() <<
             std::endl << std::endl;
           numCycles = 0;
@@ -161,18 +156,19 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
       int instrId = this->decoder.decode(bitString);
       Instruction * instr = this->INSTRUCTIONS[instrId];
       instr->setParams(bitString);
-#ifdef ENABLE_HISTORY
       if (this->historyEnabled) {
-        instrQueueElem.name = instr->getInstructionName();
-        instrQueueElem.mnemonic = instr->getMnemonic();
+        srInfo()
+          ("Address",curPC)
+          ("Name",instr->getInstructionName())
+          ("Mnemonic",instr->getMnemonic())
+          ("Instruction History");
       }
-#endif
       try {
 #ifndef DISABLE_TOOLS
         if (!(this->toolManager.newIssue(curPC, instr))) {
 #endif
           numCycles = instr->behavior();
-          instr->printTrace();
+//          instr->printTrace();
 #ifndef DISABLE_TOOLS
         }
         else {
@@ -182,7 +178,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
 #endif
       }
       catch(annull_exception &etc) {
-        instr->printTrace();
+//        instr->printTrace();
         std::cerr << "Skipped Instruction " << instr->getInstructionName() <<
           std::endl << std::endl;
         numCycles = 0;
@@ -191,25 +187,13 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         CacheElem()));
       instrCacheEnd = this->instrCache.end();
     }
-#ifdef ENABLE_HISTORY
-    if (this->historyEnabled) {
-      // First I add the new element to the queue
-      this->instHistoryQueue.push_back(instrQueueElem);
-      // Now, in case the queue dump file has been specified, I have to check if
-      // I need to save it
-      if (this->histFile) {
-        this->undumpedHistElems++;
-        if (undumpedHistElems == this->instHistoryQueue.capacity()) {
-          boost::circular_buffer<HistoryInstrType>::const_iterator beg, end;
-          for (beg = this->instHistoryQueue.begin(), end = this->instHistoryQueue.end();
-            beg != end; beg++) {
-            this->histFile << beg->toStr() << std::endl;
-          }
-          this->undumpedHistElems = 0;
-        }
-      }
-    }
-#endif
+    /*if (this->historyEnabled) {
+      srInfo()
+        ("Address",curPC)
+        ("Name",curInstrPtr->getInstructionName())
+        ("Mnemonic",curInstrPtr->getMnemonic())
+        ("Instruction History");
+    }*/
     this->totalCycles += (numCycles + 1);
     this->instrExecuting = false;
     this->numInstructions++;
@@ -592,30 +576,6 @@ core_microblaze_lt::CoreMICROBLAZELT::~CoreMICROBLAZELT() {
     delete cacheIter->second.instr;
   }
   delete this->abiIf;
-#ifdef ENABLE_HISTORY
-  if (this->historyEnabled) {
-    // Now, in case the queue dump file has been specified, I have to check if I
-    // need to save the yet undumped elements
-    if (this->histFile) {
-      if (this->undumpedHistElems > 0) {
-        std::vector<std::string> histVec;
-        boost::circular_buffer<HistoryInstrType>::const_reverse_iterator beg, end;
-        unsigned int histRead = 0;
-        for (histRead = 0, beg = this->instHistoryQueue.rbegin(), end = this->instHistoryQueue.rend();
-          beg != end && histRead < this->undumpedHistElems; beg++, histRead++) {
-          histVec.push_back(beg->toStr());
-        }
-        std::vector<std::string>::const_reverse_iterator histVecBeg, histVecEnd;
-        for (histVecBeg = histVec.rbegin(), histVecEnd = histVec.rend(); histVecBeg
-          != histVecEnd; histVecBeg++) {
-          this->histFile <<  *histVecBeg << std::endl;
-        }
-      }
-      this->histFile.flush();
-      this->histFile.close();
-    }
-  }
-#endif
 } // ~CoreMICROBLAZELT()
 
 
