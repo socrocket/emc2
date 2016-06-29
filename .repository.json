@@ -1,0 +1,44 @@
+{
+  "core": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/core.git"
+    }
+  },
+  "core/sr_param": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/sr_param.git"
+    }
+  },
+  "core/sr_register": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/sr_register.git"
+    }
+  },
+  "core/sr_registry": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/sr_registry.git"
+    }
+  },
+  "core/sr_report": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/sr_report.git"
+    }
+  },
+  "core/sr_signal": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/sr_signal.git"
+    }
+  },
+  "pysc": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/pysc.git"
+    }
+  }
+}
