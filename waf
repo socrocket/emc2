@@ -23,7 +23,7 @@ def which(program):
                 return exe_file
     return None
 
-def main():
+def waf():
     import os
     import sys
     import inspect
@@ -46,6 +46,23 @@ def main():
     sys.path.insert(0, wafdir)
     from waflib import Scripting
     return Scripting.waf_entry_point(os.getcwd(), VERSION, wafdir)
+
+def main():
+    import os
+    import sys
+    import inspect
+    src = os.path.abspath(inspect.getfile(inspect.getmodule(err)))
+    base, name = os.path.split(src)
+    sys.path.insert(0, base)
+
+    from core.tools import repository
+    commands = {
+        "repo": repository.execute
+    }
+    if len(sys.argv) > 1 and sys.argv[1] in commands:
+        commands[sys.argv[1]](base)
+    else:
+        waf()
 
 if __name__ == "__main__":
     main()
