@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 filetype=python :
-VERSION="1.8.21"
+VERSION="1.9.1"
 
 def err(m):
     print(('\033[91mError: %s\033[0m' % m))
@@ -37,7 +37,8 @@ def waf():
         git = which("git")
         if not git:
             err("git not found in the path, please install.")
-        subprocess.call([git, "clone", "https://github.com/waf-project/waf.git", "-b", "waf-%s" % VERSION, wafdir])
+        subprocess.call([git, 'subtree', 'add', '--prefix', '.waf', 'https://github.com/waf-project/waf.git', 'master'])
+        #subprocess.call([git, "clone", "https://github.com/waf-project/waf.git", "-b", "waf-%s" % VERSION, wafdir])
 
     if not os.path.isdir(os.path.join(wafdir, "waflib")):
         err("waflib-Folder not present in %s." % wafdir)

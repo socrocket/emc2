@@ -40,5 +40,11 @@
       "remote_branch": "master",
       "remote_url": "https://github.com/socrocket/pysc.git"
     }
+  },
+  ".waf": {
+    "pull": {
+      "remote_branch": "waf-1.9.1",
+      "remote_url": "https://github.com/waf-project/waf.git"
+    }
   }
 }

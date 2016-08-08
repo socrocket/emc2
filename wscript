@@ -29,8 +29,8 @@ def options(self):
 
 def configure(self):
     self.load(LOAD)
-    self.check_waf_version(mini='1.6.0')
-    self.check_python_version((2,4,0))
+    self.check_waf_version(mini='1.9.0')
+    self.check_python_version((2,7,0))
     self.check_python_headers()
     self.load(TOOLS, tooldir='core/waf')
     self.loadrepos()
