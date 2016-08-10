@@ -69,7 +69,7 @@ class swig(Task.Task):
 
 		while to_see:
 			node = to_see.pop(0)
-			if node in seen:
+			if node in seen or not node.exists():
 				continue
 			seen.append(node)
 			lst_src.append(node)

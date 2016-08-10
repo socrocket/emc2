@@ -3,6 +3,7 @@
 VERSION="1.9.1"
 
 def err(m):
+    import sys
     print(('\033[91mError: %s\033[0m' % m))
     sys.exit(1)
 
@@ -34,7 +35,7 @@ def waf():
     wafdir = os.path.abspath(os.path.join(base, ".waf"))
 
     if not os.path.isdir(wafdir):
-        git = which("git")
+        git = which("git") or which("git.exe")
         if not git:
             err("git not found in the path, please install.")
         subprocess.call([git, 'subtree', 'add', '--prefix', '.waf', 'https://github.com/waf-project/waf.git', 'master'])
