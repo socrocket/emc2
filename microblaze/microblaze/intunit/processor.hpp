@@ -27,14 +27,14 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_PROCESSOR_HPP
 #define MICROBLAZE_CORE_FUNC_LT_PROCESSOR_HPP
 
-#include "microblaze/microblaze/intunit/instructions.hpp"
-#include "microblaze/microblaze/intunit/decoder.hpp"
-#include "microblaze/microblaze/intunit/interface.hpp"
-#include "microblaze/microblaze/intunit/registers.hpp"
-#include "microblaze/microblaze/intunit/memory.hpp"
+#include "microblaze/intunit/instructions.hpp"
+#include "microblaze/intunit/decoder.hpp"
+#include "microblaze/intunit/interface.hpp"
+#include "microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/memory.hpp"
 
 #include <utils/customExceptions.hpp>
-#include "core/common/trapgen/ToolsIf.hpp"
+#include "core/trapgen/ToolsIf.hpp"
 #include <tlm_utils/tlm_quantumkeeper.h>
 #include <instructionBase.hpp>
 #include "core/common/sr_param.h"

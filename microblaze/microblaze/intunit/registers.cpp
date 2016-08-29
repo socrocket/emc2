@@ -25,7 +25,7 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/registers.hpp"
 
 
 #include <ostream>

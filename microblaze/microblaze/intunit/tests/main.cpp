@@ -25,12 +25,12 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/main.hpp"
-#include "microblaze/microblaze/intunit/decoderTests.hpp"
-#include "microblaze/microblaze/intunit/isaTests0.hpp"
-#include "microblaze/microblaze/intunit/isaTests1.hpp"
-#include "microblaze/microblaze/intunit/isaTests2.hpp"
-#include "microblaze/microblaze/intunit/isaTests3.hpp"
+#include "microblaze/intunit/main.hpp"
+#include "microblaze/intunit/decoderTests.hpp"
+#include "microblaze/intunit/isaTests0.hpp"
+#include "microblaze/intunit/isaTests1.hpp"
+#include "microblaze/intunit/isaTests2.hpp"
+#include "microblaze/intunit/isaTests3.hpp"
 
 
 #include <boost/test/included/unit_test.hpp>

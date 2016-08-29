@@ -27,8 +27,8 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_INTERFACE_HPP
 #define MICROBLAZE_CORE_FUNC_LT_INTERFACE_HPP
 
-#include "microblaze/microblaze/intunit/memory.hpp"
-#include "microblaze/microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/memory.hpp"
+#include "microblaze/intunit/registers.hpp"
 
 #include <ABIIf.hpp>
 #include <instructionBase.hpp>

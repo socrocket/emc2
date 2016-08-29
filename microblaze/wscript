@@ -24,7 +24,7 @@ def build(self):
 #            'microblaze/intunit/externalPins.cpp',
             'microblaze/microblaze.cpp',
         ],
-        includes = self.top_dir,
+        includes = [self.repository_root.abspath()],
         defines = 'ENABLE_HISTORY', 
         use          = [
                         'sr_gaisler',

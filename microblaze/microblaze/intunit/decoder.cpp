@@ -25,8 +25,8 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/decoder.hpp"
-#include "microblaze/microblaze/intunit/instructions.hpp"
+#include "microblaze/intunit/decoder.hpp"
+#include "microblaze/intunit/instructions.hpp"
 
 
 

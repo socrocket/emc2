@@ -7,37 +7,37 @@
 /// provides two TLM slave sockets for connecting the cpu and an AHB master
 /// interface for connecting the processor bus.
 ///
-/// @date 2010-2015
+/// @date 2016-
 /// @copyright All rights reserved.
 ///            Any reproduction, use, distribution or disclosure of this
 ///            program, without the express, prior written consent of the
 ///            authors is strictly prohibited.
-/// @author Thomas Schuster
+/// @author Rolf Meyer
 ///
 
-#ifndef Leon3_H_
-#define Leon3_H_
+#ifndef MICROBLASE_H_
+#define MICROBLASE_H_
 
-#include "core/common/systemc.h"
+#include "core/base/systemc.h"
+#include "core/base/verbose.h"
 #include "core/common/sr_param.h"
-#include "core/common/amba.h"
 //#include <tlm_1/tlm_req_rsp/tlm_channels/tlm_fifo/tlm_fifo.h>
 
 #include <math.h>
 
 #include "core/common/socrocket.h"
 #include "core/common/sr_signal.h"
-#include "core/common/ahbmaster.h"
 #include "core/common/clkdevice.h"
+#include "amba/amba.h"
+#include "amba/ahbmaster.h"
 
-#include "core/common/verbose.h"
 #include "gaisler/leon3/mmucache/mmu_cache_base.h"
 #include "gaisler/leon3/mmucache/localram.h"
 
 // LEON3
 #include "microblaze/microblaze/intunit/processor.hpp"
-#include "core/common/trapgen/debugger/GDBStub.hpp"
-#include "core/common/sr_iss/intrinsics/intrinsicmanager.h"
+#include "core/trapgen/debugger/GDBStub.hpp"
+#include "core/sr_iss/intrinsics/intrinsicmanager.h"
 
 /// @addtogroup mmu_cache MMU_Cache
 /// @{

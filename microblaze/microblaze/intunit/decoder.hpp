@@ -27,7 +27,7 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_DECODER_HPP
 #define MICROBLAZE_CORE_FUNC_LT_DECODER_HPP
 
-#include "microblaze/microblaze/intunit/instructions.hpp"
+#include "microblaze/intunit/instructions.hpp"
 
 
 

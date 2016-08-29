@@ -7,8 +7,8 @@ def build(self):
     self(
         target          = 'microblaze',
         features        = 'cxx cxxstlib',
-        export_includes = self.top_dir,
-        includes        = self.top_dir,
+        export_includes = [self.repository_root.abspath()],
+        includes        = [self.repository_root.abspath()],
         use             = 'mmucache trap common',
         source          = [
                             'intunit/instructions.cpp',

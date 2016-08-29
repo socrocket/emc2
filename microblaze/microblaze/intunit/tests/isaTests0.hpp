@@ -27,7 +27,7 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_ISATESTS0_HPP
 #define MICROBLAZE_CORE_FUNC_LT_ISATESTS0_HPP
 
-#include "microblaze/microblaze/intunit/alias.hpp"
+#include "microblaze/intunit/alias.hpp"
 
 #include <utils/customExceptions.hpp>
 
@@ -39,9 +39,9 @@
 
 #define private public
 #define protected public
-#include "microblaze/microblaze/intunit/instructions.hpp"
-#include "microblaze/microblaze/intunit/registers.hpp"
-#include "microblaze/microblaze/intunit/memory.hpp"
+#include "microblaze/intunit/instructions.hpp"
+#include "microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/memory.hpp"
 #undef private
 #undef protected
 

@@ -25,8 +25,8 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/alias.hpp"
-#include "microblaze/microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/alias.hpp"
+#include "microblaze/intunit/registers.hpp"
 
 
 #include <ostream>

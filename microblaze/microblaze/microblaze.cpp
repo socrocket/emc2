@@ -16,9 +16,9 @@
 ///
 
 #include <boost/filesystem.hpp>
-#include "microblaze/microblaze/microblaze.h"
+#include "core/base/vendian.h"
 #include "core/common/sr_report.h"
-#include "core/common/vendian.h"
+#include "microblaze/microblaze.h"
 
 SR_HAS_MODULE(MicroBlaze);
 

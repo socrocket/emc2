@@ -25,12 +25,12 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/processor.hpp"
-#include "microblaze/microblaze/intunit/instructions.hpp"
-#include "microblaze/microblaze/intunit/decoder.hpp"
-#include "microblaze/microblaze/intunit/interface.hpp"
-#include "microblaze/microblaze/intunit/registers.hpp"
-#include "microblaze/microblaze/intunit/memory.hpp"
+#include "microblaze/intunit/processor.hpp"
+#include "microblaze/intunit/instructions.hpp"
+#include "microblaze/intunit/decoder.hpp"
+#include "microblaze/intunit/interface.hpp"
+#include "microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/memory.hpp"
 
 #include <utils/customExceptions.hpp>
 #include <ToolsIf.hpp>
@@ -41,7 +41,7 @@
 #include <fstream>
 #include <boost/circular_buffer.hpp>
 #include <string>
-#include "core/common/verbose.h"
+#include "core/base/verbose.h"
 
 #ifdef __GNUC__
 #ifdef __GNUC_MINOR__

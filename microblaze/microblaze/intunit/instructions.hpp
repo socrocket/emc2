@@ -27,9 +27,9 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_INSTRUCTIONS_HPP
 #define MICROBLAZE_CORE_FUNC_LT_INSTRUCTIONS_HPP
 
-#include "microblaze/microblaze/intunit/registers.hpp"
-#include "microblaze/microblaze/intunit/memory.hpp"
-#include "microblaze/microblaze/intunit/alias.hpp"
+#include "microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/memory.hpp"
+#include "microblaze/intunit/alias.hpp"
 
 #include <instructionBase.hpp>
 #include <utils/customExceptions.hpp>

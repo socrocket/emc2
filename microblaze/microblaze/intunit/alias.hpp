@@ -27,7 +27,7 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_ALIAS_HPP
 #define MICROBLAZE_CORE_FUNC_LT_ALIAS_HPP
 
-#include "microblaze/microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/registers.hpp"
 
 
 #include <ostream>

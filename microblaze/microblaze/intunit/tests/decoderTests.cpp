@@ -25,7 +25,7 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/decoderTests.hpp"
+#include "microblaze/intunit/decoderTests.hpp"
 
 
 #include <boost/test/test_tools.hpp>

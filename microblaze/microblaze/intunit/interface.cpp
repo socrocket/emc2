@@ -25,9 +25,9 @@
 *******************************************************************************/
 
 
-#include "microblaze/microblaze/intunit/interface.hpp"
-#include "microblaze/microblaze/intunit/memory.hpp"
-#include "microblaze/microblaze/intunit/registers.hpp"
+#include "microblaze/intunit/interface.hpp"
+#include "microblaze/intunit/memory.hpp"
+#include "microblaze/intunit/registers.hpp"
 
 #include <ABIIf.hpp>
 #include <instructionBase.hpp>
