@@ -41,6 +41,12 @@
       "remote_url": "https://github.com/socrocket/sr_signal.git"
     }
   },
+  "microblaze": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/microblaze.git"
+    }
+  },
   "pysc": {
     "pull": {
       "remote_branch": "master",
