@@ -15,15 +15,16 @@
 #ifndef EMC2QUADCOPTER_MODELS_VOTER_VOTER_H_
 #define EMC2QUADCOPTER_MODELS_VOTER_VOTER_H_
 
-#include <stdint.h>
-#include "core/common/systemc.h"
+#include "core/base/systemc.h"
+#include "core/base/base.h"
 #include "core/common/sr_param.h"
-#include <boost/config.hpp>
-#include <utility>
-
-#include "core/common/base.h"
 #include "core/common/clkdevice.h"
 #include "core/common/sr_signal.h"
+
+#include <boost/config.hpp>
+#include <stdint.h>
+#include <utility>
+
 
 class Voter : public BaseModule<>, public CLKDevice {
   public:

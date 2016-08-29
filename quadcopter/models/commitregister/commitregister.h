@@ -16,15 +16,16 @@
 #define EMC2QUADCOPTER_MODELS_COMMITREGS_COMMITREGISTER_H_
 
 #include <greencontrol/all.h>
-#include "core/common/systemc.h"
+#include "core/base/systemc.h"
+#include "core/base/verbose.h"
+
+#include "core/common/sr_signal.h"
+#include "core/common/clkdevice.h"
+#include "amba/apbdevice.h"
+#include "amba/apbslave.h"
+
 #include <string>
 #include <vector>
-
-#include "core/common/apbdevice.h"
-#include "core/common/clkdevice.h"
-#include "core/common/sr_signal.h"
-#include "core/common/verbose.h"
-#include "core/common/apbslave.h"
 
 class CommitRegister : public APBSlave, public CLKDevice {
   public:

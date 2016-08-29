@@ -16,7 +16,7 @@
 #include <utility>
 
 #include "models/voter/voter.h"
-#include "core/common/verbose.h"
+#include "core/base/verbose.h"
 #include "core/common/sr_registry.h"
 
 SR_HAS_MODULE(Voter);
