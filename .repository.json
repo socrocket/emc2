@@ -47,6 +47,18 @@
       "remote_url": "https://github.com/socrocket/microblaze.git"
     }
   },
+  "arm": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/arm.git"
+    }
+  },
+  "quadcopter": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/quadcopter.git"
+    }
+  },
   "pysc": {
     "pull": {
       "remote_branch": "master",
