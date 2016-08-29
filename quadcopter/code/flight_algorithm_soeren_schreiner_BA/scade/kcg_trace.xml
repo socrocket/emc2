@@ -1,0 +1,1549 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$*************** KCG Version 6.1.2 (build i5) ****************
+** Command: s2c612 -config D:/Bachelor-SVN/Programmcode/scade/KCG\kcg_s2c_config.txt
+** Generation date: 2011-03-07T21:45:05
+*************************************************************$-->
+<Model date="2011-03-07T21:45:05" commandLine="s2c612 -config D:/Bachelor-SVN/Programmcode/scade/KCG\kcg_s2c_config.txt">
+  <Package scadeName="Main">
+    <Constant scadeName="WEIGHT_NEW_VALUE" scadeType="real" targetName="WEIGHT_NEW_VALUE_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="PI" scadeType="real" targetName="PI_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="PI180" scadeType="real" targetName="PI180_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="ACC_CONSTANT" scadeType="real" targetName="ACC_CONSTANT_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="GYRO_CONSTANT" scadeType="real" targetName="GYRO_CONSTANT_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="TIMERPERIOD" scadeType="real" targetName="TIMERPERIOD_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="GRAVITY" scadeType="real" targetName="GRAVITY_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="BAROMETER_CONSTANT" scadeType="real" targetName="BAROMETER_CONSTANT_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="TIMERCYCLES" scadeType="real" targetName="TIMERCYCLES_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ANGLES_INIT" scadeType="Main::angleValues" targetName="ANGLES_INIT_Main"
+        targetType="angleValues_Main"/>
+    <Constant scadeName="MIN_GAS_REAL" scadeType="real" targetName="MIN_GAS_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="MAX_GAS_REAL" scadeType="real" targetName="MAX_GAS_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="RC_NORMALIZING" scadeType="Main::rcNormalizingValues" targetName="RC_NORMALIZING_Main"
+        targetType="rcNormalizingValues_Main"/>
+    <Constant scadeName="RC_OFFSET_VALUES" scadeType="Main::rcValues" targetName="RC_OFFSET_VALUES_Main"
+        targetType="rcValues_Main"/>
+    <Constant scadeName="RC_MAX_VALUES" scadeType="Main::rcValuesReal" targetName="RC_MAX_VALUES_Main"
+        targetType="rcValuesReal_Main"/>
+    <Constant scadeName="GYRO_CORRECTION" scadeType="real" targetName="GYRO_CORRECTION_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="CONTROLLER_THETA_PHI_SETTINGS" scadeType="Main::controllerSettings"
+        targetName="CONTROLLER_THETA_PHI_SETTINGS_Main" targetType="controllerSettings_Main"/>
+    <Constant scadeName="CONTROLLER_PSI_SETTINGS" scadeType="Main::controllerSettings"
+        targetName="CONTROLLER_PSI_SETTINGS_Main" targetType="controllerSettings_Main"/>
+    <Constant scadeName="CONTROLLER_HEIGHT_SETTINGS" scadeType="Main::controllerSettings"
+        targetName="CONTROLLER_HEIGHT_SETTINGS_Main" targetType="controllerSettings_Main"/>
+    <Constant scadeName="MOTOR_VALUES_DEFAULT" scadeType="Main::motorValues" targetName="MOTOR_VALUES_DEFAULT_Main"
+        targetType="motorValues_Main"/>
+    <Constant scadeName="ANALOG_OFFSET_VALUES_DEFAULT" scadeType="Main::analogOffsetValues"
+        targetName="ANALOG_OFFSET_VALUES_DEFAULT_Main" targetType="analogOffsetValues_Main"/>
+    <Constant scadeName="I_LIMITATION_MIN" scadeType="real" targetName="I_LIMITATION_MIN_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="I_LIMITATION_MAX" scadeType="real" targetName="I_LIMITATION_MAX_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ZERO_REAL" scadeType="real" targetName="ZERO_REAL_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="MAX_GAS" scadeType="int" targetName="MAX_GAS_Main" targetType="kcg_int" macroDef="true"/>
+    <Constant scadeName="MIN_GAS" scadeType="int" targetName="MIN_GAS_Main" targetType="kcg_int" macroDef="true"/>
+    <Constant scadeName="ZERO" scadeType="int" targetName="ZERO_Main" targetType="kcg_int" macroDef="true"/>
+    <Constant scadeName="ANGLE_360_REAL" scadeType="real" targetName="ANGLE_360_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ANGLE_N180_Real" scadeType="real" targetName="ANGLE_N180_Real_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ANGLE_180_REAL" scadeType="real" targetName="ANGLE_180_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="SENSITIVITY_GAS_STICK_HC" scadeType="real" targetName="SENSITIVITY_GAS_STICK_HC_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="I_LIMITATION_MAX_HC" scadeType="real" targetName="I_LIMITATION_MAX_HC_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="I_LIMITATION_MIN_HC" scadeType="real" targetName="I_LIMITATION_MIN_HC_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="SENSITIVITY_STICKS_SP" scadeType="int" targetName="SENSITIVITY_STICKS_SP_Main"
+        targetType="kcg_int" macroDef="true"/>
+    <Constant scadeName="KALMAN_HEIGHT" scadeType="real" targetName="KALMAN_HEIGHT_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="KALMAN_HEIGHT_SPEED" scadeType="real" targetName="KALMAN_HEIGHT_SPEED_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="ONE_N_REAL" scadeType="real" targetName="ONE_N_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ONE_REAL" scadeType="real" targetName="ONE_REAL_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="KALMAN_THETA_PHI_CONSTANT" scadeType="real" targetName="KALMAN_THETA_PHI_CONSTANT_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="KALMAN_THETA_PHI_MAX" scadeType="real" targetName="KALMAN_THETA_PHI_MAX_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="SETPOINT_VALUES_DEFAULT" scadeType="Main::rcValuesReal"
+        targetName="SETPOINT_VALUES_DEFAULT_Main" targetType="rcValuesReal_Main"/>
+    <Constant scadeName="KALMAN_PSI_CONSTANT" scadeType="real" targetName="KALMAN_PSI_CONSTANT_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="KALMAN_PSI_MAX" scadeType="real" targetName="KALMAN_PSI_MAX_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="MAX_AC_GAS" scadeType="real" targetName="MAX_AC_GAS_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="MIN_AC_GAS" scadeType="real" targetName="MIN_AC_GAS_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="MIN_HC_GAS" scadeType="real" targetName="MIN_HC_GAS_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="MAX_HC_GAS" scadeType="real" targetName="MAX_HC_GAS_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ATTITUDE_CONTROLLER_VALUES_DEFAULT" scadeType="Main::attitudeController"
+        targetName="ATTITUDE_CONTROLLER_VALUES_DEFAULT_Main" targetType="attitudeController_Main"/>
+    <Constant scadeName="HEIGHT_CONTROLLER_VALUES_DEFAULT" scadeType="Main::heightController"
+        targetName="HEIGHT_CONTROLLER_VALUES_DEFAULT_Main" targetType="heightController_Main"/>
+    <Constant scadeName="SCALING_GAS_STICK_HC" scadeType="real" targetName="SCALING_GAS_STICK_HC_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="ACCELERTION_ANGLES_DEFAULT" scadeType="Main::accelerationAngles"
+        targetName="ACCELERTION_ANGLES_DEFAULT_Main" targetType="accelerationAngles_Main"/>
+    <Constant scadeName="TWO_REAL" scadeType="real" targetName="TWO_REAL_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="DEACTIVATE_OFFSET_CORRECTION" scadeType="real" targetName="DEACTIVATE_OFFSET_CORRECTION_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="STOP_GIER" scadeType="real" targetName="STOP_GIER_Main" targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="LOST_CONNECTION_HC_SETPOINT" scadeType="real" targetName="LOST_CONNECTION_HC_SETPOINT_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <Constant scadeName="ANGLE_90_REAL" scadeType="real" targetName="ANGLE_90_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="ANGLE_N90_REAL" scadeType="real" targetName="ANGLE_N90_REAL_Main" targetType="kcg_real"
+        macroDef="true"/>
+    <Constant scadeName="GYRO_CORRECTION_DIFF" scadeType="real" targetName="GYRO_CORRECTION_DIFF_Main"
+        targetType="kcg_real" macroDef="true"/>
+    <NamedType scadeName="motorValues" targetName="motorValues_Main" refType="struct__8438"/>
+    <NamedType scadeName="angleValues" targetName="angleValues_Main" refType="struct__8373"/>
+    <NamedType scadeName="analogValues" targetName="analogValues_Main" refType="struct__8399"/>
+    <NamedType scadeName="analogOffsetValues" targetName="analogOffsetValues_Main" refType="struct__8363"/>
+    <NamedType scadeName="analogValuesReal" targetName="analogValuesReal_Main" refType="struct__8388"/>
+    <NamedType scadeName="sinCosValues" targetName="sinCosValues_Main" refType="struct__8379"/>
+    <NamedType scadeName="accelerations" targetName="accelerations_Main" refType="struct__8357"/>
+    <NamedType scadeName="accelerationAngles" targetName="accelerationAngles_Main" refType="struct__8352"/>
+    <NamedType scadeName="rcValues" targetName="rcValues_Main" refType="struct__8425"/>
+    <NamedType scadeName="rcValuesReal" targetName="rcValuesReal_Main" refType="struct__8418"/>
+    <NamedType scadeName="rcFlags" targetName="rcFlags_Main" refType="struct__8432"/>
+    <NamedType scadeName="rcNormalizingValues" targetName="rcNormalizingValues_Main" refType="struct__8410"/>
+    <NamedType scadeName="controllerSettings" targetName="controllerSettings_Main" refType="struct__8445"/>
+    <NamedType scadeName="attitudeController" targetName="attitudeController_Main" refType="struct__8452"/>
+    <NamedType scadeName="heightController" targetName="heightController_Main" refType="struct__8461"/>
+    <RootNode scadeName="main" headerFile="main_Main.h" targetCycleFct="main_Main" targetInitFct="main_reset_Main">
+      <Input scadeName="rcFlags" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main" inCtx="true"/>
+      <Input scadeName="rcValues" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"
+          inCtx="true"/>
+      <Input scadeName="analogValues" scadeType="Main::analogValues" targetName="analogValues"
+          targetType="analogValues_Main" inCtx="true"/>
+      <Input scadeName="analogOffsetValues" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+          targetType="analogOffsetValues_Main" inCtx="true"/>
+      <Output scadeName="motorValues" scadeType="Main::motorValues" targetName="motorValues"
+          targetType="motorValues_Main" inCtx="true"/>
+      <Output scadeName="anlgeValues" scadeType="Main::angleValues" targetName="anlgeValues"
+          targetType="angleValues_Main" inCtx="true"/>
+      <Output scadeName="anlgeSpeedValues" scadeType="Main::angleValues" targetName="anlgeSpeedValues"
+          targetType="angleValues_Main" inCtx="true"/>
+      <Output scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+      <Output scadeName="heightSpeedValue" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"
+          inCtx="true"/>
+      <Output scadeName="analogCorrectedOffsetValues" scadeType="Main::analogOffsetValues"
+          targetName="analogCorrectedOffsetValues" targetType="analogOffsetValues_Main" inCtx="true"/>
+      <Output scadeName="setpointValues" scadeType="Main::rcValuesReal" targetName="setpointValues"
+          targetType="rcValuesReal_Main" inCtx="true"/>
+      <Output scadeName="attitudeControllerValues" scadeType="Main::attitudeController"
+          targetName="attitudeControllerValues" targetType="attitudeController_Main" inCtx="true"/>
+      <Output scadeName="heightControllerValues" scadeType="Main::heightController" targetName="heightControllerValues"
+          targetType="heightController_Main" inCtx="true"/>
+      <Output scadeName="accelerationAngleValues" scadeType="Main::accelerationAngles"
+          targetName="accelerationAngleValues" targetType="accelerationAngles_Main" inCtx="true"/>
+      <Local scadeName="_L2" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+      <Local scadeName="_L3" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+      <Local scadeName="_L4" scadeType="Main::analogValues" targetName="analogValues" targetType="analogValues_Main"/>
+      <Local scadeName="_L5" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+          targetType="analogOffsetValues_Main"/>
+      <Local scadeName="_L8" scadeType="Main::motorValues" targetName="motorValues" targetType="motorValues_Main"
+          inCtx="true"/>
+      <Local scadeName="_L9" scadeType="Main::angleValues" targetName="anlgeValues" targetType="angleValues_Main"
+          inCtx="true"/>
+      <Local scadeName="_L10" scadeType="Main::angleValues" targetName="anlgeSpeedValues" targetType="angleValues_Main"
+          inCtx="true"/>
+      <Local scadeName="_L11" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+      <Local scadeName="_L12" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real" inCtx="true"/>
+      <Local scadeName="_L13" scadeType="Main::analogOffsetValues" targetName="analogCorrectedOffsetValues"
+          targetType="analogOffsetValues_Main" inCtx="true"/>
+      <Local scadeName="_L14" scadeType="Main::rcValuesReal" targetName="setpointValues" targetType="rcValuesReal_Main"
+          inCtx="true"/>
+      <Local scadeName="_L15" scadeType="Main::attitudeController" targetName="attitudeControllerValues"
+          targetType="attitudeController_Main" inCtx="true"/>
+      <Local scadeName="_L16" scadeType="Main::heightController" targetName="heightControllerValues"
+          targetType="heightController_Main" inCtx="true"/>
+      <Local scadeName="_L17" scadeType="Main::accelerationAngles" targetName="accelerationAngleValues"
+          targetType="accelerationAngles_Main" inCtx="true"/>
+      <NodeInstance scadeName="Controller::controller" instName="1" refName="controller_Controller">
+        <OutCtxVar targetName="Context_1"/>
+      </NodeInstance>
+      <OutCtxType targetName="outC_main_Main"/>
+      <InCtxType targetName="inC_main_Main"/>
+    </RootNode>
+  </Package>
+  <Package scadeName="Controller">
+    <Package scadeName="HeightController">
+      <NoExpNode scadeName="heightController" headerFile="heightController_Controller_HeightController.h"
+          targetCycleFct="heightController_Controller_HeightController"
+          targetInitFct="heightController_reset_Controller_HeightController">
+        <Input scadeName="rcFlags" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Input scadeName="setpointValues" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main"/>
+        <Input scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real"/>
+        <Input scadeName="heightSpeedValue" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"/>
+        <Output scadeName="thrust" scadeType="real" targetName="thrust" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="heightControllerValues" scadeType="Main::heightController"
+            targetName="heightControllerValues" targetType="heightController_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="real" targetName="heightValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"/>
+        <Local scadeName="_L3" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L4" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Local scadeName="_L16" scadeType="Main::controllerSettings" targetName="CONTROLLER_HEIGHT_SETTINGS_Main"
+            targetType="controllerSettings_Main"/>
+        <Local scadeName="_L38" scadeType="bool" targetName="_L38" targetType="kcg_bool"/>
+        <Local scadeName="_L42" scadeType="Main::heightController" targetName="heightControllerValues"
+            targetType="heightController_Main" inCtx="true"/>
+        <Local scadeName="_L43" scadeType="real" targetName="thrust" targetType="kcg_real" inCtx="true"/>
+        <NodeInstance scadeName="Controller::HeightController::PIDHeightController" instName="1"
+            refName="PIDHeightController_Controller_HeightController">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::HeightController::getOffsetGasPosition" instName="1"
+            refName="getOffsetGasPosition_Controller_HeightController">
+          <OutCtxVar targetName="_2_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::HeightController::getHeightSetpoint" instName="1"
+            refName="getHeightSetpoint_Controller_HeightController">
+          <OutCtxVar targetName="_1_Context_1"/>
+        </NodeInstance>
+        <OutCtxType targetName="outC_heightController_Controller_HeightController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="PIDHeightController" headerFile="PIDHeightController_Controller_HeightController.h"
+          targetCycleFct="PIDHeightController_Controller_HeightController"
+          targetInitFct="PIDHeightController_reset_Controller_HeightController">
+        <Input scadeName="setpointValue" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Input scadeName="actualValue" scadeType="real" targetName="actualValue" targetType="kcg_real"/>
+        <Input scadeName="settingValues" scadeType="Main::controllerSettings" targetName="settingValues"
+            targetType="controllerSettings_Main"/>
+        <Input scadeName="speedValue" scadeType="real" targetName="speedValue" targetType="kcg_real"/>
+        <Input scadeName="integralStartValue" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Input scadeName="activeSignal" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Output scadeName="controllerParts" scadeType="Main::controllerSettings" targetName="controllerParts"
+            targetType="controllerSettings_Main" inCtx="true"/>
+        <Output scadeName="motorValue" scadeType="real" targetName="motorValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="actualValue" targetType="kcg_real"/>
+        <Local scadeName="_L4" scadeType="Main::controllerSettings" targetName="settingValues"
+            targetType="controllerSettings_Main"/>
+        <Local scadeName="_L7" scadeType="real" targetName="motorValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L17" scadeType="real" targetName="speedValue" targetType="kcg_real"/>
+        <Local scadeName="_L20" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Local scadeName="_L21" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L49" scadeType="Main::controllerSettings" targetName="controllerParts"
+            targetType="controllerSettings_Main" inCtx="true"/>
+        <Local scadeName="_L51" scadeType="real" targetName="_L51" targetType="kcg_real"/>
+        <Local scadeName="_L53" scadeType="real" targetName="_L53" targetType="kcg_real"/>
+        <NodeInstance scadeName="Controller::HeightController::dampingTermHC" instName="1"
+            refName="dampingTermHC_Controller_HeightController"/>
+        <NodeInstance scadeName="Controller::HeightController::proportionalTermHC" instName="1"
+            refName="proportionalTermHC_Controller_HeightController"/>
+        <NodeInstance scadeName="Controller::HeightController::integralTermHC" instName="1"
+            refName="integralTermHC_Controller_HeightController">
+          <OutCtxVar targetName="_1_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::HeightController::derivativeTermHC" instName="1"
+            refName="derivativeTermHC_Controller_HeightController">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <OutCtxType targetName="outC_PIDHeightController_Controller_HeightController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="getOffsetGasPosition" headerFile="getOffsetGasPosition_Controller_HeightController.h"
+          targetCycleFct="getOffsetGasPosition_Controller_HeightController"
+          targetInitFct="getOffsetGasPosition_reset_Controller_HeightController">
+        <Input scadeName="lostConnectionSignal" scadeType="bool" targetName="lostConnectionSignal"
+            targetType="kcg_bool"/>
+        <Input scadeName="activeSignal" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Input scadeName="thrustValue" scadeType="real" targetName="thrustValue" targetType="kcg_real"/>
+        <Output scadeName="setpointValue" scadeType="real" targetName="setpointValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Local scadeName="_L1" scadeType="real" targetName="thrustValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Memory scadeName="_L3" scadeType="real" targetName="_L3" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L12" scadeType="bool" targetName="lostConnectionSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L13" scadeType="real" targetName="setpointValue" targetType="kcg_real" inCtx="true"/>
+        <NodeInstance scadeName="Functions::rcAdjustingReal" instName="1" refName="rcAdjustingReal_Functions"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_getOffsetGasPosition_Controller_HeightController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="getHeightSetpoint" headerFile="getHeightSetpoint_Controller_HeightController.h"
+          targetCycleFct="getHeightSetpoint_Controller_HeightController"
+          targetInitFct="getHeightSetpoint_reset_Controller_HeightController">
+        <Input scadeName="activeSignal" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Input scadeName="setpointValue" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Input scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real"/>
+        <Output scadeName="heightSetpointValue" scadeType="real" targetName="heightSetpointValue" targetType="kcg_real"
+            mem="true" inCtx="true"/>
+        <Local scadeName="_L5" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L3" scadeType="real" targetName="heightSetpointValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L2" scadeType="real" targetName="heightValue" targetType="kcg_real"/>
+        <Local scadeName="_L10" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_getHeightSetpoint_Controller_HeightController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="dampingTermHC" headerFile="dampingTermHC_Controller_HeightController.h"
+          targetCycleFct="dampingTermHC_Controller_HeightController">
+        <Input scadeName="Ks" scadeType="real" targetName="Ks" targetType="kcg_real"/>
+        <Input scadeName="speedValue" scadeType="real" targetName="speedValue" targetType="kcg_real"/>
+        <Output scadeName="dampingValue" scadeType="real" targetName="dampingValue" targetType="kcg_real"/>
+        <Local scadeName="_L3" scadeType="real" targetName="dampingValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="Ks" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="real" targetName="speedValue" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="proportionalTermHC" headerFile="proportionalTermHC_Controller_HeightController.h"
+          targetCycleFct="proportionalTermHC_Controller_HeightController">
+        <Input scadeName="Kp" scadeType="real" targetName="Kp" targetType="kcg_real"/>
+        <Input scadeName="differenceValue" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Output scadeName="pValue" scadeType="real" targetName="pValue" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="real" targetName="pValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Local scadeName="_L3" scadeType="real" targetName="Kp" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="integralTermHC" headerFile="integralTermHC_Controller_HeightController.h"
+          targetCycleFct="integralTermHC_Controller_HeightController"
+          targetInitFct="integralTermHC_reset_Controller_HeightController">
+        <Input scadeName="Ki" scadeType="real" targetName="Ki" targetType="kcg_real"/>
+        <Input scadeName="setpointValue" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Memory scadeName="setpointValue" scadeType="real" targetName="rem_setpointValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Input scadeName="differenceValue" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Input scadeName="integralStartValue" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Input scadeName="activeSignal" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Memory scadeName="activeSignal" scadeType="bool" targetName="rem_activeSignal" targetType="kcg_bool"
+            inCtx="true"/>
+        <Output scadeName="iValue" scadeType="real" targetName="iValue" targetType="kcg_real" mem="true" inCtx="true"/>
+        <Local scadeName="_L3" scadeType="real" targetName="iValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L14" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Local scadeName="_L15" scadeType="bool" targetName="activeSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L16" scadeType="real" targetName="Ki" targetType="kcg_real"/>
+        <Local scadeName="_L17" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Local scadeName="_L20" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Local scadeName="_L28" scadeType="bool" targetName="_L28" targetType="kcg_bool"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="1" refName="minMaxLimitation_Functions"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_integralTermHC_Controller_HeightController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="derivativeTermHC" headerFile="derivativeTermHC_Controller_HeightController.h"
+          targetCycleFct="derivativeTermHC_Controller_HeightController"
+          targetInitFct="derivativeTermHC_reset_Controller_HeightController">
+        <Input scadeName="Kd" scadeType="real" targetName="Kd" targetType="kcg_real"/>
+        <Input scadeName="differenceValue" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Memory scadeName="differenceValue" scadeType="real" targetName="rem_differenceValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Output scadeName="dValue" scadeType="real" targetName="dValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L6" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Local scadeName="_L7" scadeType="real" targetName="dValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L8" scadeType="real" targetName="Kd" targetType="kcg_real"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_derivativeTermHC_Controller_HeightController"/>
+      </NoExpNode>
+    </Package>
+    <Package scadeName="AttitudeController">
+      <NoExpNode scadeName="attitudeController" headerFile="attitudeController_Controller_AttitudeController.h"
+          targetCycleFct="attitudeController_Controller_AttitudeController"
+          targetInitFct="attitudeController_reset_Controller_AttitudeController">
+        <Input scadeName="rcFlags" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Input scadeName="setpointValues" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main"/>
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Input scadeName="angleSpeedValues" scadeType="Main::angleValues" targetName="angleSpeedValues"
+            targetType="angleValues_Main"/>
+        <Output scadeName="psi" scadeType="real" targetName="psi" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="theta" scadeType="real" targetName="theta" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="phi" scadeType="real" targetName="phi" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="attitudeControllerValues" scadeType="Main::attitudeController"
+            targetName="attitudeControllerValues" targetType="attitudeController_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L2" scadeType="Main::angleValues" targetName="angleSpeedValues"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L3" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L4" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Local scadeName="_L5" scadeType="real" targetName="psi" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L7" scadeType="real" targetName="phi" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L33" scadeType="Main::controllerSettings" targetName="CONTROLLER_PSI_SETTINGS_Main"
+            targetType="controllerSettings_Main"/>
+        <Local scadeName="_L34" scadeType="Main::controllerSettings" targetName="CONTROLLER_THETA_PHI_SETTINGS_Main"
+            targetType="controllerSettings_Main"/>
+        <Local scadeName="_L50" scadeType="Main::attitudeController" targetName="attitudeControllerValues"
+            targetType="attitudeController_Main" inCtx="true"/>
+        <Local scadeName="_L58" scadeType="Main::rcValuesReal" targetName="_L58" targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L65" scadeType="real" targetName="theta" targetType="kcg_real" inCtx="true"/>
+        <NodeInstance scadeName="Controller::AttitudeController::PIDControllerPhiPsi" instName="3"
+            refName="PIDControllerPhiPsi_Controller_AttitudeController">
+          <OutCtxVar targetName="Context_3"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::PIDControllerPhiPsi" instName="2"
+            refName="PIDControllerPhiPsi_Controller_AttitudeController">
+          <OutCtxVar targetName="Context_2"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::getPsiSetpoint" instName="1"
+            refName="getPsiSetpoint_Controller_AttitudeController">
+          <OutCtxVar targetName="_1_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::PIDControllerTheta" instName="1"
+            refName="PIDControllerTheta_Controller_AttitudeController">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <OutCtxType targetName="outC_attitudeController_Controller_AttitudeController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="PIDControllerPhiPsi" headerFile="PIDControllerPhiPsi_Controller_AttitudeController.h"
+          targetCycleFct="PIDControllerPhiPsi_Controller_AttitudeController"
+          targetInitFct="PIDControllerPhiPsi_reset_Controller_AttitudeController">
+        <Input scadeName="setpointValue" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Input scadeName="actualValue" scadeType="real" targetName="actualValue" targetType="kcg_real"/>
+        <Input scadeName="settingValues" scadeType="Main::controllerSettings" targetName="settingValues"
+            targetType="controllerSettings_Main"/>
+        <Input scadeName="angleSpeedValue" scadeType="real" targetName="angleSpeedValue" targetType="kcg_real"/>
+        <Input scadeName="integralStartValue" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Input scadeName="motorsOnSignal" scadeType="bool" targetName="motorsOnSignal" targetType="kcg_bool"/>
+        <Output scadeName="motorValue" scadeType="real" targetName="motorValue" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="controllerParts" scadeType="Main::controllerSettings" targetName="controllerParts"
+            targetType="controllerSettings_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="actualValue" targetType="kcg_real"/>
+        <Local scadeName="_L4" scadeType="Main::controllerSettings" targetName="settingValues"
+            targetType="controllerSettings_Main"/>
+        <Local scadeName="_L7" scadeType="real" targetName="motorValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L17" scadeType="real" targetName="angleSpeedValue" targetType="kcg_real"/>
+        <Local scadeName="_L20" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Local scadeName="_L21" scadeType="bool" targetName="motorsOnSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L36" scadeType="Main::controllerSettings" targetName="controllerParts"
+            targetType="controllerSettings_Main" inCtx="true"/>
+        <Local scadeName="_L37" scadeType="real" targetName="_L37" targetType="kcg_real"/>
+        <Local scadeName="_L40" scadeType="real" targetName="_L40" targetType="kcg_real"/>
+        <NodeInstance scadeName="Functions::angleLimitation180" instName="1" refName="angleLimitation180_Functions"/>
+        <NodeInstance scadeName="Controller::AttitudeController::proportionalTerm" instName="1"
+            refName="proportionalTerm_Controller_AttitudeController"/>
+        <NodeInstance scadeName="Controller::AttitudeController::integralTerm" instName="1"
+            refName="integralTerm_Controller_AttitudeController">
+          <OutCtxVar targetName="_1_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::derivativeTerm" instName="1"
+            refName="derivativeTerm_Controller_AttitudeController">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::dampingTerm" instName="1"
+            refName="dampingTerm_Controller_AttitudeController"/>
+        <OutCtxType targetName="outC_PIDControllerPhiPsi_Controller_AttitudeController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="getPsiSetpoint" headerFile="getPsiSetpoint_Controller_AttitudeController.h"
+          targetCycleFct="getPsiSetpoint_Controller_AttitudeController"
+          targetInitFct="getPsiSetpoint_reset_Controller_AttitudeController">
+        <Input scadeName="setpointThrust" scadeType="real" targetName="setpointThrust" targetType="kcg_real"/>
+        <Input scadeName="setpointYaw" scadeType="real" targetName="setpointYaw" targetType="kcg_real"/>
+        <Input scadeName="anglePsi" scadeType="real" targetName="anglePsi" targetType="kcg_real"/>
+        <Input scadeName="motorsOn" scadeType="bool" targetName="motorsOn" targetType="kcg_bool"/>
+        <Output scadeName="psiSetpointValue" scadeType="real" targetName="psiSetpointValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Memory scadeName="_L3" scadeType="real" targetName="_L3" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L2" scadeType="real" targetName="anglePsi" targetType="kcg_real"/>
+        <Local scadeName="_L6" scadeType="real" targetName="setpointYaw" targetType="kcg_real"/>
+        <Local scadeName="_L9" scadeType="real" targetName="psiSetpointValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L12" scadeType="real" targetName="setpointThrust" targetType="kcg_real"/>
+        <Local scadeName="_L14" scadeType="real" targetName="_L14" targetType="kcg_real"/>
+        <Local scadeName="_L16" scadeType="bool" targetName="motorsOn" targetType="kcg_bool"/>
+        <NodeInstance scadeName="Functions::angleLimitation180" instName="1" refName="angleLimitation180_Functions"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_getPsiSetpoint_Controller_AttitudeController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="proportionalTerm" headerFile="proportionalTerm_Controller_AttitudeController.h"
+          targetCycleFct="proportionalTerm_Controller_AttitudeController">
+        <Input scadeName="Kp" scadeType="real" targetName="Kp" targetType="kcg_real"/>
+        <Input scadeName="differenceValue" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Output scadeName="pValue" scadeType="real" targetName="pValue" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="real" targetName="pValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Local scadeName="_L3" scadeType="real" targetName="Kp" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="integralTerm" headerFile="integralTerm_Controller_AttitudeController.h"
+          targetCycleFct="integralTerm_Controller_AttitudeController"
+          targetInitFct="integralTerm_reset_Controller_AttitudeController">
+        <Input scadeName="Ki" scadeType="real" targetName="Ki" targetType="kcg_real"/>
+        <Input scadeName="differenceValue" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Input scadeName="integralStartValue" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Input scadeName="motorsOnSignal" scadeType="bool" targetName="motorsOnSignal" targetType="kcg_bool"/>
+        <Output scadeName="iValue" scadeType="real" targetName="iValue" targetType="kcg_real" mem="true" inCtx="true"/>
+        <Local scadeName="_L3" scadeType="real" targetName="iValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L14" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Local scadeName="_L15" scadeType="bool" targetName="motorsOnSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L16" scadeType="real" targetName="Ki" targetType="kcg_real"/>
+        <Local scadeName="_L17" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="1" refName="minMaxLimitation_Functions"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_integralTerm_Controller_AttitudeController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="derivativeTerm" headerFile="derivativeTerm_Controller_AttitudeController.h"
+          targetCycleFct="derivativeTerm_Controller_AttitudeController"
+          targetInitFct="derivativeTerm_reset_Controller_AttitudeController">
+        <Input scadeName="Kd" scadeType="real" targetName="Kd" targetType="kcg_real"/>
+        <Input scadeName="differenceValue" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Memory scadeName="differenceValue" scadeType="real" targetName="rem_differenceValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Output scadeName="dValue" scadeType="real" targetName="dValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L6" scadeType="real" targetName="differenceValue" targetType="kcg_real"/>
+        <Local scadeName="_L7" scadeType="real" targetName="dValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L8" scadeType="real" targetName="Kd" targetType="kcg_real"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_derivativeTerm_Controller_AttitudeController"/>
+      </NoExpNode>
+      <NoExpNode scadeName="dampingTerm" headerFile="dampingTerm_Controller_AttitudeController.h"
+          targetCycleFct="dampingTerm_Controller_AttitudeController">
+        <Input scadeName="Ks" scadeType="real" targetName="Ks" targetType="kcg_real"/>
+        <Input scadeName="angleSpeedValue" scadeType="real" targetName="angleSpeedValue" targetType="kcg_real"/>
+        <Output scadeName="dampingValue" scadeType="real" targetName="dampingValue" targetType="kcg_real"/>
+        <Local scadeName="_L3" scadeType="real" targetName="dampingValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="Ks" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="real" targetName="angleSpeedValue" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="PIDControllerTheta" headerFile="PIDControllerTheta_Controller_AttitudeController.h"
+          targetCycleFct="PIDControllerTheta_Controller_AttitudeController"
+          targetInitFct="PIDControllerTheta_reset_Controller_AttitudeController">
+        <Input scadeName="setpointValue" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Input scadeName="actualValue" scadeType="real" targetName="actualValue" targetType="kcg_real"/>
+        <Input scadeName="settingValues" scadeType="Main::controllerSettings" targetName="settingValues"
+            targetType="controllerSettings_Main"/>
+        <Input scadeName="angleSpeedValue" scadeType="real" targetName="angleSpeedValue" targetType="kcg_real"/>
+        <Input scadeName="integralStartValue" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Input scadeName="motorsOnSignal" scadeType="bool" targetName="motorsOnSignal" targetType="kcg_bool"/>
+        <Output scadeName="motorValue" scadeType="real" targetName="motorValue" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="controllerParts" scadeType="Main::controllerSettings" targetName="controllerParts"
+            targetType="controllerSettings_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="real" targetName="setpointValue" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="actualValue" targetType="kcg_real"/>
+        <Local scadeName="_L4" scadeType="Main::controllerSettings" targetName="settingValues"
+            targetType="controllerSettings_Main"/>
+        <Local scadeName="_L7" scadeType="real" targetName="motorValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L17" scadeType="real" targetName="angleSpeedValue" targetType="kcg_real"/>
+        <Local scadeName="_L20" scadeType="real" targetName="integralStartValue" targetType="kcg_real"/>
+        <Local scadeName="_L21" scadeType="bool" targetName="motorsOnSignal" targetType="kcg_bool"/>
+        <Local scadeName="_L36" scadeType="Main::controllerSettings" targetName="controllerParts"
+            targetType="controllerSettings_Main" inCtx="true"/>
+        <Local scadeName="_L37" scadeType="real" targetName="_L37" targetType="kcg_real"/>
+        <Local scadeName="_L40" scadeType="real" targetName="_L40" targetType="kcg_real"/>
+        <NodeInstance scadeName="Controller::AttitudeController::proportionalTerm" instName="1"
+            refName="proportionalTerm_Controller_AttitudeController"/>
+        <NodeInstance scadeName="Controller::AttitudeController::integralTerm" instName="1"
+            refName="integralTerm_Controller_AttitudeController">
+          <OutCtxVar targetName="_1_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::derivativeTerm" instName="1"
+            refName="derivativeTerm_Controller_AttitudeController">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::AttitudeController::dampingTerm" instName="1"
+            refName="dampingTerm_Controller_AttitudeController"/>
+        <NodeInstance scadeName="Functions::angleLimitation90" instName="1" refName="angleLimitation90_Functions"/>
+        <OutCtxType targetName="outC_PIDControllerTheta_Controller_AttitudeController"/>
+      </NoExpNode>
+    </Package>
+    <Package scadeName="CalculateMotorSpeed">
+      <NoExpNode scadeName="calculateMotorSpeed" headerFile="calculateMotorSpeed_Controller_CalculateMotorSpeed.h"
+          targetCycleFct="calculateMotorSpeed_Controller_CalculateMotorSpeed">
+        <Input scadeName="rcFlags" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Input scadeName="psi" scadeType="real" targetName="psi" targetType="kcg_real"/>
+        <Input scadeName="theta" scadeType="real" targetName="theta" targetType="kcg_real"/>
+        <Input scadeName="phi" scadeType="real" targetName="phi" targetType="kcg_real"/>
+        <Input scadeName="thrust" scadeType="real" targetName="thrust" targetType="kcg_real"/>
+        <Output scadeName="motorValues" scadeType="Main::motorValues" targetName="motorValues"
+            targetType="motorValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Local scadeName="_L2" scadeType="Main::motorValues" targetName="motorValues" targetType="motorValues_Main"/>
+        <Local scadeName="_L3" scadeType="real" targetName="psi" targetType="kcg_real"/>
+        <Local scadeName="_L4" scadeType="real" targetName="theta" targetType="kcg_real"/>
+        <Local scadeName="_L5" scadeType="real" targetName="phi" targetType="kcg_real"/>
+        <Local scadeName="_L6" scadeType="real" targetName="thrust" targetType="kcg_real"/>
+        <Local scadeName="_L7" scadeType="real" targetName="_L7" targetType="kcg_real"/>
+        <Local scadeName="_L8" scadeType="real" targetName="_L7" targetType="kcg_real"/>
+        <Local scadeName="_L10" scadeType="real" targetName="_L10" targetType="kcg_real"/>
+        <Local scadeName="_L11" scadeType="real" targetName="_L10" targetType="kcg_real"/>
+        <Local scadeName="_L50" scadeType="real" targetName="_L50" targetType="kcg_real"/>
+        <Local scadeName="_L52" scadeType="real" targetName="_L52" targetType="kcg_real"/>
+        <Local scadeName="_L53" scadeType="real" targetName="_L53" targetType="kcg_real"/>
+        <Local scadeName="_L54" scadeType="real" targetName="_L54" targetType="kcg_real"/>
+        <NodeInstance scadeName="Functions::motorLimitation" instName="1" refName="motorLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::motorLimitation" instName="2" refName="motorLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::motorLimitation" instName="3" refName="motorLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::motorLimitation" instName="4" refName="motorLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="1" refName="minMaxLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="3" refName="minMaxLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="4" refName="minMaxLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="5" refName="minMaxLimitation_Functions"/>
+      </NoExpNode>
+    </Package>
+    <Package scadeName="Setpoint">
+      <NoExpNode scadeName="setpoints" headerFile="setpoints_Controller_Setpoint.h"
+          targetCycleFct="setpoints_Controller_Setpoint" targetInitFct="setpoints_reset_Controller_Setpoint">
+        <Input scadeName="rcFlags" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Input scadeName="rcValues" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Output scadeName="setpointValues" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+        <Local scadeName="_L10" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L17" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+        <Local scadeName="_L20" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main" inCtx="true"/>
+        <Local scadeName="_L30" scadeType="Main::rcValues" targetName="RC_OFFSET_VALUES_Main"
+            targetType="rcValues_Main"/>
+        <NodeInstance scadeName="Controller::Setpoint::setOffsets" instName="1"
+            refName="setOffsets_Controller_Setpoint"/>
+        <NodeInstance scadeName="Controller::Setpoint::rotationMatrix" instName="1"
+            refName="rotationMatrix_Controller_Setpoint"/>
+        <NodeInstance scadeName="Controller::Setpoint::limitationBlock" instName="1"
+            refName="limitationBlock_Controller_Setpoint"/>
+        <NodeInstance scadeName="Controller::Setpoint::getPsiStartValue" instName="1"
+            refName="getPsiStartValue_Controller_Setpoint">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::Setpoint::calcSetpoints" instName="1"
+            refName="calcSetpoints_Controller_Setpoint"/>
+        <OutCtxType targetName="outC_setpoints_Controller_Setpoint"/>
+      </NoExpNode>
+      <NoExpNode scadeName="setOffsets" headerFile="setOffsets_Controller_Setpoint.h"
+          targetCycleFct="setOffsets_Controller_Setpoint">
+        <Input scadeName="rcValues" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+        <Input scadeName="rcOffsetValues" scadeType="Main::rcValues" targetName="rcOffsetValues"
+            targetType="rcValues_Main"/>
+        <Output scadeName="rcAdjustedValues" scadeType="Main::rcValues" targetName="rcAdjustedValues"
+            targetType="rcValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+        <Local scadeName="_L2" scadeType="Main::rcValues" targetName="rcOffsetValues" targetType="rcValues_Main"/>
+        <Local scadeName="_L22" scadeType="Main::rcValues" targetName="rcAdjustedValues" targetType="rcValues_Main"/>
+        <NodeInstance scadeName="Functions::rcAdjusting" instName="1" refName="rcAdjusting_Functions"/>
+        <NodeInstance scadeName="Functions::rcAdjusting" instName="2" refName="rcAdjusting_Functions"/>
+        <NodeInstance scadeName="Functions::rcAdjusting" instName="3" refName="rcAdjusting_Functions"/>
+      </NoExpNode>
+      <NoExpNode scadeName="rotationMatrix" headerFile="rotationMatrix_Controller_Setpoint.h"
+          targetCycleFct="rotationMatrix_Controller_Setpoint">
+        <Input scadeName="anglePsi" scadeType="real" targetName="anglePsi" targetType="kcg_real"/>
+        <Input scadeName="psiStartValue" scadeType="real" targetName="psiStartValue" targetType="kcg_real"/>
+        <Input scadeName="rcAdjustedValues" scadeType="Main::rcValues" targetName="rcAdjustedValues"
+            targetType="rcValues_Main"/>
+        <Output scadeName="rcTransformedValues" scadeType="Main::rcValuesReal" targetName="rcTransformedValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L1" scadeType="real" targetName="anglePsi" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="Main::rcValuesReal" targetName="rcTransformedValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L3" scadeType="Main::rcValues" targetName="rcAdjustedValues" targetType="rcValues_Main"/>
+        <Local scadeName="_L11" scadeType="real" targetName="_L11" targetType="kcg_real"/>
+        <Local scadeName="_L12" scadeType="real" targetName="_L12" targetType="kcg_real"/>
+        <Local scadeName="_L25" scadeType="real" targetName="psiStartValue" targetType="kcg_real"/>
+        <Local scadeName="_L26" scadeType="real" targetName="_L26" targetType="kcg_real"/>
+        <Local scadeName="_L27" scadeType="real" targetName="_L27" targetType="kcg_real"/>
+        <Local scadeName="_L29" scadeType="real" targetName="_L29" targetType="kcg_real"/>
+        <NodeInstance scadeName="mathext::CosR" instName="1" refName="CosR_mathext"/>
+        <NodeInstance scadeName="mathext::SinR" instName="1" refName="SinR_mathext"/>
+        <NodeInstance scadeName="Functions::angleLimitation180" instName="1" refName="angleLimitation180_Functions"/>
+        <NodeInstance scadeName="Functions::degree2radian" instName="1" refName="degree2radian_Functions"/>
+      </NoExpNode>
+      <NoExpNode scadeName="limitationBlock" headerFile="limitationBlock_Controller_Setpoint.h"
+          targetCycleFct="limitationBlock_Controller_Setpoint">
+        <Input scadeName="rcNormalizedValues" scadeType="Main::rcValuesReal" targetName="rcNormalizedValues"
+            targetType="rcValuesReal_Main"/>
+        <Output scadeName="setpointValues" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L1" scadeType="Main::rcValuesReal" targetName="rcNormalizedValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L6" scadeType="Main::rcValuesReal" targetName="setpointValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L13" scadeType="Main::rcValuesReal" targetName="RC_MAX_VALUES_Main"
+            targetType="rcValuesReal_Main"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="1" refName="minMaxLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="2" refName="minMaxLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="3" refName="minMaxLimitation_Functions"/>
+        <NodeInstance scadeName="Functions::minMaxLimitation" instName="4" refName="minMaxLimitation_Functions"/>
+      </NoExpNode>
+      <NoExpNode scadeName="getPsiStartValue" headerFile="getPsiStartValue_Controller_Setpoint.h"
+          targetCycleFct="getPsiStartValue_Controller_Setpoint"
+          targetInitFct="getPsiStartValue_reset_Controller_Setpoint">
+        <Input scadeName="anglePsi" scadeType="real" targetName="anglePsi" targetType="kcg_real"/>
+        <Input scadeName="motorsOn" scadeType="bool" targetName="motorsOn" targetType="kcg_bool"/>
+        <Output scadeName="psiStartValue" scadeType="real" targetName="psiStartValue" targetType="kcg_real" mem="true"
+            inCtx="true"/>
+        <Local scadeName="_L2" scadeType="real" targetName="anglePsi" targetType="kcg_real"/>
+        <Local scadeName="_L9" scadeType="real" targetName="psiStartValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="bool" targetName="motorsOn" targetType="kcg_bool"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_getPsiStartValue_Controller_Setpoint"/>
+      </NoExpNode>
+      <NoExpNode scadeName="calcSetpoints" headerFile="calcSetpoints_Controller_Setpoint.h"
+          targetCycleFct="calcSetpoints_Controller_Setpoint">
+        <Input scadeName="rcTransformedValues" scadeType="Main::rcValuesReal" targetName="rcTransformedValues"
+            targetType="rcValuesReal_Main"/>
+        <Output scadeName="rcNormalizedValues" scadeType="Main::rcValuesReal" targetName="rcNormalizedValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L1" scadeType="Main::rcValuesReal" targetName="rcTransformedValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L17" scadeType="Main::rcValuesReal" targetName="rcNormalizedValues"
+            targetType="rcValuesReal_Main"/>
+        <Local scadeName="_L19" scadeType="Main::rcNormalizingValues" targetName="RC_NORMALIZING_Main"
+            targetType="rcNormalizingValues_Main"/>
+        <Local scadeName="_L28" scadeType="Main::rcValuesReal" targetName="RC_MAX_VALUES_Main"
+            targetType="rcValuesReal_Main"/>
+      </NoExpNode>
+    </Package>
+    <Package scadeName="Signalprocessing">
+      <NoExpNode scadeName="signalprocessing" headerFile="signalprocessing_Controller_Signalprocessing.h"
+          targetCycleFct="signalprocessing_Controller_Signalprocessing"
+          targetInitFct="signalprocessing_reset_Controller_Signalprocessing">
+        <Input scadeName="analogValues" scadeType="Main::analogValues" targetName="analogValues"
+            targetType="analogValues_Main"/>
+        <Input scadeName="analogOffsetValues" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Output scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main" mem="true" inCtx="true"/>
+        <Output scadeName="angleSpeedValues" scadeType="Main::angleValues" targetName="angleSpeedValues"
+            targetType="angleValues_Main" inCtx="true"/>
+        <Output scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+        <Output scadeName="heightSpeedValue" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Output scadeName="analogCorrectedOffsetValues" scadeType="Main::analogOffsetValues"
+            targetName="analogCorrectedOffsetValues" targetType="analogOffsetValues_Main" inCtx="true"/>
+        <Output scadeName="accelertionAngles" scadeType="Main::accelerationAngles" targetName="accelertionAngles"
+            targetType="accelerationAngles_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="Main::analogValues" targetName="analogValues" targetType="analogValues_Main"/>
+        <Local scadeName="_L18" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Local scadeName="_L25" scadeType="Main::sinCosValues" targetName="_L25" targetType="sinCosValues_Main"/>
+        <Local scadeName="_L30" scadeType="real" targetName="_L30" targetType="kcg_real"/>
+        <Local scadeName="_L49" scadeType="Main::angleValues" targetName="_L49" targetType="angleValues_Main"/>
+        <Local scadeName="_L50" scadeType="Main::angleValues" targetName="ANGLES_INIT_Main"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L28" scadeType="Main::angleValues" targetName="angleSpeedValues"
+            targetType="angleValues_Main" inCtx="true"/>
+        <Local scadeName="_L31" scadeType="real" targetName="_L31" targetType="kcg_real"/>
+        <Local scadeName="_L29" scadeType="Main::accelerations" targetName="_L29" targetType="accelerations_Main"/>
+        <Local scadeName="_L53" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L54" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L55" scadeType="Main::accelerationAngles" targetName="accelertionAngles"
+            targetType="accelerationAngles_Main" inCtx="true"/>
+        <Local scadeName="_L56" scadeType="Main::analogOffsetValues" targetName="analogCorrectedOffsetValues"
+            targetType="analogOffsetValues_Main" inCtx="true"/>
+        <Local scadeName="_L58" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"
+            inCtx="true"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::meanSquareFilterBlock" instName="1"
+            refName="meanSquareFilterBlock_Controller_Signalprocessing">
+          <OutCtxVar targetName="_2_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::Signalprocessing::sinCosValues" instName="1"
+            refName="sinCosValues_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::setOffsets" instName="1"
+            refName="setOffsets_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::calcUnitsFromAnalog" instName="1"
+            refName="calcUnitsFromAnalog_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::calcHeightValues" instName="1"
+            refName="calcHeightValues_Controller_Signalprocessing">
+          <OutCtxVar targetName="_1_Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::Signalprocessing::calcAngleValues" instName="1"
+            refName="calcAngleValues_Controller_Signalprocessing">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_signalprocessing_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="meanSquareFilterBlock" headerFile="meanSquareFilterBlock_Controller_Signalprocessing.h"
+          targetCycleFct="meanSquareFilterBlock_Controller_Signalprocessing"
+          targetInitFct="meanSquareFilterBlock_reset_Controller_Signalprocessing">
+        <Input scadeName="analogAdjustedValues" scadeType="Main::analogValuesReal" targetName="analogAdjustedValues"
+            targetType="analogValuesReal_Main"/>
+        <Output scadeName="analogValuesFiltered" scadeType="Main::analogValuesReal" targetName="analogValuesFiltered"
+            targetType="analogValuesReal_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="Main::analogValuesReal" targetName="analogAdjustedValues"
+            targetType="analogValuesReal_Main"/>
+        <Local scadeName="_L11" scadeType="Main::analogValuesReal" targetName="analogValuesFiltered"
+            targetType="analogValuesReal_Main" inCtx="true"/>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="1" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="2" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_2"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="3" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_3"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="4" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_4"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="5" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_5"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="6" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_6"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Functions::meanSquareFilter" instName="7" refName="meanSquareFilter_Functions">
+          <OutCtxVar targetName="Context_7"/>
+        </NodeInstance>
+        <OutCtxType targetName="outC_meanSquareFilterBlock_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="sinCosValues" headerFile="sinCosValues_Controller_Signalprocessing.h"
+          targetCycleFct="sinCosValues_Controller_Signalprocessing">
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Output scadeName="sinCosValues" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L7" scadeType="real" targetName="_L7" targetType="kcg_real"/>
+        <Local scadeName="_L20" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <NodeInstance scadeName="Functions::degree2radian" instName="1" refName="degree2radian_Functions"/>
+        <NodeInstance scadeName="Functions::degree2radian" instName="2" refName="degree2radian_Functions"/>
+        <NodeInstance scadeName="Functions::degree2radian" instName="3" refName="degree2radian_Functions"/>
+        <NodeInstance scadeName="mathext::CosR" instName="1" refName="CosR_mathext"/>
+        <NodeInstance scadeName="mathext::SinR" instName="1" refName="SinR_mathext"/>
+        <NodeInstance scadeName="mathext::SinR" instName="2" refName="SinR_mathext"/>
+        <NodeInstance scadeName="mathext::CosR" instName="2" refName="CosR_mathext"/>
+        <NodeInstance scadeName="mathext::CosR" instName="3" refName="CosR_mathext"/>
+        <NodeInstance scadeName="mathext::SinR" instName="3" refName="SinR_mathext"/>
+      </NoExpNode>
+      <NoExpNode scadeName="angleTransformation" headerFile="angleTransformation_Controller_Signalprocessing.h"
+          targetCycleFct="angleTransformation_Controller_Signalprocessing">
+        <Input scadeName="angleSteps" scadeType="Main::angleValues" targetName="angleSteps"
+            targetType="angleValues_Main"/>
+        <Input scadeName="sinCosValues" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <Output scadeName="angleStepsTransformed" scadeType="Main::angleValues" targetName="angleStepsTransformed"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleSteps" targetType="angleValues_Main"/>
+        <Local scadeName="_L2" scadeType="Main::sinCosValues" targetName="sinCosValues" targetType="sinCosValues_Main"/>
+        <Local scadeName="_L13" scadeType="Main::angleValues" targetName="angleStepsTransformed"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L16" scadeType="bool" targetName="_L16" targetType="kcg_bool"/>
+        <Local scadeName="_L18" scadeType="Main::angleValues" targetName="_L18" targetType="angleValues_Main"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::angleTransformationPhiPsi" instName="1"
+            refName="angleTransformationPhiPsi_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="setOffsets" headerFile="setOffsets_Controller_Signalprocessing.h"
+          targetCycleFct="setOffsets_Controller_Signalprocessing">
+        <Input scadeName="analogValues" scadeType="Main::analogValues" targetName="analogValues"
+            targetType="analogValues_Main"/>
+        <Input scadeName="analogOffsetValues" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Output scadeName="analogAdjustedValues" scadeType="Main::analogValuesReal" targetName="analogAdjustedValues"
+            targetType="analogValuesReal_Main"/>
+        <Local scadeName="_L16" scadeType="Main::analogValues" targetName="analogValues"
+            targetType="analogValues_Main"/>
+        <Local scadeName="_L17" scadeType="Main::analogValuesReal" targetName="analogAdjustedValues"
+            targetType="analogValuesReal_Main"/>
+        <Local scadeName="_L18" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+      </NoExpNode>
+      <NoExpNode scadeName="calcUnitsFromAnalog" headerFile="calcUnitsFromAnalog_Controller_Signalprocessing.h"
+          targetCycleFct="calcUnitsFromAnalog_Controller_Signalprocessing">
+        <Input scadeName="analogValuesFIltered" scadeType="Main::analogValuesReal" targetName="analogValuesFIltered"
+            targetType="analogValuesReal_Main"/>
+        <Output scadeName="heightBarometer" scadeType="real" targetName="heightBarometer" targetType="kcg_real"/>
+        <Output scadeName="accelerations" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Output scadeName="compass" scadeType="real" targetName="compass" targetType="kcg_real"/>
+        <Output scadeName="angleSpeeds" scadeType="Main::angleValues" targetName="angleSpeeds"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::analogValuesReal" targetName="analogValuesFIltered"
+            targetType="analogValuesReal_Main"/>
+        <Local scadeName="_L2" scadeType="real" targetName="compass" targetType="kcg_real"/>
+        <Local scadeName="_L11" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Local scadeName="_L12" scadeType="Main::angleValues" targetName="angleSpeeds" targetType="angleValues_Main"/>
+        <Local scadeName="_L54" scadeType="real" targetName="heightBarometer" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="calcDiscreteAngleChanges"
+          headerFile="calcDiscreteAngleChanges_Controller_Signalprocessing.h"
+          targetCycleFct="calcDiscreteAngleChanges_Controller_Signalprocessing">
+        <Input scadeName="angleSpeeds" scadeType="Main::angleValues" targetName="angleSpeeds"
+            targetType="angleValues_Main"/>
+        <Output scadeName="angleSteps" scadeType="Main::angleValues" targetName="angleSteps"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleSpeeds" targetType="angleValues_Main"/>
+        <Local scadeName="_L20" scadeType="Main::angleValues" targetName="angleSteps" targetType="angleValues_Main"/>
+      </NoExpNode>
+      <NoExpNode scadeName="angleIntegration" headerFile="angleIntegration_Controller_Signalprocessing.h"
+          targetCycleFct="angleIntegration_Controller_Signalprocessing">
+        <Input scadeName="angleStepsTransformed" scadeType="Main::angleValues" targetName="angleStepsTransformed"
+            targetType="angleValues_Main"/>
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Output scadeName="angleValuesNew" scadeType="Main::angleValues" targetName="angleValuesNew"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleStepsTransformed"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L2" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L6" scadeType="Main::angleValues" targetName="angleValuesNew" targetType="angleValues_Main"/>
+      </NoExpNode>
+      <NoExpNode scadeName="angleLimitationBlock" headerFile="angleLimitationBlock_Controller_Signalprocessing.h"
+          targetCycleFct="angleLimitationBlock_Controller_Signalprocessing">
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Output scadeName="angleValuesLimited" scadeType="Main::angleValues" targetName="angleValuesLimited"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L11" scadeType="Main::angleValues" targetName="angleValuesLimited"
+            targetType="angleValues_Main"/>
+        <NodeInstance scadeName="Functions::angleLimitation180" instName="2" refName="angleLimitation180_Functions"/>
+        <NodeInstance scadeName="Functions::angleLimitation180" instName="3" refName="angleLimitation180_Functions"/>
+        <NodeInstance scadeName="Functions::angleLimitation90" instName="1" refName="angleLimitation90_Functions"/>
+      </NoExpNode>
+      <NoExpNode scadeName="driftCorrectionAngles" headerFile="driftCorrectionAngles_Controller_Signalprocessing.h"
+          targetCycleFct="driftCorrectionAngles_Controller_Signalprocessing"
+          targetInitFct="driftCorrectionAngles_reset_Controller_Signalprocessing">
+        <Input scadeName="accelerationAngles" scadeType="Main::accelerationAngles" targetName="accelerationAngles"
+            targetType="accelerationAngles_Main"/>
+        <Input scadeName="compassValue" scadeType="real" targetName="compassValue" targetType="kcg_real"/>
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Output scadeName="angleValuesFiltered" scadeType="Main::angleValues" targetName="angleValuesFiltered"
+            targetType="angleValues_Main" inCtx="true"/>
+        <Output scadeName="diffValues" scadeType="Main::angleValues" targetName="diffValues"
+            targetType="angleValues_Main" inCtx="true"/>
+        <Local scadeName="_L1" scadeType="Main::accelerationAngles" targetName="accelerationAngles"
+            targetType="accelerationAngles_Main"/>
+        <Local scadeName="_L2" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L3" scadeType="real" targetName="compassValue" targetType="kcg_real"/>
+        <Local scadeName="_L18" scadeType="real" targetName="_L18" targetType="kcg_real"/>
+        <Local scadeName="_L29" scadeType="Main::angleValues" targetName="angleValuesFiltered"
+            targetType="angleValues_Main" inCtx="true"/>
+        <Local scadeName="_L30" scadeType="Main::angleValues" targetName="diffValues" targetType="angleValues_Main"
+            inCtx="true"/>
+        <Local scadeName="_L45" scadeType="real" targetName="_L45" targetType="kcg_real"/>
+        <Local scadeName="_L44" scadeType="real" targetName="_L44" targetType="kcg_real"/>
+        <NodeInstance scadeName="Functions::kalmanFilter180" instName="2" refName="kalmanFilter180_Functions"/>
+        <NodeInstance scadeName="Functions::kalmanFilter180" instName="3" refName="kalmanFilter180_Functions"/>
+        <NodeInlining scadeName="math::Abs" instName="1">
+          <Output scadeName="A_Output" scadeType="&apos;T" targetName="_L18" targetType="kcg_real"/>
+          <Local scadeName="_L2" scadeType="&apos;T" targetName="_L18" targetType="kcg_real"/>
+        </NodeInlining>
+        <NodeInlining scadeName="math::Abs" instName="2">
+        </NodeInlining>
+        <NodeInstance scadeName="Functions::kalmanFilter90" instName="1" refName="kalmanFilter90_Functions"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_driftCorrectionAngles_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="offsetCorrectionBlock" headerFile="offsetCorrectionBlock_Controller_Signalprocessing.h"
+          targetCycleFct="offsetCorrectionBlock_Controller_Signalprocessing">
+        <Input scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main"/>
+        <Input scadeName="diffValues" scadeType="Main::angleValues" targetName="diffValues"
+            targetType="angleValues_Main"/>
+        <Input scadeName="analogOffsetValues" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Output scadeName="analogCorrectedOffsetValues" scadeType="Main::analogOffsetValues"
+            targetName="analogCorrectedOffsetValues" targetType="analogOffsetValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Local scadeName="_L10" scadeType="Main::angleValues" targetName="diffValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L26" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"/>
+        <Local scadeName="_L35" scadeType="Main::analogOffsetValues" targetName="analogCorrectedOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <NodeInstance scadeName="Functions::offsetCorrection" instName="1" refName="offsetCorrection_Functions"/>
+        <NodeInstance scadeName="Functions::offsetCorrection" instName="2" refName="offsetCorrection_Functions"/>
+        <NodeInstance scadeName="Functions::offsetCorrection" instName="3" refName="offsetCorrection_Functions"/>
+        <NodeInlining scadeName="math::Abs" instName="1">
+        </NodeInlining>
+        <NodeInlining scadeName="math::Abs" instName="2">
+        </NodeInlining>
+      </NoExpNode>
+      <NoExpNode scadeName="angleTransformationPhiPsi"
+          headerFile="angleTransformationPhiPsi_Controller_Signalprocessing.h"
+          targetCycleFct="angleTransformationPhiPsi_Controller_Signalprocessing">
+        <Input scadeName="angleSteps" scadeType="Main::angleValues" targetName="angleSteps"
+            targetType="angleValues_Main"/>
+        <Input scadeName="sinCosValues" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <Output scadeName="angleStepsTransformedPhiPsi" scadeType="Main::angleValues"
+            targetName="angleStepsTransformedPhiPsi" targetType="angleValues_Main"/>
+        <Local scadeName="_L1" scadeType="Main::angleValues" targetName="angleSteps" targetType="angleValues_Main"/>
+        <Local scadeName="_L2" scadeType="Main::sinCosValues" targetName="sinCosValues" targetType="sinCosValues_Main"/>
+        <Local scadeName="_L14" scadeType="real" targetName="_L14" targetType="kcg_real"/>
+        <Local scadeName="_L15" scadeType="Main::angleValues" targetName="angleStepsTransformedPhiPsi"
+            targetType="angleValues_Main"/>
+      </NoExpNode>
+      <NoExpNode scadeName="accelerationAngles" headerFile="accelerationAngles_Controller_Signalprocessing.h"
+          targetCycleFct="accelerationAngles_Controller_Signalprocessing">
+        <Input scadeName="accelerations" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Output scadeName="accelerationAngles" scadeType="Main::accelerationAngles" targetName="accelerationAngles"
+            targetType="accelerationAngles_Main"/>
+        <Local scadeName="_L8" scadeType="Main::accelerationAngles" targetName="accelerationAngles"
+            targetType="accelerationAngles_Main"/>
+        <Local scadeName="_L23" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <NodeInstance scadeName="Functions::radian2degree" instName="1" refName="radian2degree_Functions"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::accelerationAngleTheta" instName="1"
+            refName="accelerationAngleTheta_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::accelerationAnglePhi" instName="1"
+            refName="accelerationAnglePhi_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Functions::radian2degree" instName="2" refName="radian2degree_Functions"/>
+        <NodeInstance scadeName="Functions::accAnglePhiCorrection" instName="1"
+            refName="accAnglePhiCorrection_Functions"/>
+      </NoExpNode>
+      <NoExpNode scadeName="accelerationGeoZ" headerFile="accelerationGeoZ_Controller_Signalprocessing.h"
+          targetCycleFct="accelerationGeoZ_Controller_Signalprocessing">
+        <Input scadeName="accelerations" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Input scadeName="sincosValues" scadeType="Main::sinCosValues" targetName="sincosValues"
+            targetType="sinCosValues_Main"/>
+        <Output scadeName="accelerationGeoZ" scadeType="real" targetName="accelerationGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Local scadeName="_L5" scadeType="Main::sinCosValues" targetName="sincosValues" targetType="sinCosValues_Main"/>
+        <Local scadeName="_L17" scadeType="real" targetName="accelerationGeoZ" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="accelerationIntegrationZ"
+          headerFile="accelerationIntegrationZ_Controller_Signalprocessing.h"
+          targetCycleFct="accelerationIntegrationZ_Controller_Signalprocessing">
+        <Input scadeName="accelerationGeoZ" scadeType="real" targetName="accelerationGeoZ" targetType="kcg_real"/>
+        <Input scadeName="oldHeightGeoZ" scadeType="real" targetName="oldHeightGeoZ" targetType="kcg_real"/>
+        <Input scadeName="oldSpeedGeoZ" scadeType="real" targetName="oldSpeedGeoZ" targetType="kcg_real"/>
+        <Output scadeName="speedGeoZ" scadeType="real" targetName="speedGeoZ" targetType="kcg_real"/>
+        <Output scadeName="heightGeoZ" scadeType="real" targetName="heightGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="real" targetName="accelerationGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L6" scadeType="real" targetName="speedGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L9" scadeType="real" targetName="heightGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L11" scadeType="real" targetName="oldSpeedGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L12" scadeType="real" targetName="oldHeightGeoZ" targetType="kcg_real"/>
+      </NoExpNode>
+      <NoExpNode scadeName="driftCorrectionHeight" headerFile="driftCorrectionHeight_Controller_Signalprocessing.h"
+          targetCycleFct="driftCorrectionHeight_Controller_Signalprocessing"
+          targetInitFct="driftCorrectionHeight_reset_Controller_Signalprocessing">
+        <Input scadeName="heightBarometer" scadeType="real" targetName="heightBarometer" targetType="kcg_real"/>
+        <Input scadeName="speedGeoZ" scadeType="real" targetName="speedGeoZ" targetType="kcg_real"/>
+        <Input scadeName="heightGeoZ" scadeType="real" targetName="heightGeoZ" targetType="kcg_real"/>
+        <Output scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+        <Memory scadeName="heightValue" scadeType="real" targetName="rem_heightValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Output scadeName="heightSpeedValue" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"
+            inCtx="true"/>
+        <Local scadeName="_L1" scadeType="real" targetName="heightBarometer" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="speedGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L3" scadeType="real" targetName="heightGeoZ" targetType="kcg_real"/>
+        <Local scadeName="_L18" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L20" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real" inCtx="true"/>
+        <NodeInstance scadeName="Functions::kalmanFilterHeight" instName="1" refName="kalmanFilterHeight_Functions"/>
+        <NodeInstance scadeName="Functions::kalmanFilterHeight" instName="2" refName="kalmanFilterHeight_Functions"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_driftCorrectionHeight_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="calcHeightValues" headerFile="calcHeightValues_Controller_Signalprocessing.h"
+          targetCycleFct="calcHeightValues_Controller_Signalprocessing"
+          targetInitFct="calcHeightValues_reset_Controller_Signalprocessing">
+        <Input scadeName="sinCosValues" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <Input scadeName="heightBarometer" scadeType="real" targetName="heightBarometer" targetType="kcg_real"/>
+        <Input scadeName="accelerations" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Output scadeName="heightSpeedValue" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"
+            mem="true" inCtx="true"/>
+        <Output scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real" mem="true"
+            inCtx="true"/>
+        <Local scadeName="_L4" scadeType="real" targetName="_L4" targetType="kcg_real"/>
+        <Local scadeName="_L5" scadeType="real" targetName="_L5" targetType="kcg_real"/>
+        <Local scadeName="_L1" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L2" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real" inCtx="true"/>
+        <Local scadeName="_L8" scadeType="Main::sinCosValues" targetName="sinCosValues" targetType="sinCosValues_Main"/>
+        <Local scadeName="_L9" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Local scadeName="_L10" scadeType="real" targetName="heightBarometer" targetType="kcg_real"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::driftCorrectionHeight" instName="1"
+            refName="driftCorrectionHeight_Controller_Signalprocessing">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::Signalprocessing::accelerationIntegrationZ" instName="1"
+            refName="accelerationIntegrationZ_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::accelerationGeoZ" instName="1"
+            refName="accelerationGeoZ_Controller_Signalprocessing"/>
+        <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+        <OutCtxType targetName="outC_calcHeightValues_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="calcAngleValues" headerFile="calcAngleValues_Controller_Signalprocessing.h"
+          targetCycleFct="calcAngleValues_Controller_Signalprocessing"
+          targetInitFct="calcAngleValues_reset_Controller_Signalprocessing">
+        <Input scadeName="oldAngleValues" scadeType="Main::angleValues" targetName="oldAngleValues"
+            targetType="angleValues_Main"/>
+        <Input scadeName="sinCosValues" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <Input scadeName="accelerations" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <Input scadeName="compassValue" scadeType="real" targetName="compassValue" targetType="kcg_real"/>
+        <Input scadeName="angleSpeeds" scadeType="Main::angleValues" targetName="angleSpeeds"
+            targetType="angleValues_Main"/>
+        <Input scadeName="analogOffsetValues" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Output scadeName="accelertionAngles" scadeType="Main::accelerationAngles" targetName="accelertionAngles"
+            targetType="accelerationAngles_Main" inCtx="true"/>
+        <Output scadeName="analogCorrectedOffsetValues" scadeType="Main::analogOffsetValues"
+            targetName="analogCorrectedOffsetValues" targetType="analogOffsetValues_Main" inCtx="true"/>
+        <Output scadeName="angleValues" scadeType="Main::angleValues" targetName="angleValues"
+            targetType="angleValues_Main" inCtx="true"/>
+        <Local scadeName="_L5" scadeType="Main::analogOffsetValues" targetName="analogCorrectedOffsetValues"
+            targetType="analogOffsetValues_Main" inCtx="true"/>
+        <Local scadeName="_L3" scadeType="Main::angleValues" targetName="angleValues" targetType="angleValues_Main"
+            inCtx="true"/>
+        <Local scadeName="_L1" scadeType="Main::accelerationAngles" targetName="accelertionAngles"
+            targetType="accelerationAngles_Main" inCtx="true"/>
+        <Local scadeName="_L11" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+            targetType="analogOffsetValues_Main"/>
+        <Local scadeName="_L12" scadeType="Main::angleValues" targetName="oldAngleValues"
+            targetType="angleValues_Main"/>
+        <Local scadeName="_L13" scadeType="Main::sinCosValues" targetName="sinCosValues"
+            targetType="sinCosValues_Main"/>
+        <Local scadeName="_L14" scadeType="real" targetName="compassValue" targetType="kcg_real"/>
+        <Local scadeName="_L15" scadeType="Main::angleValues" targetName="angleSpeeds" targetType="angleValues_Main"/>
+        <Local scadeName="_L16" scadeType="Main::accelerations" targetName="accelerations"
+            targetType="accelerations_Main"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::accelerationAngles" instName="1"
+            refName="accelerationAngles_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::angleTransformation" instName="1"
+            refName="angleTransformation_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::driftCorrectionAngles" instName="1"
+            refName="driftCorrectionAngles_Controller_Signalprocessing">
+          <OutCtxVar targetName="Context_1"/>
+        </NodeInstance>
+        <NodeInstance scadeName="Controller::Signalprocessing::offsetCorrectionBlock" instName="1"
+            refName="offsetCorrectionBlock_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::angleLimitationBlock" instName="1"
+            refName="angleLimitationBlock_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::angleIntegration" instName="1"
+            refName="angleIntegration_Controller_Signalprocessing"/>
+        <NodeInstance scadeName="Controller::Signalprocessing::calcDiscreteAngleChanges" instName="1"
+            refName="calcDiscreteAngleChanges_Controller_Signalprocessing"/>
+        <OutCtxType targetName="outC_calcAngleValues_Controller_Signalprocessing"/>
+      </NoExpNode>
+      <NoExpNode scadeName="accelerationAngleTheta" headerFile="accelerationAngleTheta_Controller_Signalprocessing.h"
+          targetCycleFct="accelerationAngleTheta_Controller_Signalprocessing">
+        <Input scadeName="accX" scadeType="real" targetName="accX" targetType="kcg_real"/>
+        <Output scadeName="thetaRadian" scadeType="real" targetName="thetaRadian" targetType="kcg_real"/>
+        <Local scadeName="_L2" scadeType="real" targetName="thetaRadian" targetType="kcg_real"/>
+        <Local scadeName="_L5" scadeType="real" targetName="accX" targetType="kcg_real"/>
+        <NodeInstance scadeName="mathext::AsinR" instName="1" refName="AsinR_mathext"/>
+        <NodeInstance scadeName="Functions::accLimitation" instName="1" refName="accLimitation_Functions"/>
+      </NoExpNode>
+      <NoExpNode scadeName="accelerationAnglePhi" headerFile="accelerationAnglePhi_Controller_Signalprocessing.h"
+          targetCycleFct="accelerationAnglePhi_Controller_Signalprocessing">
+        <Input scadeName="thetaRadian" scadeType="real" targetName="thetaRadian" targetType="kcg_real"/>
+        <Input scadeName="accY" scadeType="real" targetName="accY" targetType="kcg_real"/>
+        <Output scadeName="phiRadian" scadeType="real" targetName="phiRadian" targetType="kcg_real"/>
+        <Local scadeName="_L14" scadeType="real" targetName="_L14" targetType="kcg_real"/>
+        <Local scadeName="_L10" scadeType="real" targetName="phiRadian" targetType="kcg_real"/>
+        <Local scadeName="_L8" scadeType="bool" targetName="_L8" targetType="kcg_bool"/>
+        <Local scadeName="_L16" scadeType="real" targetName="accY" targetType="kcg_real"/>
+        <Local scadeName="_L17" scadeType="real" targetName="thetaRadian" targetType="kcg_real"/>
+        <NodeInstance scadeName="mathext::CosR" instName="1" refName="CosR_mathext"/>
+        <NodeInstance scadeName="Functions::accLimitation" instName="1" refName="accLimitation_Functions"/>
+        <NodeInstance scadeName="mathext::AsinR" instName="1" refName="AsinR_mathext"/>
+        <NodeInstance scadeName="$/$" instName="1"/>
+        <NodeInstance scadeName="Functions::accLimitation" instName="2" refName="accLimitation_Functions"/>
+      </NoExpNode>
+    </Package>
+    <NoExpNode scadeName="controller" headerFile="controller_Controller.h" targetCycleFct="controller_Controller"
+        targetInitFct="controller_reset_Controller">
+      <Input scadeName="rcFlags" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+      <Input scadeName="rcValues" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+      <Input scadeName="analogValues" scadeType="Main::analogValues" targetName="analogValues"
+          targetType="analogValues_Main"/>
+      <Input scadeName="analogOffsetValues" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+          targetType="analogOffsetValues_Main"/>
+      <Output scadeName="motorValues" scadeType="Main::motorValues" targetName="motorValues"
+          targetType="motorValues_Main" inCtx="true"/>
+      <Output scadeName="analogCorrectedOffsetValues" scadeType="Main::analogOffsetValues"
+          targetName="analogCorrectedOffsetValues" targetType="analogOffsetValues_Main" inCtx="true"/>
+      <Output scadeName="anlgeValues" scadeType="Main::angleValues" targetName="anlgeValues"
+          targetType="angleValues_Main" inCtx="true"/>
+      <Output scadeName="angleSpeedValues" scadeType="Main::angleValues" targetName="angleSpeedValues"
+          targetType="angleValues_Main" inCtx="true"/>
+      <Output scadeName="heightValue" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+      <Output scadeName="heightSpeedValue" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real"
+          inCtx="true"/>
+      <Output scadeName="setpointValues" scadeType="Main::rcValuesReal" targetName="setpointValues"
+          targetType="rcValuesReal_Main" inCtx="true"/>
+      <Output scadeName="attitudeControllerValues" scadeType="Main::attitudeController"
+          targetName="attitudeControllerValues" targetType="attitudeController_Main" inCtx="true"/>
+      <Output scadeName="heightControllerValues" scadeType="Main::heightController" targetName="heightControllerValues"
+          targetType="heightController_Main" inCtx="true"/>
+      <Output scadeName="accelerationAngleValues" scadeType="Main::accelerationAngles"
+          targetName="accelerationAngleValues" targetType="accelerationAngles_Main" inCtx="true"/>
+      <Local scadeName="_L1" scadeType="Main::angleValues" targetName="anlgeValues" targetType="angleValues_Main"
+          inCtx="true"/>
+      <Local scadeName="_L2" scadeType="Main::angleValues" targetName="angleSpeedValues" targetType="angleValues_Main"
+          inCtx="true"/>
+      <Local scadeName="_L3" scadeType="real" targetName="heightValue" targetType="kcg_real" inCtx="true"/>
+      <Local scadeName="_L4" scadeType="real" targetName="heightSpeedValue" targetType="kcg_real" inCtx="true"/>
+      <Local scadeName="_L5" scadeType="Main::rcValuesReal" targetName="setpointValues" targetType="rcValuesReal_Main"
+          inCtx="true"/>
+      <Local scadeName="_L6" scadeType="Main::rcFlags" targetName="rcFlags" targetType="rcFlags_Main"/>
+      <Local scadeName="_L7" scadeType="Main::rcValues" targetName="rcValues" targetType="rcValues_Main"/>
+      <Local scadeName="_L8" scadeType="Main::analogValues" targetName="analogValues" targetType="analogValues_Main"/>
+      <Local scadeName="_L9" scadeType="Main::analogOffsetValues" targetName="analogOffsetValues"
+          targetType="analogOffsetValues_Main"/>
+      <Local scadeName="_L10" scadeType="Main::motorValues" targetName="motorValues" targetType="motorValues_Main"
+          inCtx="true"/>
+      <Local scadeName="_L11" scadeType="real" targetName="_L11" targetType="kcg_real"/>
+      <Local scadeName="_L12" scadeType="real" targetName="_L12" targetType="kcg_real"/>
+      <Local scadeName="_L13" scadeType="real" targetName="_L13" targetType="kcg_real"/>
+      <Local scadeName="_L14" scadeType="real" targetName="_L14" targetType="kcg_real"/>
+      <Local scadeName="_L15" scadeType="Main::analogOffsetValues" targetName="analogCorrectedOffsetValues"
+          targetType="analogOffsetValues_Main" inCtx="true"/>
+      <Local scadeName="_L16" scadeType="Main::attitudeController" targetName="attitudeControllerValues"
+          targetType="attitudeController_Main" inCtx="true"/>
+      <Local scadeName="_L17" scadeType="Main::heightController" targetName="heightControllerValues"
+          targetType="heightController_Main" inCtx="true"/>
+      <Local scadeName="_L18" scadeType="Main::accelerationAngles" targetName="accelerationAngleValues"
+          targetType="accelerationAngles_Main" inCtx="true"/>
+      <NodeInstance scadeName="Controller::Signalprocessing::signalprocessing" instName="1"
+          refName="signalprocessing_Controller_Signalprocessing">
+        <OutCtxVar targetName="_3_Context_1"/>
+      </NodeInstance>
+      <NodeInstance scadeName="Controller::Setpoint::setpoints" instName="1" refName="setpoints_Controller_Setpoint">
+        <OutCtxVar targetName="_2_Context_1"/>
+      </NodeInstance>
+      <NodeInstance scadeName="Controller::HeightController::heightController" instName="1"
+          refName="heightController_Controller_HeightController">
+        <OutCtxVar targetName="_1_Context_1"/>
+      </NodeInstance>
+      <NodeInstance scadeName="Controller::AttitudeController::attitudeController" instName="1"
+          refName="attitudeController_Controller_AttitudeController">
+        <OutCtxVar targetName="Context_1"/>
+      </NodeInstance>
+      <NodeInstance scadeName="Controller::CalculateMotorSpeed::calculateMotorSpeed" instName="1"
+          refName="calculateMotorSpeed_Controller_CalculateMotorSpeed"/>
+      <OutCtxType targetName="outC_controller_Controller"/>
+    </NoExpNode>
+  </Package>
+  <Package scadeName="Functions">
+    <NoExpNode scadeName="meanSquareFilter" headerFile="meanSquareFilter_Functions.h"
+        targetCycleFct="meanSquareFilter_Functions" targetInitFct="meanSquareFilter_reset_Functions">
+      <Input scadeName="newValue" scadeType="real" targetName="newValue" targetType="kcg_real"/>
+      <Input scadeName="weightNewValue" scadeType="real" targetName="weightNewValue" targetType="kcg_real"/>
+      <Output scadeName="filterValue" scadeType="real" targetName="filterValue" targetType="kcg_real" mem="true"
+          inCtx="true"/>
+      <Local scadeName="_L1" scadeType="real" targetName="newValue" targetType="kcg_real"/>
+      <Local scadeName="_L2" scadeType="real" targetName="weightNewValue" targetType="kcg_real"/>
+      <Local scadeName="_L6" scadeType="real" targetName="filterValue" targetType="kcg_real" inCtx="true"/>
+      <Init targetName="init" targetType="kcg_bool" inCtx="true"/>
+      <OutCtxType targetName="outC_meanSquareFilter_Functions"/>
+    </NoExpNode>
+    <NoExpNode scadeName="kalmanFilter180" headerFile="kalmanFilter180_Functions.h"
+        targetCycleFct="kalmanFilter180_Functions">
+      <Input scadeName="refValue" scadeType="real" targetName="refValue" targetType="kcg_real"/>
+      <Input scadeName="value" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Input scadeName="kalmanValue" scadeType="real" targetName="kalmanValue" targetType="kcg_real"/>
+      <Output scadeName="filterValue" scadeType="real" targetName="filterValue" targetType="kcg_real"/>
+      <Output scadeName="diffValue" scadeType="real" targetName="diffValue" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="filterValue" targetType="kcg_real"/>
+      <Local scadeName="_L4" scadeType="real" targetName="refValue" targetType="kcg_real"/>
+      <Local scadeName="_L5" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Local scadeName="_L6" scadeType="real" targetName="kalmanValue" targetType="kcg_real"/>
+      <Local scadeName="_L7" scadeType="real" targetName="diffValue" targetType="kcg_real"/>
+      <NodeInstance scadeName="Functions::angleLimitation180" instName="1" refName="angleLimitation180_Functions"/>
+    </NoExpNode>
+    <NoExpNode scadeName="degree2radian" headerFile="degree2radian_Functions.h"
+        targetCycleFct="degree2radian_Functions">
+      <Input scadeName="degree" scadeType="real" targetName="degree" targetType="kcg_real"/>
+      <Output scadeName="radian" scadeType="real" targetName="radian" targetType="kcg_real"/>
+      <Local scadeName="_L1" scadeType="real" targetName="degree" targetType="kcg_real"/>
+      <Local scadeName="_L2" scadeType="real" targetName="radian" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="angleLimitation180" headerFile="angleLimitation180_Functions.h"
+        targetCycleFct="angleLimitation180_Functions">
+      <Input scadeName="angle" scadeType="real" targetName="angle" targetType="kcg_real"/>
+      <Output scadeName="angleLimited" scadeType="real" targetName="angleLimited" targetType="kcg_real"/>
+      <Local scadeName="_L1" scadeType="real" targetName="angle" targetType="kcg_real"/>
+      <Local scadeName="_L10" scadeType="real" targetName="angleLimited" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="accLimitation" headerFile="accLimitation_Functions.h"
+        targetCycleFct="accLimitation_Functions">
+      <Input scadeName="value" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Output scadeName="valueLimited" scadeType="real" targetName="valueLimited" targetType="kcg_real"/>
+      <Local scadeName="_L1" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Local scadeName="_L7" scadeType="real" targetName="valueLimited" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="rcAdjusting" headerFile="rcAdjusting_Functions.h" targetCycleFct="rcAdjusting_Functions">
+      <Input scadeName="rcValue" scadeType="int" targetName="rcValue" targetType="kcg_int"/>
+      <Input scadeName="adjustingValue" scadeType="int" targetName="adjustingValue" targetType="kcg_int"/>
+      <Output scadeName="rcValueAdjusted" scadeType="int" targetName="rcValueAdjusted" targetType="kcg_int"/>
+      <Local scadeName="_L2" scadeType="int" targetName="rcValueAdjusted" targetType="kcg_int"/>
+      <Local scadeName="_L3" scadeType="int" targetName="rcValue" targetType="kcg_int"/>
+      <Local scadeName="_L9" scadeType="int" targetName="adjustingValue" targetType="kcg_int"/>
+    </NoExpNode>
+    <NoExpNode scadeName="minMaxLimitation" headerFile="minMaxLimitation_Functions.h"
+        targetCycleFct="minMaxLimitation_Functions">
+      <Input scadeName="min" scadeType="real" targetName="min" targetType="kcg_real"/>
+      <Input scadeName="max" scadeType="real" targetName="max" targetType="kcg_real"/>
+      <Input scadeName="value" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Output scadeName="valueLimited" scadeType="real" targetName="valueLimited" targetType="kcg_real"/>
+      <Local scadeName="_L1" scadeType="real" targetName="min" targetType="kcg_real"/>
+      <Local scadeName="_L2" scadeType="real" targetName="max" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Local scadeName="_L6" scadeType="real" targetName="valueLimited" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="offsetCorrection" headerFile="offsetCorrection_Functions.h"
+        targetCycleFct="offsetCorrection_Functions">
+      <Input scadeName="analogOffsetValue" scadeType="real" targetName="analogOffsetValue" targetType="kcg_real"/>
+      <Input scadeName="diffValue" scadeType="real" targetName="diffValue" targetType="kcg_real"/>
+      <Input scadeName="influence" scadeType="real" targetName="influence" targetType="kcg_real"/>
+      <Output scadeName="analogCorrectedOffsetValue" scadeType="real" targetName="analogCorrectedOffsetValue"
+          targetType="kcg_real"/>
+      <Local scadeName="_L1" scadeType="real" targetName="analogOffsetValue" targetType="kcg_real"/>
+      <Local scadeName="_L2" scadeType="real" targetName="diffValue" targetType="kcg_real"/>
+      <Local scadeName="_L8" scadeType="real" targetName="_L8" targetType="kcg_real"/>
+      <Local scadeName="_L9" scadeType="real" targetName="analogCorrectedOffsetValue" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="influence" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="motorLimitation" headerFile="motorLimitation_Functions.h"
+        targetCycleFct="motorLimitation_Functions">
+      <Input scadeName="value" scadeType="int" targetName="value" targetType="kcg_int"/>
+      <Input scadeName="max" scadeType="int" targetName="max" targetType="kcg_int"/>
+      <Input scadeName="min" scadeType="int" targetName="min" targetType="kcg_int"/>
+      <Output scadeName="valueLimited" scadeType="int" targetName="valueLimited" targetType="kcg_int"/>
+      <Local scadeName="_L6" scadeType="int" targetName="valueLimited" targetType="kcg_int"/>
+      <Local scadeName="_L4" scadeType="int" targetName="min" targetType="kcg_int"/>
+      <Local scadeName="_L3" scadeType="int" targetName="max" targetType="kcg_int"/>
+      <Local scadeName="_L2" scadeType="int" targetName="value" targetType="kcg_int"/>
+    </NoExpNode>
+    <NoExpNode scadeName="rcAdjustingReal" headerFile="rcAdjustingReal_Functions.h"
+        targetCycleFct="rcAdjustingReal_Functions">
+      <Input scadeName="rcValue" scadeType="real" targetName="rcValue" targetType="kcg_real"/>
+      <Input scadeName="adjustingValue" scadeType="real" targetName="adjustingValue" targetType="kcg_real"/>
+      <Output scadeName="rcValueAdjusted" scadeType="real" targetName="rcValueAdjusted" targetType="kcg_real"/>
+      <Local scadeName="_L2" scadeType="real" targetName="rcValueAdjusted" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="rcValue" targetType="kcg_real"/>
+      <Local scadeName="_L9" scadeType="real" targetName="adjustingValue" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="kalmanFilterHeight" headerFile="kalmanFilterHeight_Functions.h"
+        targetCycleFct="kalmanFilterHeight_Functions">
+      <Input scadeName="refValue" scadeType="real" targetName="refValue" targetType="kcg_real"/>
+      <Input scadeName="value" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Input scadeName="kalmanValue" scadeType="real" targetName="kalmanValue" targetType="kcg_real"/>
+      <Output scadeName="filterValue" scadeType="real" targetName="filterValue" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="filterValue" targetType="kcg_real"/>
+      <Local scadeName="_L4" scadeType="real" targetName="refValue" targetType="kcg_real"/>
+      <Local scadeName="_L5" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Local scadeName="_L6" scadeType="real" targetName="kalmanValue" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="radian2degree" headerFile="radian2degree_Functions.h"
+        targetCycleFct="radian2degree_Functions">
+      <Input scadeName="radian" scadeType="real" targetName="radian" targetType="kcg_real"/>
+      <Output scadeName="degree" scadeType="real" targetName="degree" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="radian" targetType="kcg_real"/>
+      <Local scadeName="_L4" scadeType="real" targetName="degree" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="accAnglePhiCorrection" headerFile="accAnglePhiCorrection_Functions.h"
+        targetCycleFct="accAnglePhiCorrection_Functions">
+      <Input scadeName="accPhi" scadeType="real" targetName="accPhi" targetType="kcg_real"/>
+      <Input scadeName="accZ" scadeType="real" targetName="accZ" targetType="kcg_real"/>
+      <Output scadeName="accPhiCorrected" scadeType="real" targetName="accPhiCorrected" targetType="kcg_real"/>
+      <Local scadeName="_L7" scadeType="real" targetName="accPhiCorrected" targetType="kcg_real"/>
+      <Local scadeName="_L10" scadeType="real" targetName="accZ" targetType="kcg_real"/>
+      <Local scadeName="_L11" scadeType="real" targetName="accPhi" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="angleLimitation90" headerFile="angleLimitation90_Functions.h"
+        targetCycleFct="angleLimitation90_Functions">
+      <Input scadeName="angle" scadeType="real" targetName="angle" targetType="kcg_real"/>
+      <Output scadeName="angleLimited" scadeType="real" targetName="angleLimited" targetType="kcg_real"/>
+      <Local scadeName="_L1" scadeType="real" targetName="angle" targetType="kcg_real"/>
+      <Local scadeName="_L10" scadeType="real" targetName="angleLimited" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="kalmanFilter90" headerFile="kalmanFilter90_Functions.h"
+        targetCycleFct="kalmanFilter90_Functions">
+      <Input scadeName="refValue" scadeType="real" targetName="refValue" targetType="kcg_real"/>
+      <Input scadeName="value" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Input scadeName="kalmanValue" scadeType="real" targetName="kalmanValue" targetType="kcg_real"/>
+      <Output scadeName="filterValue" scadeType="real" targetName="filterValue" targetType="kcg_real"/>
+      <Output scadeName="diffValue" scadeType="real" targetName="diffValue" targetType="kcg_real"/>
+      <Local scadeName="_L3" scadeType="real" targetName="filterValue" targetType="kcg_real"/>
+      <Local scadeName="_L4" scadeType="real" targetName="refValue" targetType="kcg_real"/>
+      <Local scadeName="_L5" scadeType="real" targetName="value" targetType="kcg_real"/>
+      <Local scadeName="_L6" scadeType="real" targetName="kalmanValue" targetType="kcg_real"/>
+      <Local scadeName="_L8" scadeType="real" targetName="diffValue" targetType="kcg_real"/>
+      <NodeInstance scadeName="Functions::angleLimitation90" instName="1" refName="angleLimitation90_Functions"/>
+    </NoExpNode>
+  </Package>
+  <Package scadeName="Proofs">
+    <Constant scadeName="TEST_OFFSET_VALUES" scadeType="Main::analogOffsetValues" targetName="TEST_OFFSET_VALUES_Proofs"
+        targetType="analogOffsetValues_Main"/>
+  </Package>
+  <Package scadeName="digital"/>
+  <Package scadeName="truthtables">
+    <EnumType scadeName="TruthTableValues" targetName="TruthTableValues_truthtables">
+      <EnumVal scadeName="T" targetName="T_truthtables"/>
+      <EnumVal scadeName="F" targetName="F_truthtables"/>
+      <EnumVal scadeName="X" targetName="X_truthtables"/>
+    </EnumType>
+  </Package>
+  <Package scadeName="linear"/>
+  <Package scadeName="filters"/>
+  <Package scadeName="vect"/>
+  <Package scadeName="math">
+    <ExpNode scadeName="Abs"/>
+  </Package>
+  <Package scadeName="mathext">
+    <NoExpNode scadeName="AsinR" headerFile="kcg_imported_functions.h" targetCycleFct="AsinR_mathext" imported="true">
+      <Input scadeName="Input1" scadeType="real" targetName="Input1" targetType="kcg_real"/>
+      <Output scadeName="Output1" scadeType="real" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="CosR" headerFile="kcg_imported_functions.h" targetCycleFct="CosR_mathext" imported="true">
+      <Input scadeName="Input1" scadeType="real" targetName="Input1" targetType="kcg_real"/>
+      <Output scadeName="Output1" scadeType="real" targetType="kcg_real"/>
+    </NoExpNode>
+    <NoExpNode scadeName="SinR" headerFile="kcg_imported_functions.h" targetCycleFct="SinR_mathext" imported="true">
+      <Input scadeName="Input1" scadeType="real" targetName="Input1" targetType="kcg_real"/>
+      <Output scadeName="Output1" scadeType="real" targetType="kcg_real"/>
+    </NoExpNode>
+  </Package>
+  <Package scadeName="pwlinear"/>
+  <Package scadeName="lut">
+    <NamedType scadeName="LutIndex" targetName="LutIndex_lut" refType="struct__8468"/>
+  </Package>
+  <Package scadeName="verif"/>
+  <Option name="root_node_name" value="Main::main"/>
+  <Option name="target" value="C"/>
+  <Option name="target_dir" value="D:/Bachelor-SVN/Programmcode/scade/KCG"/>
+  <Option name="exp" value="#off#"/>
+  <Option name="noexp" value="#off#"/>
+  <Option name="expall" value="#off#"/>
+  <Option name="global_root_context" value="#off#"/>
+  <Option name="optimization_level" value="1"/>
+  <Option name="macro_on_assert" value="#off#"/>
+  <Option name="global_prefix" value="#off#"/>
+  <Option name="name_length" value="200"/>
+  <Option name="significance_length" value="31"/>
+  <Option name="header" value="#off#"/>
+  <Option name="input_threshold" value="#off#"/>
+  <Option name="user_config" value="./my_macros.h"/>
+  <Option name="observe" value="#off#"/>
+  <Option name="no_observe" value="#off#"/>
+  <Option name="debug" value="#off#"/>
+  <Option name="probes" value="#off#"/>
+  <Option name="input_file" value="D:/Bachelor-SVN/Programmcode/scade/KCG\kcg_xml_filter_out.scade"/>
+  <Option name="wrap_c_ops" value="#off#"/>
+  <Option name="no_bitwise" value="#off#"/>
+  <Option name="warn_error" value="#off#"/>
+  <Option name="static" value="#off#"/>
+  <Option name="state_vector" value="#off#"/>
+  <PredefType scadeName="real" targetName="kcg_real"/>
+  <PredefType scadeName="bool" targetName="kcg_bool"/>
+  <PredefType scadeName="char" targetName="kcg_char"/>
+  <PredefType scadeName="int" targetName="kcg_int"/>
+  <StructType targetName="struct__8352" targetCopyFct="kcg_copy_struct__8352" targetCompFct="kcg_comp_struct__8352">
+    <Field scadeName="accTheta" scadeType="real" targetName="accTheta" targetType="kcg_real"/>
+    <Field scadeName="accPhi" scadeType="real" targetName="accPhi" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8357" targetCopyFct="kcg_copy_struct__8357" targetCompFct="kcg_comp_struct__8357">
+    <Field scadeName="accX" scadeType="real" targetName="accX" targetType="kcg_real"/>
+    <Field scadeName="accY" scadeType="real" targetName="accY" targetType="kcg_real"/>
+    <Field scadeName="accZ" scadeType="real" targetName="accZ" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8363" targetCopyFct="kcg_copy_struct__8363" targetCompFct="kcg_comp_struct__8363">
+    <Field scadeName="accX" scadeType="real" targetName="accX" targetType="kcg_real"/>
+    <Field scadeName="accY" scadeType="real" targetName="accY" targetType="kcg_real"/>
+    <Field scadeName="accZ" scadeType="real" targetName="accZ" targetType="kcg_real"/>
+    <Field scadeName="gyroPitch" scadeType="real" targetName="gyroPitch" targetType="kcg_real"/>
+    <Field scadeName="gyroRoll" scadeType="real" targetName="gyroRoll" targetType="kcg_real"/>
+    <Field scadeName="gyroYaw" scadeType="real" targetName="gyroYaw" targetType="kcg_real"/>
+    <Field scadeName="barometer" scadeType="real" targetName="barometer" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8373" targetCopyFct="kcg_copy_struct__8373" targetCompFct="kcg_comp_struct__8373">
+    <Field scadeName="theta" scadeType="real" targetName="theta" targetType="kcg_real"/>
+    <Field scadeName="phi" scadeType="real" targetName="phi" targetType="kcg_real"/>
+    <Field scadeName="psi" scadeType="real" targetName="psi" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8379" targetCopyFct="kcg_copy_struct__8379" targetCompFct="kcg_comp_struct__8379">
+    <Field scadeName="sinTheta" scadeType="real" targetName="sinTheta" targetType="kcg_real"/>
+    <Field scadeName="cosTheta" scadeType="real" targetName="cosTheta" targetType="kcg_real"/>
+    <Field scadeName="sinPhi" scadeType="real" targetName="sinPhi" targetType="kcg_real"/>
+    <Field scadeName="cosPhi" scadeType="real" targetName="cosPhi" targetType="kcg_real"/>
+    <Field scadeName="sinPsi" scadeType="real" targetName="sinPsi" targetType="kcg_real"/>
+    <Field scadeName="cosPsi" scadeType="real" targetName="cosPsi" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8388" targetCopyFct="kcg_copy_struct__8388" targetCompFct="kcg_comp_struct__8388">
+    <Field scadeName="accX" scadeType="real" targetName="accX" targetType="kcg_real"/>
+    <Field scadeName="accY" scadeType="real" targetName="accY" targetType="kcg_real"/>
+    <Field scadeName="accZ" scadeType="real" targetName="accZ" targetType="kcg_real"/>
+    <Field scadeName="gyroPitch" scadeType="real" targetName="gyroPitch" targetType="kcg_real"/>
+    <Field scadeName="gyroRoll" scadeType="real" targetName="gyroRoll" targetType="kcg_real"/>
+    <Field scadeName="gyroYaw" scadeType="real" targetName="gyroYaw" targetType="kcg_real"/>
+    <Field scadeName="barometer" scadeType="real" targetName="barometer" targetType="kcg_real"/>
+    <Field scadeName="compass" scadeType="real" targetName="compass" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8399" targetCopyFct="kcg_copy_struct__8399" targetCompFct="kcg_comp_struct__8399">
+    <Field scadeName="accX" scadeType="int" targetName="accX" targetType="kcg_int"/>
+    <Field scadeName="accY" scadeType="int" targetName="accY" targetType="kcg_int"/>
+    <Field scadeName="accZ" scadeType="int" targetName="accZ" targetType="kcg_int"/>
+    <Field scadeName="gyroPitch" scadeType="int" targetName="gyroPitch" targetType="kcg_int"/>
+    <Field scadeName="gyroRoll" scadeType="int" targetName="gyroRoll" targetType="kcg_int"/>
+    <Field scadeName="gyroYaw" scadeType="int" targetName="gyroYaw" targetType="kcg_int"/>
+    <Field scadeName="barometer" scadeType="int" targetName="barometer" targetType="kcg_int"/>
+    <Field scadeName="compass" scadeType="real" targetName="compass" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8410" targetCopyFct="kcg_copy_struct__8410" targetCompFct="kcg_comp_struct__8410">
+    <Field scadeName="thrustMin" scadeType="real" targetName="thrustMin" targetType="kcg_real"/>
+    <Field scadeName="thrust" scadeType="real" targetName="thrust" targetType="kcg_real"/>
+    <Field scadeName="yaw" scadeType="real" targetName="yaw" targetType="kcg_real"/>
+    <Field scadeName="pitch" scadeType="real" targetName="pitch" targetType="kcg_real"/>
+    <Field scadeName="roll" scadeType="real" targetName="roll" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8418" targetCopyFct="kcg_copy_struct__8418" targetCompFct="kcg_comp_struct__8418">
+    <Field scadeName="thrust" scadeType="real" targetName="thrust" targetType="kcg_real"/>
+    <Field scadeName="yaw" scadeType="real" targetName="yaw" targetType="kcg_real"/>
+    <Field scadeName="pitch" scadeType="real" targetName="pitch" targetType="kcg_real"/>
+    <Field scadeName="roll" scadeType="real" targetName="roll" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8425" targetCopyFct="kcg_copy_struct__8425" targetCompFct="kcg_comp_struct__8425">
+    <Field scadeName="thrust" scadeType="int" targetName="thrust" targetType="kcg_int"/>
+    <Field scadeName="yaw" scadeType="int" targetName="yaw" targetType="kcg_int"/>
+    <Field scadeName="pitch" scadeType="int" targetName="pitch" targetType="kcg_int"/>
+    <Field scadeName="roll" scadeType="int" targetName="roll" targetType="kcg_int"/>
+  </StructType>
+  <StructType targetName="struct__8432" targetCopyFct="kcg_copy_struct__8432" targetCompFct="kcg_comp_struct__8432">
+    <Field scadeName="motorsOn" scadeType="bool" targetName="motorsOn" targetType="kcg_bool"/>
+    <Field scadeName="heightControl" scadeType="bool" targetName="heightControl" targetType="kcg_bool"/>
+    <Field scadeName="lostConnection" scadeType="bool" targetName="lostConnection" targetType="kcg_bool"/>
+  </StructType>
+  <StructType targetName="struct__8438" targetCopyFct="kcg_copy_struct__8438" targetCompFct="kcg_comp_struct__8438">
+    <Field scadeName="motorFront" scadeType="int" targetName="motorFront" targetType="kcg_int"/>
+    <Field scadeName="motorRear" scadeType="int" targetName="motorRear" targetType="kcg_int"/>
+    <Field scadeName="motorLeft" scadeType="int" targetName="motorLeft" targetType="kcg_int"/>
+    <Field scadeName="motorRight" scadeType="int" targetName="motorRight" targetType="kcg_int"/>
+  </StructType>
+  <StructType targetName="struct__8445" targetCopyFct="kcg_copy_struct__8445" targetCompFct="kcg_comp_struct__8445">
+    <Field scadeName="Kp" scadeType="real" targetName="Kp" targetType="kcg_real"/>
+    <Field scadeName="Ki" scadeType="real" targetName="Ki" targetType="kcg_real"/>
+    <Field scadeName="Kd" scadeType="real" targetName="Kd" targetType="kcg_real"/>
+    <Field scadeName="Ks" scadeType="real" targetName="Ks" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8452" targetCopyFct="kcg_copy_struct__8452" targetCompFct="kcg_comp_struct__8452">
+    <Field scadeName="theta" scadeType="Main::controllerSettings" targetName="theta" targetType="struct__8445"/>
+    <Field scadeName="thetaFinal" scadeType="real" targetName="thetaFinal" targetType="kcg_real"/>
+    <Field scadeName="phi" scadeType="Main::controllerSettings" targetName="phi" targetType="struct__8445"/>
+    <Field scadeName="phiFinal" scadeType="real" targetName="phiFinal" targetType="kcg_real"/>
+    <Field scadeName="psi" scadeType="Main::controllerSettings" targetName="psi" targetType="struct__8445"/>
+    <Field scadeName="psiFinal" scadeType="real" targetName="psiFinal" targetType="kcg_real"/>
+  </StructType>
+  <StructType targetName="struct__8461" targetCopyFct="kcg_copy_struct__8461" targetCompFct="kcg_comp_struct__8461">
+    <Field scadeName="thrust" scadeType="Main::controllerSettings" targetName="thrust" targetType="struct__8445"/>
+    <Field scadeName="thrustFinal" scadeType="real" targetName="thrustFinal" targetType="kcg_real"/>
+    <Field scadeName="setpoint" scadeType="real" targetName="setpoint" targetType="kcg_real"/>
+    <Field scadeName="activated" scadeType="bool" targetName="activated" targetType="kcg_bool"/>
+  </StructType>
+  <StructType targetName="struct__8468" targetCopyFct="kcg_copy_struct__8468" targetCompFct="kcg_comp_struct__8468">
+    <Field scadeName="k" scadeType="int" targetName="k" targetType="kcg_int"/>
+    <Field scadeName="f" scadeType="real" targetName="f" targetType="kcg_real"/>
+  </StructType>
+</Model>
+<!--$*************** KCG Version 6.1.2 (build i5) ****************
+** kcg_trace.xml
+** Generation date: 2011-03-07T21:45:05
+*************************************************************$-->
