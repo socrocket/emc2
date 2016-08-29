@@ -5,6 +5,12 @@
       "remote_url": "https://github.com/waf-project/waf.git"
     }
   },
+  "arm": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/arm.git"
+    }
+  },
   "core": {
     "pull": {
       "remote_branch": "master",
@@ -41,28 +47,28 @@
       "remote_url": "https://github.com/socrocket/sr_signal.git"
     }
   },
+  "core/trapgen": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "../trap-gen2"
+    }
+  },
   "microblaze": {
     "pull": {
       "remote_branch": "master",
       "remote_url": "https://github.com/socrocket/microblaze.git"
     }
   },
-  "arm": {
+  "pysc": {
     "pull": {
       "remote_branch": "master",
-      "remote_url": "https://github.com/socrocket/arm.git"
+      "remote_url": "https://github.com/socrocket/pysc.git"
     }
   },
   "quadcopter": {
     "pull": {
       "remote_branch": "master",
       "remote_url": "https://github.com/socrocket/quadcopter.git"
-    }
-  },
-  "pysc": {
-    "pull": {
-      "remote_branch": "master",
-      "remote_url": "https://github.com/socrocket/pysc.git"
     }
   }
 }
