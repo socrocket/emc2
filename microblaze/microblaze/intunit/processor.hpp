@@ -33,10 +33,9 @@
 #include "microblaze/intunit/registers.hpp"
 #include "microblaze/intunit/memory.hpp"
 
-#include <utils/customExceptions.hpp>
-#include "core/trapgen/ToolsIf.hpp"
+#include <common/tools_if.hpp>
+#include <modules/instruction.hpp>
 #include <tlm_utils/tlm_quantumkeeper.h>
-#include <instructionBase.hpp>
 #include "core/common/sr_param.h"
 
 #include <systemc.h>

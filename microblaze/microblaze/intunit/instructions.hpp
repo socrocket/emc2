@@ -31,9 +31,8 @@
 #include "microblaze/intunit/memory.hpp"
 #include "microblaze/intunit/alias.hpp"
 
-#include <instructionBase.hpp>
-#include <utils/customExceptions.hpp>
-#include <utils/trap_utils.hpp>
+#include <common/report.hpp>
+#include <modules/instruction.hpp>
 
 #include <string>
 #include <sstream>
@@ -59,9 +58,9 @@ namespace core_microblaze_lt {
     virtual Instruction * replicate() const throw() = 0;
     virtual void setParams(const unsigned int & bitString) throw() = 0;
     void printTrace();
-    virtual std::string getInstructionName() const throw() = 0;
-    virtual std::string getMnemonic() const throw() = 0;
-    virtual unsigned int getId() const throw() = 0;
+    virtual std::string get_name() const throw() = 0;
+    virtual std::string get_mnemonic() const throw() = 0;
+    virtual unsigned int get_id() const throw() = 0;
     inline void annull() {
       throw annull_exception();
     } // annull()
@@ -174,9 +173,9 @@ namespace core_microblaze_lt {
     unsigned int behavior();
     Instruction * replicate() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getInstructionName() const throw();
-    std::string getMnemonic() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    std::string get_mnemonic() const throw();
+    unsigned int get_id() const throw();
     virtual ~InvalidInstr();
 
   }; // class InvalidInstr
@@ -195,10 +194,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~WDC();
 
     private:
@@ -223,10 +222,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGE();
 
     private:
@@ -251,10 +250,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGEID();
 
     protected:
@@ -281,10 +280,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BSLL();
 
     private:
@@ -311,10 +310,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGT();
 
     private:
@@ -339,10 +338,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BR();
 
     private:
@@ -367,10 +366,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BNED();
 
     private:
@@ -395,10 +394,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BNEI();
 
     protected:
@@ -425,10 +424,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~LBU();
 
     private:
@@ -455,10 +454,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUB();
 
     private:
@@ -485,10 +484,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BSRLI();
 
     protected:
@@ -517,10 +516,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FDIV();
 
     private:
@@ -547,10 +546,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FADD();
 
     private:
@@ -577,10 +576,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MULHU();
 
     private:
@@ -607,10 +606,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGTD();
 
     private:
@@ -635,10 +634,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGTI();
 
     protected:
@@ -665,10 +664,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SEXT8();
 
     private:
@@ -693,10 +692,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~LHU();
 
     private:
@@ -723,10 +722,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BNE();
 
     private:
@@ -751,10 +750,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRLD();
 
     private:
@@ -779,10 +778,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRKI();
 
     protected:
@@ -809,10 +808,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDIKC();
 
     protected:
@@ -841,10 +840,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~IDIV();
 
     private:
@@ -871,10 +870,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDC();
 
     private:
@@ -901,10 +900,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~LBUI();
 
     protected:
@@ -933,10 +932,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDK();
 
     private:
@@ -963,10 +962,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~OR();
 
     private:
@@ -993,10 +992,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDI();
 
     protected:
@@ -1025,10 +1024,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BEQID();
 
     protected:
@@ -1055,10 +1054,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~CMPU();
 
     private:
@@ -1085,10 +1084,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FINT();
 
     private:
@@ -1113,10 +1112,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BSRL();
 
     private:
@@ -1143,10 +1142,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLTI();
 
     protected:
@@ -1173,10 +1172,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~PCMPEQ();
 
     private:
@@ -1203,10 +1202,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~XOR();
 
     private:
@@ -1233,10 +1232,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BEQ();
 
     private:
@@ -1261,10 +1260,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLTD();
 
     private:
@@ -1289,10 +1288,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~CMP();
 
     private:
@@ -1319,10 +1318,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRALID();
 
     protected:
@@ -1349,10 +1348,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RTBD();
 
     protected:
@@ -1379,10 +1378,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MFS();
 
     private:
@@ -1406,10 +1405,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLT();
 
     private:
@@ -1434,10 +1433,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRLID();
 
     protected:
@@ -1464,10 +1463,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SB();
 
     private:
@@ -1494,10 +1493,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLE();
 
     private:
@@ -1522,10 +1521,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SHI();
 
     protected:
@@ -1554,10 +1553,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~AND();
 
     private:
@@ -1584,10 +1583,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBIC();
 
     protected:
@@ -1616,10 +1615,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SBI();
 
     protected:
@@ -1648,10 +1647,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RTED();
 
     protected:
@@ -1678,10 +1677,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBIK();
 
     protected:
@@ -1710,10 +1709,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRALD();
 
     private:
@@ -1738,10 +1737,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRA();
 
     private:
@@ -1766,10 +1765,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FSQRT();
 
     private:
@@ -1794,10 +1793,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SEXT16();
 
     private:
@@ -1822,10 +1821,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SWI();
 
     protected:
@@ -1854,10 +1853,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLEID();
 
     protected:
@@ -1884,10 +1883,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BSRA();
 
     private:
@@ -1914,10 +1913,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLED();
 
     private:
@@ -1942,10 +1941,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MULI();
 
     protected:
@@ -1974,10 +1973,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MSRSET();
 
     private:
@@ -2001,10 +2000,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MUL();
 
     private:
@@ -2031,10 +2030,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLEI();
 
     protected:
@@ -2061,10 +2060,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RTSD();
 
     protected:
@@ -2091,10 +2090,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ANDN();
 
     private:
@@ -2121,10 +2120,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ANDI();
 
     protected:
@@ -2153,10 +2152,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDKC();
 
     private:
@@ -2183,10 +2182,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MSRCLR();
 
     private:
@@ -2210,10 +2209,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BSLLI();
 
     protected:
@@ -2242,10 +2241,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGEI();
 
     protected:
@@ -2272,10 +2271,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SRC();
 
     private:
@@ -2300,10 +2299,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SRA();
 
     private:
@@ -2328,10 +2327,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~IMM();
 
     private:
@@ -2353,10 +2352,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SRL();
 
     private:
@@ -2381,10 +2380,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FLT();
 
     private:
@@ -2409,10 +2408,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MULHSU();
 
     private:
@@ -2439,10 +2438,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADD();
 
     private:
@@ -2469,10 +2468,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~XORI();
 
     protected:
@@ -2501,10 +2500,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~PCMPNE();
 
     private:
@@ -2531,10 +2530,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BSRAI();
 
     protected:
@@ -2563,10 +2562,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRAID();
 
     protected:
@@ -2593,10 +2592,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~WIC();
 
     private:
@@ -2621,10 +2620,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBKC();
 
     private:
@@ -2651,10 +2650,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SW();
 
     private:
@@ -2681,10 +2680,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FCMP();
 
     private:
@@ -2712,10 +2711,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~SH();
 
     private:
@@ -2742,10 +2741,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRK();
 
     private:
@@ -2770,10 +2769,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRI();
 
     protected:
@@ -2800,10 +2799,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ORI();
 
     protected:
@@ -2832,10 +2831,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ANDNI();
 
     protected:
@@ -2864,10 +2863,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRD();
 
     private:
@@ -2892,10 +2891,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~LHUI();
 
     protected:
@@ -2924,10 +2923,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBIKC();
 
     protected:
@@ -2956,10 +2955,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MULH();
 
     private:
@@ -2986,10 +2985,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FRSUB();
 
     private:
@@ -3016,10 +3015,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BEQI();
 
     protected:
@@ -3046,10 +3045,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BEQD();
 
     private:
@@ -3074,10 +3073,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RTID();
 
     protected:
@@ -3104,10 +3103,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~FMUL();
 
     private:
@@ -3134,10 +3133,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~LWI();
 
     protected:
@@ -3166,10 +3165,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BNEID();
 
     protected:
@@ -3196,10 +3195,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDIK();
 
     protected:
@@ -3228,10 +3227,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGTID();
 
     protected:
@@ -3258,10 +3257,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~ADDIC();
 
     protected:
@@ -3290,10 +3289,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~LW();
 
     private:
@@ -3320,10 +3319,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBC();
 
     private:
@@ -3350,10 +3349,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BLTID();
 
     protected:
@@ -3380,10 +3379,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBI();
 
     protected:
@@ -3412,10 +3411,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~MTS();
 
     private:
@@ -3439,10 +3438,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~RSUBK();
 
     private:
@@ -3469,10 +3468,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BGED();
 
     private:
@@ -3497,10 +3496,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRID();
 
     protected:
@@ -3527,10 +3526,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~PCMPBF();
 
     private:
@@ -3557,10 +3556,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~IDIVU();
 
     private:
@@ -3587,10 +3586,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRAD();
 
     private:
@@ -3615,10 +3614,10 @@ namespace core_microblaze_lt {
         MemoryInterface & dataMem, unsigned int & totalCycles);
     unsigned int behavior();
     Instruction * replicate() const throw();
-    std::string getInstructionName() const throw();
-    unsigned int getId() const throw();
+    std::string get_name() const throw();
+    unsigned int get_id() const throw();
     void setParams(const unsigned int & bitString) throw();
-    std::string getMnemonic() const throw();
+    std::string get_mnemonic() const throw();
     virtual ~BRAI();
 
     protected:

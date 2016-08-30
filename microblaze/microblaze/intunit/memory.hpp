@@ -27,12 +27,7 @@
 #ifndef MICROBLAZE_CORE_FUNC_LT_MEMORY_HPP
 #define MICROBLAZE_CORE_FUNC_LT_MEMORY_HPP
 
-
-#include <ToolsIf.hpp>
-#include <utils/trap_utils.hpp>
-
 #include <systemc.h>
-
 #include "gaisler/leon3/mmucache/cpu_if.h"
 
 #define FUNC_MODEL

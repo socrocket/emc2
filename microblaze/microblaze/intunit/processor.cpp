@@ -32,9 +32,8 @@
 #include "microblaze/intunit/registers.hpp"
 #include "microblaze/intunit/memory.hpp"
 
-#include <utils/customExceptions.hpp>
-#include <ToolsIf.hpp>
-#include <instructionBase.hpp>
+#include <common/tools_if.hpp>
+#include <modules/instruction.hpp>
 
 #include <systemc.h>
 #include <iostream>
@@ -84,13 +83,13 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         if (this->historyEnabled) {
           srInfo()
             ("Address",curPC)
-            ("Name",curInstrPtr->getInstructionName())
-            ("Mnemonic",curInstrPtr->getMnemonic())
+            ("Name",curInstrPtr->get_name())
+            ("Mnemonic",curInstrPtr->get_mnemonic())
             ("Instruction History");
         }
         try {
 #ifndef DISABLE_TOOLS
-          if (!(this->toolManager.newIssue(curPC, curInstrPtr))) {
+          if (!(this->toolManager.issue(curPC, curInstrPtr))) {
 #endif
             numCycles = curInstrPtr->behavior();
 //            curInstrPtr->printTrace();
@@ -104,7 +103,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         }
         catch(annull_exception &etc) {
 //          curInstrPtr->printTrace();
-          std::cerr << "Skipped Instruction " << curInstrPtr->getInstructionName()
+          std::cerr << "Skipped Instruction " << curInstrPtr->get_name()
             << std::endl << std::endl;
           numCycles = 0;
         }
@@ -117,13 +116,13 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         if (this->historyEnabled) {
           srInfo()
             ("Address",curPC)
-            ("Name",curInstrPtr->getInstructionName())
-            ("Mnemonic",curInstrPtr->getMnemonic())
+            ("Name",curInstrPtr->get_name())
+            ("Mnemonic",curInstrPtr->get_mnemonic())
             ("Instruction History");
         }
         try {
 #ifndef DISABLE_TOOLS
-          if (!(this->toolManager.newIssue(curPC, instr))) {
+          if (!(this->toolManager.issue(curPC, instr))) {
 #endif
             numCycles = instr->behavior();
 //            instr->printTrace();
@@ -137,7 +136,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         }
         catch(annull_exception &etc) {
 //          instr->printTrace();
-          std::cerr << "Skipped Instruction " << instr->getInstructionName() <<
+          std::cerr << "Skipped Instruction " << instr->get_name() <<
             std::endl << std::endl;
           numCycles = 0;
         }
@@ -159,13 +158,13 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
       if (this->historyEnabled) {
         srInfo()
           ("Address",curPC)
-          ("Name",instr->getInstructionName())
-          ("Mnemonic",instr->getMnemonic())
+          ("Name",instr->get_name())
+          ("Mnemonic",instr->get_mnemonic())
           ("Instruction History");
       }
       try {
 #ifndef DISABLE_TOOLS
-        if (!(this->toolManager.newIssue(curPC, instr))) {
+        if (!(this->toolManager.issue(curPC, instr))) {
 #endif
           numCycles = instr->behavior();
 //          instr->printTrace();
@@ -179,7 +178,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
       }
       catch(annull_exception &etc) {
 //        instr->printTrace();
-        std::cerr << "Skipped Instruction " << instr->getInstructionName() <<
+        std::cerr << "Skipped Instruction " << instr->get_name() <<
           std::endl << std::endl;
         numCycles = 0;
       }
@@ -190,8 +189,8 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
     /*if (this->historyEnabled) {
       srInfo()
         ("Address",curPC)
-        ("Name",curInstrPtr->getInstructionName())
-        ("Mnemonic",curInstrPtr->getMnemonic())
+        ("Name",curInstrPtr->get_name())
+        ("Mnemonic",curInstrPtr->get_mnemonic())
         ("Instruction History");
     }*/
     this->totalCycles += (numCycles + 1);

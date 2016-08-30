@@ -30,9 +30,7 @@
 #include "microblaze/intunit/instructions.hpp"
 #include "microblaze/intunit/alias.hpp"
 
-#include <instructionBase.hpp>
-#include <utils/customExceptions.hpp>
-#include <utils/trap_utils.hpp>
+#include <modules/instruction.hpp>
 
 #include <string>
 #include <sstream>
@@ -41,8 +39,8 @@
 using namespace core_microblaze_lt;
 void core_microblaze_lt::Instruction::printTrace() {
   std::cerr << "Simulated time " << std::dec << this->totalCycles << std::endl;
-  std::cerr << "Instruction: " << this->getInstructionName() << std::endl;
-  std::cerr << "Mnemonic: " << this->getMnemonic() << std::endl;
+  std::cerr << "Instruction: " << this->get_name() << std::endl;
+  std::cerr << "Mnemonic: " << this->get_mnemonic() << std::endl;
   std::cerr << "PC = " << std::hex << std::showbase << this->PC << std::endl;
   std::cerr << "MSR = " << std::hex << std::showbase << this->MSR << std::endl;
   std::cerr << "EAR = " << std::hex << std::showbase << this->EAR << std::endl;
@@ -184,17 +182,17 @@ void core_microblaze_lt::InvalidInstr::setParams(const unsigned int & bitString)
 
 } // setParams()
 
-std::string core_microblaze_lt::InvalidInstr::getInstructionName() const throw() {
+std::string core_microblaze_lt::InvalidInstr::get_name() const throw() {
   return "InvalidInstruction";
-} // getInstructionName()
+} // get_name()
 
-std::string core_microblaze_lt::InvalidInstr::getMnemonic() const throw() {
+std::string core_microblaze_lt::InvalidInstr::get_mnemonic() const throw() {
   return "invalid";
-} // getMnemonic()
+} // get_mnemonic()
 
-unsigned int core_microblaze_lt::InvalidInstr::getId() const throw() {
+unsigned int core_microblaze_lt::InvalidInstr::get_id() const throw() {
   return 116;
-} // getId()
+} // get_id()
 
 core_microblaze_lt::InvalidInstr::InvalidInstr(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -238,13 +236,13 @@ Instruction * core_microblaze_lt::WDC::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::WDC::getInstructionName() const throw() {
+std::string core_microblaze_lt::WDC::get_name() const throw() {
   return "WDC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::WDC::getId() const throw() {
+unsigned int core_microblaze_lt::WDC::get_id() const throw() {
   return 112;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::WDC::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -253,14 +251,14 @@ void core_microblaze_lt::WDC::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::WDC::getMnemonic() const throw() {
+std::string core_microblaze_lt::WDC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "wdc r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::WDC::WDC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -296,13 +294,13 @@ Instruction * core_microblaze_lt::BGE::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGE::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGE::get_name() const throw() {
   return "BGE";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGE::getId() const throw() {
+unsigned int core_microblaze_lt::BGE::get_id() const throw() {
   return 16;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGE::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -311,14 +309,14 @@ void core_microblaze_lt::BGE::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BGE::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGE::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bge r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGE::BGE(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -355,13 +353,13 @@ Instruction * core_microblaze_lt::BGEID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGEID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGEID::get_name() const throw() {
   return "BGEID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGEID::getId() const throw() {
+unsigned int core_microblaze_lt::BGEID::get_id() const throw() {
   return 19;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGEID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -369,14 +367,14 @@ void core_microblaze_lt::BGEID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BGEID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGEID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bgeid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGEID::BGEID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -420,13 +418,13 @@ Instruction * core_microblaze_lt::BSLL::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BSLL::getInstructionName() const throw() {
+std::string core_microblaze_lt::BSLL::get_name() const throw() {
   return "BSLL";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BSLL::getId() const throw() {
+unsigned int core_microblaze_lt::BSLL::get_id() const throw() {
   return 52;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BSLL::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -437,7 +435,7 @@ void core_microblaze_lt::BSLL::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BSLL::getMnemonic() const throw() {
+std::string core_microblaze_lt::BSLL::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bsll r";
   oss << std::dec << this->rd_bit;
@@ -446,7 +444,7 @@ std::string core_microblaze_lt::BSLL::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BSLL::BSLL(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -482,13 +480,13 @@ Instruction * core_microblaze_lt::BGT::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGT::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGT::get_name() const throw() {
   return "BGT";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGT::getId() const throw() {
+unsigned int core_microblaze_lt::BGT::get_id() const throw() {
   return 20;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGT::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -497,14 +495,14 @@ void core_microblaze_lt::BGT::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BGT::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGT::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bgt r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGT::BGT(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -536,13 +534,13 @@ Instruction * core_microblaze_lt::BR::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BR::getInstructionName() const throw() {
+std::string core_microblaze_lt::BR::get_name() const throw() {
   return "BR";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BR::getId() const throw() {
+unsigned int core_microblaze_lt::BR::get_id() const throw() {
   return 36;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BR::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -551,14 +549,14 @@ void core_microblaze_lt::BR::setParams(const unsigned int & bitString) throw() {
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BR::getMnemonic() const throw() {
+std::string core_microblaze_lt::BR::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "br r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BR::BR(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -595,13 +593,13 @@ Instruction * core_microblaze_lt::BNED::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BNED::getInstructionName() const throw() {
+std::string core_microblaze_lt::BNED::get_name() const throw() {
   return "BNED";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BNED::getId() const throw() {
+unsigned int core_microblaze_lt::BNED::get_id() const throw() {
   return 33;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BNED::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -610,14 +608,14 @@ void core_microblaze_lt::BNED::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BNED::getMnemonic() const throw() {
+std::string core_microblaze_lt::BNED::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bned r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BNED::BNED(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -653,13 +651,13 @@ Instruction * core_microblaze_lt::BNEI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BNEI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BNEI::get_name() const throw() {
   return "BNEI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BNEI::getId() const throw() {
+unsigned int core_microblaze_lt::BNEI::get_id() const throw() {
   return 34;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BNEI::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -667,14 +665,14 @@ void core_microblaze_lt::BNEI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BNEI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BNEI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bnei r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BNEI::BNEI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -720,13 +718,13 @@ Instruction * core_microblaze_lt::LBU::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::LBU::getInstructionName() const throw() {
+std::string core_microblaze_lt::LBU::get_name() const throw() {
   return "LBU";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::LBU::getId() const throw() {
+unsigned int core_microblaze_lt::LBU::get_id() const throw() {
   return 69;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::LBU::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -737,7 +735,7 @@ void core_microblaze_lt::LBU::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::LBU::getMnemonic() const throw() {
+std::string core_microblaze_lt::LBU::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "lbu r";
   oss << std::dec << this->rd_bit;
@@ -746,7 +744,7 @@ std::string core_microblaze_lt::LBU::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::LBU::LBU(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -794,13 +792,13 @@ Instruction * core_microblaze_lt::RSUB::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUB::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUB::get_name() const throw() {
   return "RSUB";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUB::getId() const throw() {
+unsigned int core_microblaze_lt::RSUB::get_id() const throw() {
   return 89;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUB::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -811,7 +809,7 @@ void core_microblaze_lt::RSUB::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::RSUB::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUB::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsub r";
   oss << std::dec << this->rd_bit;
@@ -820,7 +818,7 @@ std::string core_microblaze_lt::RSUB::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUB::RSUB(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -864,13 +862,13 @@ Instruction * core_microblaze_lt::BSRLI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BSRLI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BSRLI::get_name() const throw() {
   return "BSRLI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BSRLI::getId() const throw() {
+unsigned int core_microblaze_lt::BSRLI::get_id() const throw() {
   return 53;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BSRLI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -880,7 +878,7 @@ void core_microblaze_lt::BSRLI::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0x1f);
 } // setParams()
 
-std::string core_microblaze_lt::BSRLI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BSRLI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bsrli r";
   oss << std::dec << this->rd_bit;
@@ -889,7 +887,7 @@ std::string core_microblaze_lt::BSRLI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BSRLI::BSRLI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1001,13 +999,13 @@ Instruction * core_microblaze_lt::FDIV::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FDIV::getInstructionName() const throw() {
+std::string core_microblaze_lt::FDIV::get_name() const throw() {
   return "FDIV";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FDIV::getId() const throw() {
+unsigned int core_microblaze_lt::FDIV::get_id() const throw() {
   return 61;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FDIV::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1018,14 +1016,14 @@ void core_microblaze_lt::FDIV::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FDIV::getMnemonic() const throw() {
+std::string core_microblaze_lt::FDIV::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FDIV::FDIV(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1129,13 +1127,13 @@ Instruction * core_microblaze_lt::FADD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FADD::getInstructionName() const throw() {
+std::string core_microblaze_lt::FADD::get_name() const throw() {
   return "FADD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FADD::getId() const throw() {
+unsigned int core_microblaze_lt::FADD::get_id() const throw() {
   return 58;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FADD::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1146,14 +1144,14 @@ void core_microblaze_lt::FADD::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FADD::getMnemonic() const throw() {
+std::string core_microblaze_lt::FADD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FADD::FADD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1200,13 +1198,13 @@ Instruction * core_microblaze_lt::MULHU::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MULHU::getInstructionName() const throw() {
+std::string core_microblaze_lt::MULHU::get_name() const throw() {
   return "MULHU";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MULHU::getId() const throw() {
+unsigned int core_microblaze_lt::MULHU::get_id() const throw() {
   return 81;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MULHU::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1217,7 +1215,7 @@ void core_microblaze_lt::MULHU::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::MULHU::getMnemonic() const throw() {
+std::string core_microblaze_lt::MULHU::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "mulhu r";
   oss << std::dec << this->rd_bit;
@@ -1226,7 +1224,7 @@ std::string core_microblaze_lt::MULHU::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MULHU::MULHU(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1263,13 +1261,13 @@ Instruction * core_microblaze_lt::BGTD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGTD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGTD::get_name() const throw() {
   return "BGTD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGTD::getId() const throw() {
+unsigned int core_microblaze_lt::BGTD::get_id() const throw() {
   return 21;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGTD::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -1278,14 +1276,14 @@ void core_microblaze_lt::BGTD::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BGTD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGTD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bgtd r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGTD::BGTD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1321,13 +1319,13 @@ Instruction * core_microblaze_lt::BGTI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGTI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGTI::get_name() const throw() {
   return "BGTI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGTI::getId() const throw() {
+unsigned int core_microblaze_lt::BGTI::get_id() const throw() {
   return 22;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGTI::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -1335,14 +1333,14 @@ void core_microblaze_lt::BGTI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BGTI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGTI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bgti r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGTI::BGTI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1392,13 +1390,13 @@ Instruction * core_microblaze_lt::SEXT8::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SEXT8::getInstructionName() const throw() {
+std::string core_microblaze_lt::SEXT8::get_name() const throw() {
   return "SEXT8";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SEXT8::getId() const throw() {
+unsigned int core_microblaze_lt::SEXT8::get_id() const throw() {
   return 108;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SEXT8::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1407,14 +1405,14 @@ void core_microblaze_lt::SEXT8::setParams(const unsigned int & bitString) throw(
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SEXT8::getMnemonic() const throw() {
+std::string core_microblaze_lt::SEXT8::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sext8 r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->ra_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SEXT8::SEXT8(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1464,13 +1462,13 @@ Instruction * core_microblaze_lt::LHU::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::LHU::getInstructionName() const throw() {
+std::string core_microblaze_lt::LHU::get_name() const throw() {
   return "LHU";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::LHU::getId() const throw() {
+unsigned int core_microblaze_lt::LHU::get_id() const throw() {
   return 71;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::LHU::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1481,7 +1479,7 @@ void core_microblaze_lt::LHU::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::LHU::getMnemonic() const throw() {
+std::string core_microblaze_lt::LHU::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "lhu r";
   oss << std::dec << this->rd_bit;
@@ -1490,7 +1488,7 @@ std::string core_microblaze_lt::LHU::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::LHU::LHU(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1526,13 +1524,13 @@ Instruction * core_microblaze_lt::BNE::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BNE::getInstructionName() const throw() {
+std::string core_microblaze_lt::BNE::get_name() const throw() {
   return "BNE";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BNE::getId() const throw() {
+unsigned int core_microblaze_lt::BNE::get_id() const throw() {
   return 32;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BNE::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -1541,14 +1539,14 @@ void core_microblaze_lt::BNE::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BNE::getMnemonic() const throw() {
+std::string core_microblaze_lt::BNE::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bne r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BNE::BNE(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1582,13 +1580,13 @@ Instruction * core_microblaze_lt::BRLD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRLD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRLD::get_name() const throw() {
   return "BRLD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRLD::getId() const throw() {
+unsigned int core_microblaze_lt::BRLD::get_id() const throw() {
   return 40;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRLD::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1597,14 +1595,14 @@ void core_microblaze_lt::BRLD::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BRLD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRLD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brld r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRLD::BRLD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1648,13 +1646,13 @@ Instruction * core_microblaze_lt::BRKI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRKI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRKI::get_name() const throw() {
   return "BRKI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRKI::getId() const throw() {
+unsigned int core_microblaze_lt::BRKI::get_id() const throw() {
   return 49;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRKI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1662,14 +1660,14 @@ void core_microblaze_lt::BRKI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRKI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRKI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brki r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRKI::BRKI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1713,13 +1711,13 @@ Instruction * core_microblaze_lt::ADDIKC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDIKC::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDIKC::get_name() const throw() {
   return "ADDIKC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDIKC::getId() const throw() {
+unsigned int core_microblaze_lt::ADDIKC::get_id() const throw() {
   return 7;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDIKC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1729,7 +1727,7 @@ void core_microblaze_lt::ADDIKC::setParams(const unsigned int & bitString) throw
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ADDIKC::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDIKC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addikc r";
   oss << std::dec << this->rd_bit;
@@ -1738,7 +1736,7 @@ std::string core_microblaze_lt::ADDIKC::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDIKC::ADDIKC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1790,13 +1788,13 @@ Instruction * core_microblaze_lt::IDIV::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::IDIV::getInstructionName() const throw() {
+std::string core_microblaze_lt::IDIV::get_name() const throw() {
   return "IDIV";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::IDIV::getId() const throw() {
+unsigned int core_microblaze_lt::IDIV::get_id() const throw() {
   return 66;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::IDIV::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1807,7 +1805,7 @@ void core_microblaze_lt::IDIV::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::IDIV::getMnemonic() const throw() {
+std::string core_microblaze_lt::IDIV::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "idiv r";
   oss << std::dec << this->rd_bit;
@@ -1816,7 +1814,7 @@ std::string core_microblaze_lt::IDIV::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::IDIV::IDIV(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1862,13 +1860,13 @@ Instruction * core_microblaze_lt::ADDC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDC::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDC::get_name() const throw() {
   return "ADDC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDC::getId() const throw() {
+unsigned int core_microblaze_lt::ADDC::get_id() const throw() {
   return 1;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1879,7 +1877,7 @@ void core_microblaze_lt::ADDC::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::ADDC::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addc r";
   oss << std::dec << this->rd_bit;
@@ -1888,7 +1886,7 @@ std::string core_microblaze_lt::ADDC::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDC::ADDC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -1934,13 +1932,13 @@ Instruction * core_microblaze_lt::LBUI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::LBUI::getInstructionName() const throw() {
+std::string core_microblaze_lt::LBUI::get_name() const throw() {
   return "LBUI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::LBUI::getId() const throw() {
+unsigned int core_microblaze_lt::LBUI::get_id() const throw() {
   return 70;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::LBUI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -1950,7 +1948,7 @@ void core_microblaze_lt::LBUI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::LBUI::getMnemonic() const throw() {
+std::string core_microblaze_lt::LBUI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "lbui r";
   oss << std::dec << this->rd_bit;
@@ -1959,7 +1957,7 @@ std::string core_microblaze_lt::LBUI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::LBUI::LBUI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2003,13 +2001,13 @@ Instruction * core_microblaze_lt::ADDK::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDK::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDK::get_name() const throw() {
   return "ADDK";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDK::getId() const throw() {
+unsigned int core_microblaze_lt::ADDK::get_id() const throw() {
   return 2;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDK::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2020,7 +2018,7 @@ void core_microblaze_lt::ADDK::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::ADDK::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDK::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addk r";
   oss << std::dec << this->rd_bit;
@@ -2029,7 +2027,7 @@ std::string core_microblaze_lt::ADDK::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDK::ADDK(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2073,13 +2071,13 @@ Instruction * core_microblaze_lt::OR::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::OR::getInstructionName() const throw() {
+std::string core_microblaze_lt::OR::get_name() const throw() {
   return "OR";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::OR::getId() const throw() {
+unsigned int core_microblaze_lt::OR::get_id() const throw() {
   return 84;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::OR::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2090,7 +2088,7 @@ void core_microblaze_lt::OR::setParams(const unsigned int & bitString) throw() {
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::OR::getMnemonic() const throw() {
+std::string core_microblaze_lt::OR::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "or r";
   oss << std::dec << this->rd_bit;
@@ -2099,7 +2097,7 @@ std::string core_microblaze_lt::OR::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::OR::OR(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2145,13 +2143,13 @@ Instruction * core_microblaze_lt::ADDI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDI::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDI::get_name() const throw() {
   return "ADDI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDI::getId() const throw() {
+unsigned int core_microblaze_lt::ADDI::get_id() const throw() {
   return 4;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2161,7 +2159,7 @@ void core_microblaze_lt::ADDI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ADDI::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addi r";
   oss << std::dec << this->rd_bit;
@@ -2170,7 +2168,7 @@ std::string core_microblaze_lt::ADDI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDI::ADDI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2207,13 +2205,13 @@ Instruction * core_microblaze_lt::BEQID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BEQID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BEQID::get_name() const throw() {
   return "BEQID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BEQID::getId() const throw() {
+unsigned int core_microblaze_lt::BEQID::get_id() const throw() {
   return 15;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BEQID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -2221,14 +2219,14 @@ void core_microblaze_lt::BEQID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BEQID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BEQID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "beqid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BEQID::BEQID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2278,13 +2276,13 @@ Instruction * core_microblaze_lt::CMPU::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::CMPU::getInstructionName() const throw() {
+std::string core_microblaze_lt::CMPU::get_name() const throw() {
   return "CMPU";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::CMPU::getId() const throw() {
+unsigned int core_microblaze_lt::CMPU::get_id() const throw() {
   return 57;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::CMPU::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2295,7 +2293,7 @@ void core_microblaze_lt::CMPU::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::CMPU::getMnemonic() const throw() {
+std::string core_microblaze_lt::CMPU::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "cmpu r";
   oss << std::dec << this->rd_bit;
@@ -2304,7 +2302,7 @@ std::string core_microblaze_lt::CMPU::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::CMPU::CMPU(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2335,13 +2333,13 @@ Instruction * core_microblaze_lt::FINT::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FINT::getInstructionName() const throw() {
+std::string core_microblaze_lt::FINT::get_name() const throw() {
   return "FINT";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FINT::getId() const throw() {
+unsigned int core_microblaze_lt::FINT::get_id() const throw() {
   return 64;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FINT::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2350,14 +2348,14 @@ void core_microblaze_lt::FINT::setParams(const unsigned int & bitString) throw()
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FINT::getMnemonic() const throw() {
+std::string core_microblaze_lt::FINT::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FINT::FINT(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2400,13 +2398,13 @@ Instruction * core_microblaze_lt::BSRL::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BSRL::getInstructionName() const throw() {
+std::string core_microblaze_lt::BSRL::get_name() const throw() {
   return "BSRL";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BSRL::getId() const throw() {
+unsigned int core_microblaze_lt::BSRL::get_id() const throw() {
   return 50;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BSRL::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2417,7 +2415,7 @@ void core_microblaze_lt::BSRL::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BSRL::getMnemonic() const throw() {
+std::string core_microblaze_lt::BSRL::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bsrl r";
   oss << std::dec << this->rd_bit;
@@ -2426,7 +2424,7 @@ std::string core_microblaze_lt::BSRL::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BSRL::BSRL(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2462,13 +2460,13 @@ Instruction * core_microblaze_lt::BLTI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLTI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLTI::get_name() const throw() {
   return "BLTI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLTI::getId() const throw() {
+unsigned int core_microblaze_lt::BLTI::get_id() const throw() {
   return 30;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLTI::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -2476,14 +2474,14 @@ void core_microblaze_lt::BLTI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BLTI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLTI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "blti r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLTI::BLTI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2527,13 +2525,13 @@ Instruction * core_microblaze_lt::PCMPEQ::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::PCMPEQ::getInstructionName() const throw() {
+std::string core_microblaze_lt::PCMPEQ::get_name() const throw() {
   return "PCMPEQ";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::PCMPEQ::getId() const throw() {
+unsigned int core_microblaze_lt::PCMPEQ::get_id() const throw() {
   return 87;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::PCMPEQ::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2544,7 +2542,7 @@ void core_microblaze_lt::PCMPEQ::setParams(const unsigned int & bitString) throw
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::PCMPEQ::getMnemonic() const throw() {
+std::string core_microblaze_lt::PCMPEQ::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "pcmpeq r";
   oss << std::dec << this->rd_bit;
@@ -2553,7 +2551,7 @@ std::string core_microblaze_lt::PCMPEQ::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::PCMPEQ::PCMPEQ(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2597,13 +2595,13 @@ Instruction * core_microblaze_lt::XOR::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::XOR::getInstructionName() const throw() {
+std::string core_microblaze_lt::XOR::get_name() const throw() {
   return "XOR";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::XOR::getId() const throw() {
+unsigned int core_microblaze_lt::XOR::get_id() const throw() {
   return 114;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::XOR::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2614,7 +2612,7 @@ void core_microblaze_lt::XOR::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::XOR::getMnemonic() const throw() {
+std::string core_microblaze_lt::XOR::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "xor r";
   oss << std::dec << this->rd_bit;
@@ -2623,7 +2621,7 @@ std::string core_microblaze_lt::XOR::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::XOR::XOR(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2659,13 +2657,13 @@ Instruction * core_microblaze_lt::BEQ::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BEQ::getInstructionName() const throw() {
+std::string core_microblaze_lt::BEQ::get_name() const throw() {
   return "BEQ";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BEQ::getId() const throw() {
+unsigned int core_microblaze_lt::BEQ::get_id() const throw() {
   return 12;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BEQ::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -2674,14 +2672,14 @@ void core_microblaze_lt::BEQ::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BEQ::getMnemonic() const throw() {
+std::string core_microblaze_lt::BEQ::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "beq r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BEQ::BEQ(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2718,13 +2716,13 @@ Instruction * core_microblaze_lt::BLTD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLTD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLTD::get_name() const throw() {
   return "BLTD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLTD::getId() const throw() {
+unsigned int core_microblaze_lt::BLTD::get_id() const throw() {
   return 29;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLTD::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -2733,14 +2731,14 @@ void core_microblaze_lt::BLTD::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BLTD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLTD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bltd r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLTD::BLTD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2790,13 +2788,13 @@ Instruction * core_microblaze_lt::CMP::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::CMP::getInstructionName() const throw() {
+std::string core_microblaze_lt::CMP::get_name() const throw() {
   return "CMP";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::CMP::getId() const throw() {
+unsigned int core_microblaze_lt::CMP::get_id() const throw() {
   return 56;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::CMP::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2807,7 +2805,7 @@ void core_microblaze_lt::CMP::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::CMP::getMnemonic() const throw() {
+std::string core_microblaze_lt::CMP::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "cmp r";
   oss << std::dec << this->rd_bit;
@@ -2816,7 +2814,7 @@ std::string core_microblaze_lt::CMP::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::CMP::CMP(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2850,13 +2848,13 @@ Instruction * core_microblaze_lt::BRALID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRALID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRALID::get_name() const throw() {
   return "BRALID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRALID::getId() const throw() {
+unsigned int core_microblaze_lt::BRALID::get_id() const throw() {
   return 47;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRALID::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -2864,14 +2862,14 @@ void core_microblaze_lt::BRALID::setParams(const unsigned int & bitString) throw
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRALID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRALID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bralid r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRALID::BRALID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -2911,13 +2909,13 @@ Instruction * core_microblaze_lt::RTBD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RTBD::getInstructionName() const throw() {
+std::string core_microblaze_lt::RTBD::get_name() const throw() {
   return "RTBD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RTBD::getId() const throw() {
+unsigned int core_microblaze_lt::RTBD::get_id() const throw() {
   return 97;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RTBD::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -2925,14 +2923,14 @@ void core_microblaze_lt::RTBD::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RTBD::getMnemonic() const throw() {
+std::string core_microblaze_lt::RTBD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rtbd r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RTBD::RTBD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3016,13 +3014,13 @@ Instruction * core_microblaze_lt::MFS::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MFS::getInstructionName() const throw() {
+std::string core_microblaze_lt::MFS::get_name() const throw() {
   return "MFS";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MFS::getId() const throw() {
+unsigned int core_microblaze_lt::MFS::get_id() const throw() {
   return 75;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MFS::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3030,14 +3028,14 @@ void core_microblaze_lt::MFS::setParams(const unsigned int & bitString) throw() 
   this->rs = (bitString & 0x3fff);
 } // setParams()
 
-std::string core_microblaze_lt::MFS::getMnemonic() const throw() {
+std::string core_microblaze_lt::MFS::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MFS::MFS(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3073,13 +3071,13 @@ Instruction * core_microblaze_lt::BLT::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLT::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLT::get_name() const throw() {
   return "BLT";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLT::getId() const throw() {
+unsigned int core_microblaze_lt::BLT::get_id() const throw() {
   return 28;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLT::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -3088,14 +3086,14 @@ void core_microblaze_lt::BLT::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BLT::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLT::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "blt r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLT::BLT(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3129,13 +3127,13 @@ Instruction * core_microblaze_lt::BRLID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRLID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRLID::get_name() const throw() {
   return "BRLID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRLID::getId() const throw() {
+unsigned int core_microblaze_lt::BRLID::get_id() const throw() {
   return 46;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRLID::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3143,14 +3141,14 @@ void core_microblaze_lt::BRLID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRLID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRLID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brlid r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRLID::BRLID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3195,13 +3193,13 @@ Instruction * core_microblaze_lt::SB::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SB::getInstructionName() const throw() {
+std::string core_microblaze_lt::SB::get_name() const throw() {
   return "SB";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SB::getId() const throw() {
+unsigned int core_microblaze_lt::SB::get_id() const throw() {
   return 101;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SB::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3212,7 +3210,7 @@ void core_microblaze_lt::SB::setParams(const unsigned int & bitString) throw() {
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SB::getMnemonic() const throw() {
+std::string core_microblaze_lt::SB::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sb r";
   oss << std::dec << this->rd_bit;
@@ -3221,7 +3219,7 @@ std::string core_microblaze_lt::SB::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SB::SB(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3257,13 +3255,13 @@ Instruction * core_microblaze_lt::BLE::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLE::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLE::get_name() const throw() {
   return "BLE";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLE::getId() const throw() {
+unsigned int core_microblaze_lt::BLE::get_id() const throw() {
   return 24;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLE::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -3272,14 +3270,14 @@ void core_microblaze_lt::BLE::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BLE::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLE::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "ble r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLE::BLE(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3328,13 +3326,13 @@ Instruction * core_microblaze_lt::SHI::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SHI::getInstructionName() const throw() {
+std::string core_microblaze_lt::SHI::get_name() const throw() {
   return "SHI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SHI::getId() const throw() {
+unsigned int core_microblaze_lt::SHI::get_id() const throw() {
   return 104;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SHI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3344,7 +3342,7 @@ void core_microblaze_lt::SHI::setParams(const unsigned int & bitString) throw() 
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::SHI::getMnemonic() const throw() {
+std::string core_microblaze_lt::SHI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "shi r";
   oss << std::dec << this->rd_bit;
@@ -3353,7 +3351,7 @@ std::string core_microblaze_lt::SHI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SHI::SHI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3397,13 +3395,13 @@ Instruction * core_microblaze_lt::AND::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::AND::getInstructionName() const throw() {
+std::string core_microblaze_lt::AND::get_name() const throw() {
   return "AND";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::AND::getId() const throw() {
+unsigned int core_microblaze_lt::AND::get_id() const throw() {
   return 8;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::AND::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3414,7 +3412,7 @@ void core_microblaze_lt::AND::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::AND::getMnemonic() const throw() {
+std::string core_microblaze_lt::AND::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "and r";
   oss << std::dec << this->rd_bit;
@@ -3423,7 +3421,7 @@ std::string core_microblaze_lt::AND::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::AND::AND(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3472,13 +3470,13 @@ Instruction * core_microblaze_lt::RSUBIC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBIC::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBIC::get_name() const throw() {
   return "RSUBIC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBIC::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBIC::get_id() const throw() {
   return 94;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBIC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3488,7 +3486,7 @@ void core_microblaze_lt::RSUBIC::setParams(const unsigned int & bitString) throw
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBIC::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBIC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubic r";
   oss << std::dec << this->rd_bit;
@@ -3497,7 +3495,7 @@ std::string core_microblaze_lt::RSUBIC::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBIC::RSUBIC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3542,13 +3540,13 @@ Instruction * core_microblaze_lt::SBI::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SBI::getInstructionName() const throw() {
+std::string core_microblaze_lt::SBI::get_name() const throw() {
   return "SBI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SBI::getId() const throw() {
+unsigned int core_microblaze_lt::SBI::get_id() const throw() {
   return 102;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SBI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3558,7 +3556,7 @@ void core_microblaze_lt::SBI::setParams(const unsigned int & bitString) throw() 
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::SBI::getMnemonic() const throw() {
+std::string core_microblaze_lt::SBI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sbi r";
   oss << std::dec << this->rd_bit;
@@ -3567,7 +3565,7 @@ std::string core_microblaze_lt::SBI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SBI::SBI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3613,13 +3611,13 @@ Instruction * core_microblaze_lt::RTED::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RTED::getInstructionName() const throw() {
+std::string core_microblaze_lt::RTED::get_name() const throw() {
   return "RTED";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RTED::getId() const throw() {
+unsigned int core_microblaze_lt::RTED::get_id() const throw() {
   return 99;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RTED::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -3627,14 +3625,14 @@ void core_microblaze_lt::RTED::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RTED::getMnemonic() const throw() {
+std::string core_microblaze_lt::RTED::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rted r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RTED::RTED(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3680,13 +3678,13 @@ Instruction * core_microblaze_lt::RSUBIK::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBIK::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBIK::get_name() const throw() {
   return "RSUBIK";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBIK::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBIK::get_id() const throw() {
   return 95;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBIK::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3696,7 +3694,7 @@ void core_microblaze_lt::RSUBIK::setParams(const unsigned int & bitString) throw
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBIK::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBIK::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubik r";
   oss << std::dec << this->rd_bit;
@@ -3705,7 +3703,7 @@ std::string core_microblaze_lt::RSUBIK::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBIK::RSUBIK(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3739,13 +3737,13 @@ Instruction * core_microblaze_lt::BRALD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRALD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRALD::get_name() const throw() {
   return "BRALD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRALD::getId() const throw() {
+unsigned int core_microblaze_lt::BRALD::get_id() const throw() {
   return 41;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRALD::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3754,14 +3752,14 @@ void core_microblaze_lt::BRALD::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BRALD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRALD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brald r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRALD::BRALD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3793,13 +3791,13 @@ Instruction * core_microblaze_lt::BRA::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRA::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRA::get_name() const throw() {
   return "BRA";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRA::getId() const throw() {
+unsigned int core_microblaze_lt::BRA::get_id() const throw() {
   return 37;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRA::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3808,14 +3806,14 @@ void core_microblaze_lt::BRA::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BRA::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRA::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bra r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRA::BRA(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3846,13 +3844,13 @@ Instruction * core_microblaze_lt::FSQRT::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FSQRT::getInstructionName() const throw() {
+std::string core_microblaze_lt::FSQRT::get_name() const throw() {
   return "FSQRT";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FSQRT::getId() const throw() {
+unsigned int core_microblaze_lt::FSQRT::get_id() const throw() {
   return 65;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FSQRT::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3861,14 +3859,14 @@ void core_microblaze_lt::FSQRT::setParams(const unsigned int & bitString) throw(
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FSQRT::getMnemonic() const throw() {
+std::string core_microblaze_lt::FSQRT::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FSQRT::FSQRT(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3916,13 +3914,13 @@ Instruction * core_microblaze_lt::SEXT16::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SEXT16::getInstructionName() const throw() {
+std::string core_microblaze_lt::SEXT16::get_name() const throw() {
   return "SEXT16";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SEXT16::getId() const throw() {
+unsigned int core_microblaze_lt::SEXT16::get_id() const throw() {
   return 107;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SEXT16::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -3931,14 +3929,14 @@ void core_microblaze_lt::SEXT16::setParams(const unsigned int & bitString) throw
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SEXT16::getMnemonic() const throw() {
+std::string core_microblaze_lt::SEXT16::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sext16 r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->ra_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SEXT16::SEXT16(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -3987,13 +3985,13 @@ Instruction * core_microblaze_lt::SWI::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SWI::getInstructionName() const throw() {
+std::string core_microblaze_lt::SWI::get_name() const throw() {
   return "SWI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SWI::getId() const throw() {
+unsigned int core_microblaze_lt::SWI::get_id() const throw() {
   return 106;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SWI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4003,7 +4001,7 @@ void core_microblaze_lt::SWI::setParams(const unsigned int & bitString) throw() 
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::SWI::getMnemonic() const throw() {
+std::string core_microblaze_lt::SWI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "swi r";
   oss << std::dec << this->rd_bit;
@@ -4012,7 +4010,7 @@ std::string core_microblaze_lt::SWI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SWI::SWI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4049,13 +4047,13 @@ Instruction * core_microblaze_lt::BLEID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLEID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLEID::get_name() const throw() {
   return "BLEID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLEID::getId() const throw() {
+unsigned int core_microblaze_lt::BLEID::get_id() const throw() {
   return 27;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLEID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -4063,14 +4061,14 @@ void core_microblaze_lt::BLEID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BLEID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLEID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bleid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLEID::BLEID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4114,13 +4112,13 @@ Instruction * core_microblaze_lt::BSRA::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BSRA::getInstructionName() const throw() {
+std::string core_microblaze_lt::BSRA::get_name() const throw() {
   return "BSRA";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BSRA::getId() const throw() {
+unsigned int core_microblaze_lt::BSRA::get_id() const throw() {
   return 51;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BSRA::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4131,7 +4129,7 @@ void core_microblaze_lt::BSRA::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BSRA::getMnemonic() const throw() {
+std::string core_microblaze_lt::BSRA::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bsra r";
   oss << std::dec << this->rd_bit;
@@ -4140,7 +4138,7 @@ std::string core_microblaze_lt::BSRA::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BSRA::BSRA(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4177,13 +4175,13 @@ Instruction * core_microblaze_lt::BLED::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLED::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLED::get_name() const throw() {
   return "BLED";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLED::getId() const throw() {
+unsigned int core_microblaze_lt::BLED::get_id() const throw() {
   return 25;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLED::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -4192,14 +4190,14 @@ void core_microblaze_lt::BLED::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BLED::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLED::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bled r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLED::BLED(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4244,13 +4242,13 @@ Instruction * core_microblaze_lt::MULI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MULI::getInstructionName() const throw() {
+std::string core_microblaze_lt::MULI::get_name() const throw() {
   return "MULI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MULI::getId() const throw() {
+unsigned int core_microblaze_lt::MULI::get_id() const throw() {
   return 83;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MULI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4260,7 +4258,7 @@ void core_microblaze_lt::MULI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::MULI::getMnemonic() const throw() {
+std::string core_microblaze_lt::MULI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "muli r";
   oss << std::dec << this->rd_bit;
@@ -4269,7 +4267,7 @@ std::string core_microblaze_lt::MULI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MULI::MULI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4328,13 +4326,13 @@ Instruction * core_microblaze_lt::MSRSET::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MSRSET::getInstructionName() const throw() {
+std::string core_microblaze_lt::MSRSET::get_name() const throw() {
   return "MSRSET";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MSRSET::getId() const throw() {
+unsigned int core_microblaze_lt::MSRSET::get_id() const throw() {
   return 77;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MSRSET::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4342,14 +4340,14 @@ void core_microblaze_lt::MSRSET::setParams(const unsigned int & bitString) throw
   this->imm15 = (bitString & 0x7fff);
 } // setParams()
 
-std::string core_microblaze_lt::MSRSET::getMnemonic() const throw() {
+std::string core_microblaze_lt::MSRSET::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MSRSET::MSRSET(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4394,13 +4392,13 @@ Instruction * core_microblaze_lt::MUL::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MUL::getInstructionName() const throw() {
+std::string core_microblaze_lt::MUL::get_name() const throw() {
   return "MUL";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MUL::getId() const throw() {
+unsigned int core_microblaze_lt::MUL::get_id() const throw() {
   return 79;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MUL::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4411,7 +4409,7 @@ void core_microblaze_lt::MUL::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::MUL::getMnemonic() const throw() {
+std::string core_microblaze_lt::MUL::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "mul r";
   oss << std::dec << this->rd_bit;
@@ -4420,7 +4418,7 @@ std::string core_microblaze_lt::MUL::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MUL::MUL(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4456,13 +4454,13 @@ Instruction * core_microblaze_lt::BLEI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLEI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLEI::get_name() const throw() {
   return "BLEI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLEI::getId() const throw() {
+unsigned int core_microblaze_lt::BLEI::get_id() const throw() {
   return 26;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLEI::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -4470,14 +4468,14 @@ void core_microblaze_lt::BLEI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BLEI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLEI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "blei r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLEI::BLEI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4510,13 +4508,13 @@ Instruction * core_microblaze_lt::RTSD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RTSD::getInstructionName() const throw() {
+std::string core_microblaze_lt::RTSD::get_name() const throw() {
   return "RTSD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RTSD::getId() const throw() {
+unsigned int core_microblaze_lt::RTSD::get_id() const throw() {
   return 100;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RTSD::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -4524,14 +4522,14 @@ void core_microblaze_lt::RTSD::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RTSD::getMnemonic() const throw() {
+std::string core_microblaze_lt::RTSD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rtsd r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RTSD::RTSD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4575,13 +4573,13 @@ Instruction * core_microblaze_lt::ANDN::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ANDN::getInstructionName() const throw() {
+std::string core_microblaze_lt::ANDN::get_name() const throw() {
   return "ANDN";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ANDN::getId() const throw() {
+unsigned int core_microblaze_lt::ANDN::get_id() const throw() {
   return 10;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ANDN::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4592,7 +4590,7 @@ void core_microblaze_lt::ANDN::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::ANDN::getMnemonic() const throw() {
+std::string core_microblaze_lt::ANDN::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addn r";
   oss << std::dec << this->rd_bit;
@@ -4601,7 +4599,7 @@ std::string core_microblaze_lt::ANDN::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ANDN::ANDN(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4645,13 +4643,13 @@ Instruction * core_microblaze_lt::ANDI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ANDI::getInstructionName() const throw() {
+std::string core_microblaze_lt::ANDI::get_name() const throw() {
   return "ANDI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ANDI::getId() const throw() {
+unsigned int core_microblaze_lt::ANDI::get_id() const throw() {
   return 9;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ANDI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4661,7 +4659,7 @@ void core_microblaze_lt::ANDI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ANDI::getMnemonic() const throw() {
+std::string core_microblaze_lt::ANDI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "andi r";
   oss << std::dec << this->rd_bit;
@@ -4670,7 +4668,7 @@ std::string core_microblaze_lt::ANDI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ANDI::ANDI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4714,13 +4712,13 @@ Instruction * core_microblaze_lt::ADDKC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDKC::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDKC::get_name() const throw() {
   return "ADDKC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDKC::getId() const throw() {
+unsigned int core_microblaze_lt::ADDKC::get_id() const throw() {
   return 3;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDKC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4731,7 +4729,7 @@ void core_microblaze_lt::ADDKC::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::ADDKC::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDKC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addkc r";
   oss << std::dec << this->rd_bit;
@@ -4740,7 +4738,7 @@ std::string core_microblaze_lt::ADDKC::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDKC::ADDKC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4799,13 +4797,13 @@ Instruction * core_microblaze_lt::MSRCLR::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MSRCLR::getInstructionName() const throw() {
+std::string core_microblaze_lt::MSRCLR::get_name() const throw() {
   return "MSRCLR";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MSRCLR::getId() const throw() {
+unsigned int core_microblaze_lt::MSRCLR::get_id() const throw() {
   return 76;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MSRCLR::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4813,14 +4811,14 @@ void core_microblaze_lt::MSRCLR::setParams(const unsigned int & bitString) throw
   this->imm15 = (bitString & 0x7fff);
 } // setParams()
 
-std::string core_microblaze_lt::MSRCLR::getMnemonic() const throw() {
+std::string core_microblaze_lt::MSRCLR::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MSRCLR::MSRCLR(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4864,13 +4862,13 @@ Instruction * core_microblaze_lt::BSLLI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BSLLI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BSLLI::get_name() const throw() {
   return "BSLLI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BSLLI::getId() const throw() {
+unsigned int core_microblaze_lt::BSLLI::get_id() const throw() {
   return 55;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BSLLI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -4880,7 +4878,7 @@ void core_microblaze_lt::BSLLI::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0x1f);
 } // setParams()
 
-std::string core_microblaze_lt::BSLLI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BSLLI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bslli r";
   oss << std::dec << this->rd_bit;
@@ -4889,7 +4887,7 @@ std::string core_microblaze_lt::BSLLI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BSLLI::BSLLI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4925,13 +4923,13 @@ Instruction * core_microblaze_lt::BGEI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGEI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGEI::get_name() const throw() {
   return "BGEI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGEI::getId() const throw() {
+unsigned int core_microblaze_lt::BGEI::get_id() const throw() {
   return 18;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGEI::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -4939,14 +4937,14 @@ void core_microblaze_lt::BGEI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BGEI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGEI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bgei r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGEI::BGEI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -4997,13 +4995,13 @@ Instruction * core_microblaze_lt::SRC::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SRC::getInstructionName() const throw() {
+std::string core_microblaze_lt::SRC::get_name() const throw() {
   return "SRC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SRC::getId() const throw() {
+unsigned int core_microblaze_lt::SRC::get_id() const throw() {
   return 110;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SRC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5012,14 +5010,14 @@ void core_microblaze_lt::SRC::setParams(const unsigned int & bitString) throw() 
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SRC::getMnemonic() const throw() {
+std::string core_microblaze_lt::SRC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "src r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->ra_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SRC::SRC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5070,13 +5068,13 @@ Instruction * core_microblaze_lt::SRA::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SRA::getInstructionName() const throw() {
+std::string core_microblaze_lt::SRA::get_name() const throw() {
   return "SRA";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SRA::getId() const throw() {
+unsigned int core_microblaze_lt::SRA::get_id() const throw() {
   return 109;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SRA::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5085,14 +5083,14 @@ void core_microblaze_lt::SRA::setParams(const unsigned int & bitString) throw() 
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SRA::getMnemonic() const throw() {
+std::string core_microblaze_lt::SRA::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sra r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->ra_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SRA::SRA(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5138,25 +5136,25 @@ Instruction * core_microblaze_lt::IMM::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::IMM::getInstructionName() const throw() {
+std::string core_microblaze_lt::IMM::get_name() const throw() {
   return "IMM";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::IMM::getId() const throw() {
+unsigned int core_microblaze_lt::IMM::get_id() const throw() {
   return 68;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::IMM::setParams(const unsigned int & bitString) throw() {
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::IMM::getMnemonic() const throw() {
+std::string core_microblaze_lt::IMM::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "imm";
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::IMM::IMM(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5203,13 +5201,13 @@ Instruction * core_microblaze_lt::SRL::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SRL::getInstructionName() const throw() {
+std::string core_microblaze_lt::SRL::get_name() const throw() {
   return "SRL";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SRL::getId() const throw() {
+unsigned int core_microblaze_lt::SRL::get_id() const throw() {
   return 111;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SRL::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5218,14 +5216,14 @@ void core_microblaze_lt::SRL::setParams(const unsigned int & bitString) throw() 
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SRL::getMnemonic() const throw() {
+std::string core_microblaze_lt::SRL::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "srl r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->ra_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SRL::SRL(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5271,13 +5269,13 @@ Instruction * core_microblaze_lt::FLT::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FLT::getInstructionName() const throw() {
+std::string core_microblaze_lt::FLT::get_name() const throw() {
   return "FLT";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FLT::getId() const throw() {
+unsigned int core_microblaze_lt::FLT::get_id() const throw() {
   return 63;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FLT::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5286,14 +5284,14 @@ void core_microblaze_lt::FLT::setParams(const unsigned int & bitString) throw() 
   this->ra.directSetAlias(this->GPR[this->ra_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FLT::getMnemonic() const throw() {
+std::string core_microblaze_lt::FLT::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FLT::FLT(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5339,13 +5337,13 @@ Instruction * core_microblaze_lt::MULHSU::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MULHSU::getInstructionName() const throw() {
+std::string core_microblaze_lt::MULHSU::get_name() const throw() {
   return "MULHSU";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MULHSU::getId() const throw() {
+unsigned int core_microblaze_lt::MULHSU::get_id() const throw() {
   return 82;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MULHSU::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5356,7 +5354,7 @@ void core_microblaze_lt::MULHSU::setParams(const unsigned int & bitString) throw
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::MULHSU::getMnemonic() const throw() {
+std::string core_microblaze_lt::MULHSU::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "mulhsu r";
   oss << std::dec << this->rd_bit;
@@ -5365,7 +5363,7 @@ std::string core_microblaze_lt::MULHSU::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MULHSU::MULHSU(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5411,13 +5409,13 @@ Instruction * core_microblaze_lt::ADD::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADD::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADD::get_name() const throw() {
   return "ADD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADD::getId() const throw() {
+unsigned int core_microblaze_lt::ADD::get_id() const throw() {
   return 0;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADD::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5428,7 +5426,7 @@ void core_microblaze_lt::ADD::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::ADD::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "add r";
   oss << std::dec << this->rd_bit;
@@ -5437,7 +5435,7 @@ std::string core_microblaze_lt::ADD::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADD::ADD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5481,13 +5479,13 @@ Instruction * core_microblaze_lt::XORI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::XORI::getInstructionName() const throw() {
+std::string core_microblaze_lt::XORI::get_name() const throw() {
   return "XORI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::XORI::getId() const throw() {
+unsigned int core_microblaze_lt::XORI::get_id() const throw() {
   return 115;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::XORI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5497,7 +5495,7 @@ void core_microblaze_lt::XORI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::XORI::getMnemonic() const throw() {
+std::string core_microblaze_lt::XORI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "xori r";
   oss << std::dec << this->rd_bit;
@@ -5506,7 +5504,7 @@ std::string core_microblaze_lt::XORI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::XORI::XORI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5550,13 +5548,13 @@ Instruction * core_microblaze_lt::PCMPNE::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::PCMPNE::getInstructionName() const throw() {
+std::string core_microblaze_lt::PCMPNE::get_name() const throw() {
   return "PCMPNE";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::PCMPNE::getId() const throw() {
+unsigned int core_microblaze_lt::PCMPNE::get_id() const throw() {
   return 88;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::PCMPNE::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5567,7 +5565,7 @@ void core_microblaze_lt::PCMPNE::setParams(const unsigned int & bitString) throw
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::PCMPNE::getMnemonic() const throw() {
+std::string core_microblaze_lt::PCMPNE::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "pcmpne r";
   oss << std::dec << this->rd_bit;
@@ -5576,7 +5574,7 @@ std::string core_microblaze_lt::PCMPNE::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::PCMPNE::PCMPNE(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5620,13 +5618,13 @@ Instruction * core_microblaze_lt::BSRAI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BSRAI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BSRAI::get_name() const throw() {
   return "BSRAI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BSRAI::getId() const throw() {
+unsigned int core_microblaze_lt::BSRAI::get_id() const throw() {
   return 54;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BSRAI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5636,7 +5634,7 @@ void core_microblaze_lt::BSRAI::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0x1f);
 } // setParams()
 
-std::string core_microblaze_lt::BSRAI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BSRAI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bsrai r";
   oss << std::dec << this->rd_bit;
@@ -5645,7 +5643,7 @@ std::string core_microblaze_lt::BSRAI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BSRAI::BSRAI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5678,13 +5676,13 @@ Instruction * core_microblaze_lt::BRAID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRAID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRAID::get_name() const throw() {
   return "BRAID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRAID::getId() const throw() {
+unsigned int core_microblaze_lt::BRAID::get_id() const throw() {
   return 45;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRAID::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5692,14 +5690,14 @@ void core_microblaze_lt::BRAID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRAID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRAID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "braid r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRAID::BRAID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5745,13 +5743,13 @@ Instruction * core_microblaze_lt::WIC::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::WIC::getInstructionName() const throw() {
+std::string core_microblaze_lt::WIC::get_name() const throw() {
   return "WIC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::WIC::getId() const throw() {
+unsigned int core_microblaze_lt::WIC::get_id() const throw() {
   return 113;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::WIC::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -5760,14 +5758,14 @@ void core_microblaze_lt::WIC::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::WIC::getMnemonic() const throw() {
+std::string core_microblaze_lt::WIC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "wic r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::WIC::WIC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5813,13 +5811,13 @@ Instruction * core_microblaze_lt::RSUBKC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBKC::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBKC::get_name() const throw() {
   return "RSUBKC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBKC::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBKC::get_id() const throw() {
   return 92;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBKC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5830,7 +5828,7 @@ void core_microblaze_lt::RSUBKC::setParams(const unsigned int & bitString) throw
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBKC::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBKC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubkc r";
   oss << std::dec << this->rd_bit;
@@ -5839,7 +5837,7 @@ std::string core_microblaze_lt::RSUBKC::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBKC::RSUBKC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5888,13 +5886,13 @@ Instruction * core_microblaze_lt::SW::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SW::getInstructionName() const throw() {
+std::string core_microblaze_lt::SW::get_name() const throw() {
   return "SW";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SW::getId() const throw() {
+unsigned int core_microblaze_lt::SW::get_id() const throw() {
   return 105;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SW::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5905,7 +5903,7 @@ void core_microblaze_lt::SW::setParams(const unsigned int & bitString) throw() {
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SW::getMnemonic() const throw() {
+std::string core_microblaze_lt::SW::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sw r";
   oss << std::dec << this->rd_bit;
@@ -5914,7 +5912,7 @@ std::string core_microblaze_lt::SW::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SW::SW(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -5945,13 +5943,13 @@ Instruction * core_microblaze_lt::FCMP::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FCMP::getInstructionName() const throw() {
+std::string core_microblaze_lt::FCMP::get_name() const throw() {
   return "FCMP";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FCMP::getId() const throw() {
+unsigned int core_microblaze_lt::FCMP::get_id() const throw() {
   return 62;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FCMP::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -5963,14 +5961,14 @@ void core_microblaze_lt::FCMP::setParams(const unsigned int & bitString) throw()
   this->opsel = (bitString & 0x70) >> 4;
 } // setParams()
 
-std::string core_microblaze_lt::FCMP::getMnemonic() const throw() {
+std::string core_microblaze_lt::FCMP::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FCMP::FCMP(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6017,13 +6015,13 @@ Instruction * core_microblaze_lt::SH::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::SH::getInstructionName() const throw() {
+std::string core_microblaze_lt::SH::get_name() const throw() {
   return "SH";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::SH::getId() const throw() {
+unsigned int core_microblaze_lt::SH::get_id() const throw() {
   return 103;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::SH::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6034,7 +6032,7 @@ void core_microblaze_lt::SH::setParams(const unsigned int & bitString) throw() {
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::SH::getMnemonic() const throw() {
+std::string core_microblaze_lt::SH::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "sh r";
   oss << std::dec << this->rd_bit;
@@ -6043,7 +6041,7 @@ std::string core_microblaze_lt::SH::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::SH::SH(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6081,13 +6079,13 @@ Instruction * core_microblaze_lt::BRK::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRK::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRK::get_name() const throw() {
   return "BRK";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRK::getId() const throw() {
+unsigned int core_microblaze_lt::BRK::get_id() const throw() {
   return 48;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRK::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6096,14 +6094,14 @@ void core_microblaze_lt::BRK::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BRK::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRK::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brk r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRK::BRK(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6135,13 +6133,13 @@ Instruction * core_microblaze_lt::BRI::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRI::get_name() const throw() {
   return "BRI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRI::getId() const throw() {
+unsigned int core_microblaze_lt::BRI::get_id() const throw() {
   return 42;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6149,14 +6147,14 @@ void core_microblaze_lt::BRI::setParams(const unsigned int & bitString) throw() 
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bri r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRI::BRI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6200,13 +6198,13 @@ Instruction * core_microblaze_lt::ORI::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ORI::getInstructionName() const throw() {
+std::string core_microblaze_lt::ORI::get_name() const throw() {
   return "ORI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ORI::getId() const throw() {
+unsigned int core_microblaze_lt::ORI::get_id() const throw() {
   return 85;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ORI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6216,7 +6214,7 @@ void core_microblaze_lt::ORI::setParams(const unsigned int & bitString) throw() 
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ORI::getMnemonic() const throw() {
+std::string core_microblaze_lt::ORI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "ori r";
   oss << std::dec << this->rd_bit;
@@ -6225,7 +6223,7 @@ std::string core_microblaze_lt::ORI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ORI::ORI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6269,13 +6267,13 @@ Instruction * core_microblaze_lt::ANDNI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ANDNI::getInstructionName() const throw() {
+std::string core_microblaze_lt::ANDNI::get_name() const throw() {
   return "ANDNI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ANDNI::getId() const throw() {
+unsigned int core_microblaze_lt::ANDNI::get_id() const throw() {
   return 11;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ANDNI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6285,7 +6283,7 @@ void core_microblaze_lt::ANDNI::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ANDNI::getMnemonic() const throw() {
+std::string core_microblaze_lt::ANDNI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "andi r";
   oss << std::dec << this->rd_bit;
@@ -6294,7 +6292,7 @@ std::string core_microblaze_lt::ANDNI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ANDNI::ANDNI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6327,13 +6325,13 @@ Instruction * core_microblaze_lt::BRD::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRD::get_name() const throw() {
   return "BRD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRD::getId() const throw() {
+unsigned int core_microblaze_lt::BRD::get_id() const throw() {
   return 38;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRD::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6342,14 +6340,14 @@ void core_microblaze_lt::BRD::setParams(const unsigned int & bitString) throw() 
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BRD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brd r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRD::BRD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6399,13 +6397,13 @@ Instruction * core_microblaze_lt::LHUI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::LHUI::getInstructionName() const throw() {
+std::string core_microblaze_lt::LHUI::get_name() const throw() {
   return "LHUI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::LHUI::getId() const throw() {
+unsigned int core_microblaze_lt::LHUI::get_id() const throw() {
   return 72;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::LHUI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6415,7 +6413,7 @@ void core_microblaze_lt::LHUI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::LHUI::getMnemonic() const throw() {
+std::string core_microblaze_lt::LHUI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "lhui r";
   oss << std::dec << this->rd_bit;
@@ -6424,7 +6422,7 @@ std::string core_microblaze_lt::LHUI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::LHUI::LHUI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6470,13 +6468,13 @@ Instruction * core_microblaze_lt::RSUBIKC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBIKC::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBIKC::get_name() const throw() {
   return "RSUBIKC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBIKC::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBIKC::get_id() const throw() {
   return 96;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBIKC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6486,7 +6484,7 @@ void core_microblaze_lt::RSUBIKC::setParams(const unsigned int & bitString) thro
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBIKC::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBIKC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubikc r";
   oss << std::dec << this->rd_bit;
@@ -6495,7 +6493,7 @@ std::string core_microblaze_lt::RSUBIKC::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBIKC::RSUBIKC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6541,13 +6539,13 @@ Instruction * core_microblaze_lt::MULH::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MULH::getInstructionName() const throw() {
+std::string core_microblaze_lt::MULH::get_name() const throw() {
   return "MULH";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MULH::getId() const throw() {
+unsigned int core_microblaze_lt::MULH::get_id() const throw() {
   return 80;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MULH::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6558,7 +6556,7 @@ void core_microblaze_lt::MULH::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::MULH::getMnemonic() const throw() {
+std::string core_microblaze_lt::MULH::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "mulh r";
   oss << std::dec << this->rd_bit;
@@ -6567,7 +6565,7 @@ std::string core_microblaze_lt::MULH::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MULH::MULH(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6671,13 +6669,13 @@ Instruction * core_microblaze_lt::FRSUB::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FRSUB::getInstructionName() const throw() {
+std::string core_microblaze_lt::FRSUB::get_name() const throw() {
   return "FRSUB";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FRSUB::getId() const throw() {
+unsigned int core_microblaze_lt::FRSUB::get_id() const throw() {
   return 59;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FRSUB::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6688,14 +6686,14 @@ void core_microblaze_lt::FRSUB::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FRSUB::getMnemonic() const throw() {
+std::string core_microblaze_lt::FRSUB::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FRSUB::FRSUB(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6731,13 +6729,13 @@ Instruction * core_microblaze_lt::BEQI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BEQI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BEQI::get_name() const throw() {
   return "BEQI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BEQI::getId() const throw() {
+unsigned int core_microblaze_lt::BEQI::get_id() const throw() {
   return 14;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BEQI::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -6745,14 +6743,14 @@ void core_microblaze_lt::BEQI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BEQI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BEQI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "beqi r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BEQI::BEQI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6789,13 +6787,13 @@ Instruction * core_microblaze_lt::BEQD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BEQD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BEQD::get_name() const throw() {
   return "BEQD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BEQD::getId() const throw() {
+unsigned int core_microblaze_lt::BEQD::get_id() const throw() {
   return 13;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BEQD::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -6804,14 +6802,14 @@ void core_microblaze_lt::BEQD::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BEQD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BEQD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "beqd r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BEQD::BEQD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6851,13 +6849,13 @@ Instruction * core_microblaze_lt::RTID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RTID::getInstructionName() const throw() {
+std::string core_microblaze_lt::RTID::get_name() const throw() {
   return "RTID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RTID::getId() const throw() {
+unsigned int core_microblaze_lt::RTID::get_id() const throw() {
   return 98;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RTID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -6865,14 +6863,14 @@ void core_microblaze_lt::RTID::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RTID::getMnemonic() const throw() {
+std::string core_microblaze_lt::RTID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rtid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RTID::RTID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -6974,13 +6972,13 @@ Instruction * core_microblaze_lt::FMUL::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::FMUL::getInstructionName() const throw() {
+std::string core_microblaze_lt::FMUL::get_name() const throw() {
   return "FMUL";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::FMUL::getId() const throw() {
+unsigned int core_microblaze_lt::FMUL::get_id() const throw() {
   return 60;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::FMUL::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -6991,14 +6989,14 @@ void core_microblaze_lt::FMUL::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::FMUL::getMnemonic() const throw() {
+std::string core_microblaze_lt::FMUL::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::FMUL::FMUL(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7047,13 +7045,13 @@ Instruction * core_microblaze_lt::LWI::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::LWI::getInstructionName() const throw() {
+std::string core_microblaze_lt::LWI::get_name() const throw() {
   return "LWI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::LWI::getId() const throw() {
+unsigned int core_microblaze_lt::LWI::get_id() const throw() {
   return 74;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::LWI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7063,7 +7061,7 @@ void core_microblaze_lt::LWI::setParams(const unsigned int & bitString) throw() 
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::LWI::getMnemonic() const throw() {
+std::string core_microblaze_lt::LWI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "lwi r";
   oss << std::dec << this->rd_bit;
@@ -7072,7 +7070,7 @@ std::string core_microblaze_lt::LWI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::LWI::LWI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7109,13 +7107,13 @@ Instruction * core_microblaze_lt::BNEID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BNEID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BNEID::get_name() const throw() {
   return "BNEID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BNEID::getId() const throw() {
+unsigned int core_microblaze_lt::BNEID::get_id() const throw() {
   return 35;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BNEID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -7123,14 +7121,14 @@ void core_microblaze_lt::BNEID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BNEID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BNEID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bneid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BNEID::BNEID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7174,13 +7172,13 @@ Instruction * core_microblaze_lt::ADDIK::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDIK::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDIK::get_name() const throw() {
   return "ADDIK";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDIK::getId() const throw() {
+unsigned int core_microblaze_lt::ADDIK::get_id() const throw() {
   return 6;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDIK::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7190,7 +7188,7 @@ void core_microblaze_lt::ADDIK::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ADDIK::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDIK::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addik r";
   oss << std::dec << this->rd_bit;
@@ -7199,7 +7197,7 @@ std::string core_microblaze_lt::ADDIK::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDIK::ADDIK(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7236,13 +7234,13 @@ Instruction * core_microblaze_lt::BGTID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGTID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGTID::get_name() const throw() {
   return "BGTID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGTID::getId() const throw() {
+unsigned int core_microblaze_lt::BGTID::get_id() const throw() {
   return 23;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGTID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -7250,14 +7248,14 @@ void core_microblaze_lt::BGTID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BGTID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGTID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bgtid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGTID::BGTID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7304,13 +7302,13 @@ Instruction * core_microblaze_lt::ADDIC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::ADDIC::getInstructionName() const throw() {
+std::string core_microblaze_lt::ADDIC::get_name() const throw() {
   return "ADDIC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::ADDIC::getId() const throw() {
+unsigned int core_microblaze_lt::ADDIC::get_id() const throw() {
   return 5;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::ADDIC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7320,7 +7318,7 @@ void core_microblaze_lt::ADDIC::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::ADDIC::getMnemonic() const throw() {
+std::string core_microblaze_lt::ADDIC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "addic r";
   oss << std::dec << this->rd_bit;
@@ -7329,7 +7327,7 @@ std::string core_microblaze_lt::ADDIC::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::ADDIC::ADDIC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7378,13 +7376,13 @@ Instruction * core_microblaze_lt::LW::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::LW::getInstructionName() const throw() {
+std::string core_microblaze_lt::LW::get_name() const throw() {
   return "LW";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::LW::getId() const throw() {
+unsigned int core_microblaze_lt::LW::get_id() const throw() {
   return 73;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::LW::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7395,7 +7393,7 @@ void core_microblaze_lt::LW::setParams(const unsigned int & bitString) throw() {
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::LW::getMnemonic() const throw() {
+std::string core_microblaze_lt::LW::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "lw r";
   oss << std::dec << this->rd_bit;
@@ -7404,7 +7402,7 @@ std::string core_microblaze_lt::LW::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::LW::LW(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7452,13 +7450,13 @@ Instruction * core_microblaze_lt::RSUBC::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBC::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBC::get_name() const throw() {
   return "RSUBC";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBC::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBC::get_id() const throw() {
   return 90;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBC::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7469,7 +7467,7 @@ void core_microblaze_lt::RSUBC::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBC::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBC::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubc r";
   oss << std::dec << this->rd_bit;
@@ -7478,7 +7476,7 @@ std::string core_microblaze_lt::RSUBC::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBC::RSUBC(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7515,13 +7513,13 @@ Instruction * core_microblaze_lt::BLTID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BLTID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BLTID::get_name() const throw() {
   return "BLTID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BLTID::getId() const throw() {
+unsigned int core_microblaze_lt::BLTID::get_id() const throw() {
   return 31;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BLTID::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -7529,14 +7527,14 @@ void core_microblaze_lt::BLTID::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BLTID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BLTID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bltid r";
   oss << std::dec << this->ra_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BLTID::BLTID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7584,13 +7582,13 @@ Instruction * core_microblaze_lt::RSUBI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBI::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBI::get_name() const throw() {
   return "RSUBI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBI::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBI::get_id() const throw() {
   return 93;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7600,7 +7598,7 @@ void core_microblaze_lt::RSUBI::setParams(const unsigned int & bitString) throw(
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBI::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubi r";
   oss << std::dec << this->rd_bit;
@@ -7609,7 +7607,7 @@ std::string core_microblaze_lt::RSUBI::getMnemonic() const throw() {
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBI::RSUBI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7684,13 +7682,13 @@ Instruction * core_microblaze_lt::MTS::replicate() const throw() {
     TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::MTS::getInstructionName() const throw() {
+std::string core_microblaze_lt::MTS::get_name() const throw() {
   return "MTS";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::MTS::getId() const throw() {
+unsigned int core_microblaze_lt::MTS::get_id() const throw() {
   return 78;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::MTS::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -7698,14 +7696,14 @@ void core_microblaze_lt::MTS::setParams(const unsigned int & bitString) throw() 
   this->rs = (bitString & 0x3fff);
 } // setParams()
 
-std::string core_microblaze_lt::MTS::getMnemonic() const throw() {
+std::string core_microblaze_lt::MTS::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "T";
   oss << "O";
   oss << "D";
   oss << "O";
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::MTS::MTS(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7751,13 +7749,13 @@ Instruction * core_microblaze_lt::RSUBK::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::RSUBK::getInstructionName() const throw() {
+std::string core_microblaze_lt::RSUBK::get_name() const throw() {
   return "RSUBK";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::RSUBK::getId() const throw() {
+unsigned int core_microblaze_lt::RSUBK::get_id() const throw() {
   return 91;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::RSUBK::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7768,7 +7766,7 @@ void core_microblaze_lt::RSUBK::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::RSUBK::getMnemonic() const throw() {
+std::string core_microblaze_lt::RSUBK::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "rsubk r";
   oss << std::dec << this->rd_bit;
@@ -7777,7 +7775,7 @@ std::string core_microblaze_lt::RSUBK::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::RSUBK::RSUBK(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7814,13 +7812,13 @@ Instruction * core_microblaze_lt::BGED::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BGED::getInstructionName() const throw() {
+std::string core_microblaze_lt::BGED::get_name() const throw() {
   return "BGED";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BGED::getId() const throw() {
+unsigned int core_microblaze_lt::BGED::get_id() const throw() {
   return 17;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BGED::setParams(const unsigned int & bitString) throw() {
   this->ra_bit = (bitString & 0x1f0000) >> 16;
@@ -7829,14 +7827,14 @@ void core_microblaze_lt::BGED::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BGED::getMnemonic() const throw() {
+std::string core_microblaze_lt::BGED::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "bged r";
   oss << std::dec << this->ra_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BGED::BGED(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7869,13 +7867,13 @@ Instruction * core_microblaze_lt::BRID::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRID::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRID::get_name() const throw() {
   return "BRID";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRID::getId() const throw() {
+unsigned int core_microblaze_lt::BRID::get_id() const throw() {
   return 44;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRID::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7883,14 +7881,14 @@ void core_microblaze_lt::BRID::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRID::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRID::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brid r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRID::BRID(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -7943,13 +7941,13 @@ Instruction * core_microblaze_lt::PCMPBF::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::PCMPBF::getInstructionName() const throw() {
+std::string core_microblaze_lt::PCMPBF::get_name() const throw() {
   return "PCMPBF";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::PCMPBF::getId() const throw() {
+unsigned int core_microblaze_lt::PCMPBF::get_id() const throw() {
   return 86;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::PCMPBF::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -7960,7 +7958,7 @@ void core_microblaze_lt::PCMPBF::setParams(const unsigned int & bitString) throw
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::PCMPBF::getMnemonic() const throw() {
+std::string core_microblaze_lt::PCMPBF::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "pcmpbf r";
   oss << std::dec << this->rd_bit;
@@ -7969,7 +7967,7 @@ std::string core_microblaze_lt::PCMPBF::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::PCMPBF::PCMPBF(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -8021,13 +8019,13 @@ Instruction * core_microblaze_lt::IDIVU::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::IDIVU::getInstructionName() const throw() {
+std::string core_microblaze_lt::IDIVU::get_name() const throw() {
   return "IDIVU";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::IDIVU::getId() const throw() {
+unsigned int core_microblaze_lt::IDIVU::get_id() const throw() {
   return 67;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::IDIVU::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -8038,7 +8036,7 @@ void core_microblaze_lt::IDIVU::setParams(const unsigned int & bitString) throw(
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::IDIVU::getMnemonic() const throw() {
+std::string core_microblaze_lt::IDIVU::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "idivu r";
   oss << std::dec << this->rd_bit;
@@ -8047,7 +8045,7 @@ std::string core_microblaze_lt::IDIVU::getMnemonic() const throw() {
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::IDIVU::IDIVU(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -8080,13 +8078,13 @@ Instruction * core_microblaze_lt::BRAD::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRAD::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRAD::get_name() const throw() {
   return "BRAD";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRAD::getId() const throw() {
+unsigned int core_microblaze_lt::BRAD::get_id() const throw() {
   return 39;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRAD::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -8095,14 +8093,14 @@ void core_microblaze_lt::BRAD::setParams(const unsigned int & bitString) throw()
   this->rb.directSetAlias(this->GPR[this->rb_bit]);
 } // setParams()
 
-std::string core_microblaze_lt::BRAD::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRAD::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brad r";
   oss << std::dec << this->rd_bit;
   oss << " r";
   oss << std::dec << this->rb_bit;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRAD::BRAD(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,
@@ -8134,13 +8132,13 @@ Instruction * core_microblaze_lt::BRAI::replicate() const throw() {
     TLBX, TLBSX, IMMREG, TARGET, DSFLAG, GPR, PVR, dataMem, totalCycles);
 } // replicate()
 
-std::string core_microblaze_lt::BRAI::getInstructionName() const throw() {
+std::string core_microblaze_lt::BRAI::get_name() const throw() {
   return "BRAI";
-} // getInstructionName()
+} // get_name()
 
-unsigned int core_microblaze_lt::BRAI::getId() const throw() {
+unsigned int core_microblaze_lt::BRAI::get_id() const throw() {
   return 43;
-} // getId()
+} // get_id()
 
 void core_microblaze_lt::BRAI::setParams(const unsigned int & bitString) throw() {
   this->rd_bit = (bitString & 0x3e00000) >> 21;
@@ -8148,14 +8146,14 @@ void core_microblaze_lt::BRAI::setParams(const unsigned int & bitString) throw()
   this->imm = (bitString & 0xffff);
 } // setParams()
 
-std::string core_microblaze_lt::BRAI::getMnemonic() const throw() {
+std::string core_microblaze_lt::BRAI::get_mnemonic() const throw() {
   std::ostringstream oss (std::ostringstream::out);
   oss << "brai r";
   oss << std::dec << this->rd_bit;
   oss << " ";
   oss << std::showbase << std::hex << this->imm;
   return oss.str();
-} // getMnemonic()
+} // get_mnemonic()
 
 core_microblaze_lt::BRAI::BRAI(
     Reg32_0 & PC, Reg32_1 & MSR, Reg32_0 & EAR, Reg32_2 & ESR, Reg32_0 & BTR,

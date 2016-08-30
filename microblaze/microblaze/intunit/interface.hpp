@@ -30,9 +30,9 @@
 #include "microblaze/intunit/memory.hpp"
 #include "microblaze/intunit/registers.hpp"
 
-#include <ABIIf.hpp>
-#include <instructionBase.hpp>
-#include <utils/trap_utils.hpp>
+#include <common/report.hpp>
+#include <modules/abi_if.hpp>
+#include <modules/instruction.hpp>
 
 #include <boost/circular_buffer.hpp>
 #include <vector>
@@ -57,36 +57,36 @@ namespace core_microblaze_lt {
         Reg32_0 & TLBHI, Reg32_0 & TLBX, Reg32_0 & TLBSX, Reg32_0 & IMMREG,
         Reg32_0 & TARGET, Reg1_0 & DSFLAG, Reg32_0 * GPR, Reg32_0 * PVR, bool &
         instrExecuting, boost::circular_buffer<HistoryInstrType> & instHistoryQueue);
-    bool isLittleEndian() const throw();
-    bool isInstrExecuting() const throw();
-    void waitInstrEnd() const throw();
-    void returnFromCall() throw();
-    bool isRoutineEntry(const InstructionBase * instr) throw();
-    bool isRoutineExit(const InstructionBase * instr) throw();
-    unsigned char * getState() const throw();
-    void setState(unsigned char * state) throw();
-    void setExitValue(unsigned int value) throw();
-    unsigned int getExitValue() throw();
-    unsigned int getCodeLimit();
-    unsigned int readLR() const throw();
-    void setLR(const unsigned int & newValue) throw();
-    unsigned int readPC() const throw();
-    void setPC(const unsigned int & newValue) throw();
-    unsigned int readSP() const throw();
-    void setSP(const unsigned int & newValue) throw();
-    unsigned int readRetVal() const throw();
-    void setRetVal(const unsigned int & newValue) throw();
-    std::vector<unsigned int> readArgs() const throw();
-    void setArgs(const std::vector<unsigned int> & args) throw();
-    unsigned int readGDBReg(const unsigned int & gdbId) const throw();
-    unsigned int nGDBRegs() const throw();
-    void setGDBReg(
+    bool is_little_endian() const throw();
+    bool is_executing_instr() const throw();
+    void wait_instr_end() const throw();
+    void return_from_call() throw();
+    bool is_routine_entry(const InstructionBase * instr) throw();
+    bool is_routine_exit(const InstructionBase * instr) throw();
+    unsigned char * get_state() const throw();
+    void set_state(unsigned char * state) throw();
+    void set_exit_value(unsigned int value) throw();
+    unsigned int get_exit_value() throw();
+    unsigned int get_code_limit();
+    unsigned int read_LR() const throw();
+    void set_LR(const unsigned int & newValue) throw();
+    unsigned int read_PC() const throw();
+    void set_PC(const unsigned int & newValue) throw();
+    unsigned int read_SP() const throw();
+    void set_SP(const unsigned int & newValue) throw();
+    unsigned int read_return_value() const throw();
+    void set_return_value(const unsigned int & newValue) throw();
+    std::vector<unsigned int> read_args() const throw();
+    void set_args(const std::vector<unsigned int> & args) throw();
+    unsigned int read_gdb_reg(const unsigned int & gdbId) const throw();
+    unsigned int num_gdb_regs() const throw();
+    void set_gdb_reg(
         const unsigned int & newValue, const unsigned int & gdbId) throw();
-    unsigned int readMem(const unsigned int & address);
-    unsigned char readCharMem(const unsigned int & address);
-    void writeMem(
+    unsigned int read_mem(const unsigned int & address);
+    unsigned char read_char_mem(const unsigned int & address);
+    void write_mem(
         const unsigned int & address, unsigned int datum);
-    void writeCharMem(
+    void write_char_mem(
         const unsigned int & address, unsigned char datum);
     boost::circular_buffer<HistoryInstrType> & getInstructionHistory();
     virtual ~MICROBLAZE_ABIIf();

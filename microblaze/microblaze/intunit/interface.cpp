@@ -29,9 +29,8 @@
 #include "microblaze/intunit/memory.hpp"
 #include "microblaze/intunit/registers.hpp"
 
-#include <ABIIf.hpp>
-#include <instructionBase.hpp>
-#include <utils/trap_utils.hpp>
+#include <modules/abi_if.hpp>
+#include <modules/instruction.hpp>
 
 #include <boost/circular_buffer.hpp>
 #include <vector>
@@ -40,29 +39,29 @@
 
 using namespace core_microblaze_lt;
 using namespace trap;
-bool core_microblaze_lt::MICROBLAZE_ABIIf::isLittleEndian() const throw() {
+bool core_microblaze_lt::MICROBLAZE_ABIIf::is_little_endian() const throw() {
   return false;
 } // isLittleEndian()
 
-bool core_microblaze_lt::MICROBLAZE_ABIIf::isInstrExecuting() const throw() {
+bool core_microblaze_lt::MICROBLAZE_ABIIf::is_executing_instr() const throw() {
   return this->instrExecuting;
 } // isInstrExecuting()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::waitInstrEnd() const throw() {
+void core_microblaze_lt::MICROBLAZE_ABIIf::wait_instr_end() const throw() {
   while(this->instrExecuting) {
     ;
   }
 } // waitInstrEnd()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::returnFromCall() throw() {
+void core_microblaze_lt::MICROBLAZE_ABIIf::return_from_call() throw() {
   PC.immediateWrite(GPR[15] + 8);
 } // returnFromCall()
 
-bool core_microblaze_lt::MICROBLAZE_ABIIf::isRoutineEntry(const InstructionBase
+bool core_microblaze_lt::MICROBLAZE_ABIIf::is_routine_entry(const InstructionBase
   * instr) throw() {
   std::vector<std::string> nextNames = this->routineEntrySequence[this->routineEntryState];
   std::vector<std::string>::const_iterator namesIter, namesEnd;
-  std::string curName = instr->getInstructionName();
+  std::string curName = instr->get_name();
   for (namesIter = nextNames.begin(), namesEnd = nextNames.end(); namesIter !=
     namesEnd; namesIter++) {
     if (curName == *namesIter || *namesIter == "") {
@@ -78,11 +77,11 @@ bool core_microblaze_lt::MICROBLAZE_ABIIf::isRoutineEntry(const InstructionBase
   return false;
 } // isRoutineEntry()
 
-bool core_microblaze_lt::MICROBLAZE_ABIIf::isRoutineExit(const InstructionBase *
+bool core_microblaze_lt::MICROBLAZE_ABIIf::is_routine_exit(const InstructionBase *
   instr) throw() {
   std::vector<std::string> nextNames = this->routineExitSequence[this->routineExitState];
   std::vector<std::string>::const_iterator namesIter, namesEnd;
-  std::string curName = instr->getInstructionName();
+  std::string curName = instr->get_name();
   for (namesIter = nextNames.begin(), namesEnd = nextNames.end(); namesIter !=
     namesEnd; namesIter++) {
     if (curName == *namesIter || *namesIter == "") {
@@ -98,7 +97,7 @@ bool core_microblaze_lt::MICROBLAZE_ABIIf::isRoutineExit(const InstructionBase *
   return false;
 } // isRoutineExit()
 
-unsigned char * core_microblaze_lt::MICROBLAZE_ABIIf::getState() const throw() {
+unsigned char * core_microblaze_lt::MICROBLAZE_ABIIf::get_state() const throw() {
   unsigned char * curState = new unsigned char[236];
   unsigned char * curStateTemp = curState;
   *((unsigned int *)curStateTemp) = this->PC.readNewValue();
@@ -224,7 +223,7 @@ unsigned char * core_microblaze_lt::MICROBLAZE_ABIIf::getState() const throw() {
   return curState;
 } // getState()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setState(unsigned char * state) throw() {
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_state(unsigned char * state) throw() {
   unsigned char * curStateTemp = state;
   this->PC.immediateWrite(*((unsigned int *)curStateTemp));
   curStateTemp += 4;
@@ -348,55 +347,55 @@ void core_microblaze_lt::MICROBLAZE_ABIIf::setState(unsigned char * state) throw
   curStateTemp += 4;
 } // setState()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setExitValue(unsigned int value) throw() {
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_exit_value(unsigned int value) throw() {
   this->exitValue = value;
 } // setExitValue()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::getExitValue() throw() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::get_exit_value() throw() {
   return this->exitValue;
 } // getExitValue()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::getCodeLimit() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::get_code_limit() {
   return this->PROGRAM_LIMIT;
 } // getCodeLimit()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readLR() const throw() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::read_LR() const throw() {
   return this->GPR[15];
 } // readLR()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setLR(const unsigned int & newValue)
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_LR(const unsigned int & newValue)
   throw() {
   this->GPR[15].immediateWrite(newValue);
 } // setLR()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readPC() const throw() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::read_PC() const throw() {
   return this->PC + 0;
 } // readPC()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setPC(const unsigned int & newValue)
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_PC(const unsigned int & newValue)
   throw() {
   this->PC.immediateWrite(newValue);
 } // setPC()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readSP() const throw() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::read_SP() const throw() {
   return this->GPR[1];
 } // readSP()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setSP(const unsigned int & newValue)
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_SP(const unsigned int & newValue)
   throw() {
   this->GPR[1].immediateWrite(newValue);
 } // setSP()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readRetVal() const throw() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::read_return_value() const throw() {
   return this->GPR[3];
 } // readRetVal()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setRetVal(const unsigned int &
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_return_value(const unsigned int &
   newValue) throw() {
   this->GPR[3].immediateWrite(newValue);
 } // setRetVal()
 
-std::vector<unsigned int> core_microblaze_lt::MICROBLAZE_ABIIf::readArgs() const
+std::vector<unsigned int> core_microblaze_lt::MICROBLAZE_ABIIf::read_args() const
   throw() {
   std::vector<unsigned int > args;
   args.push_back(this->GPR[5]);
@@ -408,7 +407,7 @@ std::vector<unsigned int> core_microblaze_lt::MICROBLAZE_ABIIf::readArgs() const
   return args;
 } // readArgs()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setArgs(const std::vector<unsigned
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_args(const std::vector<unsigned
   int> & args) throw() {
   if (args.size() > 6) {
     THROW_EXCEPTION("ABI of processor supports up to 6 arguments: " << args.size()
@@ -442,7 +441,7 @@ void core_microblaze_lt::MICROBLAZE_ABIIf::setArgs(const std::vector<unsigned
   }
 } // setArgs()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readGDBReg(const unsigned int
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::read_gdb_reg(const unsigned int
   & gdbId) const throw() {
   switch(gdbId) {
     case 0: {
@@ -562,11 +561,11 @@ unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readGDBReg(const unsigned int
   }
 } // readGDBReg()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::nGDBRegs() const throw() {
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::num_gdb_regs() const throw() {
   return 37;
 } // nGDBRegs()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::setGDBReg(
+void core_microblaze_lt::MICROBLAZE_ABIIf::set_gdb_reg(
     const unsigned int & newValue,
     const unsigned int & gdbId) throw() {
   switch(gdbId) {
@@ -687,23 +686,23 @@ void core_microblaze_lt::MICROBLAZE_ABIIf::setGDBReg(
   }
 } // setGDBReg()
 
-unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::readMem(const unsigned int &
+unsigned int core_microblaze_lt::MICROBLAZE_ABIIf::read_mem(const unsigned int &
   address) {
   return this->dataMem.read_word_dbg(address);
 } // readMem()
 
-unsigned char core_microblaze_lt::MICROBLAZE_ABIIf::readCharMem(const unsigned
+unsigned char core_microblaze_lt::MICROBLAZE_ABIIf::read_char_mem(const unsigned
   int & address) {
   return this->dataMem.read_byte_dbg(address);
 } // readCharMem()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::writeMem(
+void core_microblaze_lt::MICROBLAZE_ABIIf::write_mem(
     const unsigned int & address,
     unsigned int datum) {
   this->dataMem.write_word_dbg(address, datum);
 } // writeMem()
 
-void core_microblaze_lt::MICROBLAZE_ABIIf::writeCharMem(
+void core_microblaze_lt::MICROBLAZE_ABIIf::write_char_mem(
     const unsigned int & address,
     unsigned char datum) {
   this->dataMem.write_byte_dbg(address, datum);
