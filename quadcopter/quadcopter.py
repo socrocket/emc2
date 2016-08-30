@@ -18,10 +18,10 @@ from sr_registry import module
 from usi.sc_module import USIModule
 from usi.tools import elf
 
-
-usi.registry.api.load('./build/gaisler/libsr_gaisler.so')
-usi.registry.api.load('./build/microblaze/libsr_microblaze.so')
-usi.registry.api.load('./build/emc2quadcopter/libsr_quadcopter.so')
+usi.registry.load('./build/gaisler/libsr_gaisler.so')
+usi.registry.load('./build/microblaze/libsr_microblaze.so')
+usi.registry.load('./build/arm/libsr_arm.so')
+usi.registry.load('./build/quadcopter/libsr_quadcopter.so')
 
 class BaseSystem(USIModule):
     def __init__(self, name):
@@ -314,7 +314,7 @@ class ARMSystem(BaseSystem):
     def __init__(self, name):
         print " * Creating ARM Subsystem:"
         super(ARMSystem, self).__init__(name)
-        self.cpu = module.Leon3("cpu", hindex = 1)
+        self.cpu = module.CortexA9("cpu", hindex = 1)
         self.connect_cpu()
 
 class SupervisorSystem(USIModule):
@@ -340,8 +340,8 @@ def class_systems(*k, **kw):
     leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
     # 
-    #microblazesystem = MicroBlazeSystem("microblaze_system")
-    microblazesystem = LeonSystem("microblaze_system")
+    microblazesystem = MicroBlazeSystem("microblaze_system")
+    #microblazesystem = LeonSystem("microblaze_system")
     microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #microblazesystem.store_elf("./build/emc2quadcopter/software/hellospecial.sparc", True)
 
@@ -355,5 +355,4 @@ def class_systems(*k, **kw):
     #    caches = usi.find("leon_system.cpu.{}.*".format(vec))
     #    usi.add_to_reporting_list(caches, usi.report.SC_WARNING, 0)
 usi.report.set_filter_to_whitelist(True)
-
 
