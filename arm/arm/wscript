@@ -9,6 +9,7 @@ def build(self):
         features        = 'cxx cxxstlib',
         export_includes = [self.repository_root.abspath()],
         includes        = [self.repository_root.abspath()],
+        cxxflags     = '-std=gnu++11',
         use             = 'mmucache trap common',
         source          = [
                             'intunit/instructions.cpp',
