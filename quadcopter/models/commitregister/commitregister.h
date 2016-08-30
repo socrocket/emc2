@@ -20,7 +20,7 @@
 #include "core/base/verbose.h"
 
 #include "core/common/sr_signal.h"
-#include "core/common/clkdevice.h"
+#include "core/base/clkdevice.h"
 #include "amba/apbdevice.h"
 #include "amba/apbslave.h"
 

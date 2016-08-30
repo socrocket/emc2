@@ -18,7 +18,7 @@
 #include "core/base/systemc.h"
 #include "core/base/base.h"
 #include "core/common/sr_param.h"
-#include "core/common/clkdevice.h"
+#include "core/base/clkdevice.h"
 #include "core/common/sr_signal.h"
 
 #include <boost/config.hpp>

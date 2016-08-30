@@ -27,7 +27,7 @@
 
 #include "core/common/socrocket.h"
 #include "core/common/sr_signal.h"
-#include "core/common/clkdevice.h"
+#include "core/base/clkdevice.h"
 #include "amba/amba.h"
 #include "amba/ahbmaster.h"
 
