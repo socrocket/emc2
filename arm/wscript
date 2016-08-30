@@ -1,0 +1,40 @@
+#! /usr/bin/env python
+# vim : set fileencoding=utf-8 expandtab noai ts=4 sw=4 filetype=python :
+top = '..'
+REPOSITORY_PATH = "arm"
+REPOSITORY_NAME = "ARM Extensions"
+REPOSITORY_DESC = "SoCRockets ARM extensions"
+REPOSITORY_TOOLS = [
+]
+
+def build(self):
+  self.recurse_all()
+  self.recurse_all_tests()
+  self(
+        target       = 'sr_arm',
+        features     = 'cxx cxxshlib',
+        cxxflags     = '-std=gnu++11',
+        source = [
+            'arm/intunit/instructions.cpp',
+            'arm/intunit/registers.cpp',
+            #'arm/intunit/alias.cpp',
+            'arm/intunit/processor.cpp',
+            'arm/intunit/interface.cpp',
+            'arm/intunit/decoder.cpp',
+#            'arm/intunit/irqPorts.cpp',
+#            'arm/intunit/externalPins.cpp',
+            'arm/cortexa9.cpp',
+        ],
+        includes = [self.repository_root.abspath()],
+        defines = 'ENABLE_HISTORY', 
+        use          = [
+                        'sr_gaisler',
+                        'sr_registry',
+                        'sr_register',
+                        'sr_report',
+                        'sr_signal',
+                        'common',
+                        'AMBA', 'GREENSOCS', 'TLM', 'SYSTEMC', 'BOOST'
+                       ],
+        idx=98,
+  )
