@@ -49,7 +49,7 @@
   },
   "core/trapgen": {
     "pull": {
-      "remote_branch": "master",
+      "remote_branch": "runtime",
       "remote_url": "../trap-gen2"
     }
   },
