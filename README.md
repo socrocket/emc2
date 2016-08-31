@@ -1,4 +1,14 @@
-SoCRocket {#mainpage}
+emc2 SoCRocket {#mainpage}
+==============
+
+How to start:
+
+- *$* ./waf configure
+- *$* ./waf --target=usiexec.platform,sr_gaisler,sr_microblaze,sr_arm,sr_quadcopter
+- *modify quadcopter/quadcopter.py to use correct target binaries*
+- *$* ./build/pysc/usiexec/usiexec.platform quadcopter/quadcopter.py
+
+SoCRocket
 =========
 
 Increasingly large portions of electronic systems are being implemented
