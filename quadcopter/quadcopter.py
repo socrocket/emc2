@@ -315,7 +315,7 @@ class ARMSystem(BaseSystem):
         print " * Creating ARM Subsystem:"
         super(ARMSystem, self).__init__(name)
         self.cpu = module.CortexA9("cpu", hindex = 1)
-        self.connect_cpu()
+        self.connect_cpu(True)
 
 class SupervisorSystem(USIModule):
     def __init__(self, name):
@@ -345,8 +345,8 @@ def class_systems(*k, **kw):
     microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #microblazesystem.store_elf("./build/emc2quadcopter/software/hellospecial.sparc", True)
 
-    #armsystem = ARMSystem("arm_system")
-    armsystem = LeonSystem("arm_system")
+    armsystem = ARMSystem("arm_system")
+    #armsystem = LeonSystem("arm_system")
     armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #armsystem.store_elf("./build/emc2quadcopter/software/hellospecial.sparc", True)
     supervisorsystem = SupervisorSystem("supervisor_system")
