@@ -54,15 +54,15 @@
 #include <tlm_utils/tlm_quantumkeeper.h>
 
 
-using namespace core_armcortexa9_lt;
+using namespace core_armcortexa9_funclt;
 
-void core_armcortexa9_lt::TLMMemory::set_debugger(MemoryToolsIf<unsigned>*
+void core_armcortexa9_funclt::TLMMemory::set_debugger(MemoryToolsIf<unsigned>*
 debugger) {
   this->debugger = debugger;
 } // set_debugger()
 /// ----------------------------------------------------------------------------
 
-sc_dt::uint64 core_armcortexa9_lt::TLMMemory::read_dword(const unsigned& address)
+sc_dt::uint64 core_armcortexa9_funclt::TLMMemory::read_dword(const unsigned& address)
 throw() {
   sc_dt::uint64 datum = 0;
   if (this->dmi_ptr_valid) {
@@ -119,7 +119,7 @@ throw() {
 
 /// ----------------------------------------------------------------------------
 
-unsigned short int core_armcortexa9_lt::TLMMemory::read_half(const unsigned&
+unsigned short int core_armcortexa9_funclt::TLMMemory::read_half(const unsigned&
 address) throw() {
   unsigned short int datum = 0;
   if (this->dmi_ptr_valid) {
@@ -172,7 +172,7 @@ address) throw() {
 } // read_half()
 /// ----------------------------------------------------------------------------
 
-unsigned char core_armcortexa9_lt::TLMMemory::read_byte(const unsigned& address)
+unsigned char core_armcortexa9_funclt::TLMMemory::read_byte(const unsigned& address)
 throw() {
   unsigned char datum = 0;
   if (this->dmi_ptr_valid) {
@@ -220,7 +220,7 @@ throw() {
 } // read_byte()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_dword(
+void core_armcortexa9_funclt::TLMMemory::write_dword(
     const unsigned& address,
     sc_dt::uint64 datum) throw() {
 #ifdef BIG_ENDIAN_BO
@@ -277,7 +277,7 @@ void core_armcortexa9_lt::TLMMemory::write_dword(
 
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_half(
+void core_armcortexa9_funclt::TLMMemory::write_half(
     const unsigned& address,
     unsigned short int datum) throw() {
   // Endianess conversion: The processor is always modeled with the host endianess.
@@ -333,7 +333,7 @@ void core_armcortexa9_lt::TLMMemory::write_half(
 } // write_half()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_byte(
+void core_armcortexa9_funclt::TLMMemory::write_byte(
     const unsigned& address,
     unsigned char datum) throw() {
 #ifdef BIG_ENDIAN_BO
@@ -384,7 +384,7 @@ void core_armcortexa9_lt::TLMMemory::write_byte(
 } // write_byte()
 /// ----------------------------------------------------------------------------
 
-sc_dt::uint64 core_armcortexa9_lt::TLMMemory::read_dword_dbg(const unsigned&
+sc_dt::uint64 core_armcortexa9_funclt::TLMMemory::read_dword_dbg(const unsigned&
 address) throw() {
   tlm::tlm_generic_payload trans;
   trans.set_address(address);
@@ -405,7 +405,7 @@ address) throw() {
 } // read_dword_dbg()
 /// ----------------------------------------------------------------------------
 
-unsigned core_armcortexa9_lt::TLMMemory::read_word_dbg(const unsigned& address)
+unsigned core_armcortexa9_funclt::TLMMemory::read_word_dbg(const unsigned& address)
 throw() {
   tlm::tlm_generic_payload trans;
   trans.set_address(address);
@@ -424,7 +424,7 @@ throw() {
 } // read_word_dbg()
 /// ----------------------------------------------------------------------------
 
-unsigned short int core_armcortexa9_lt::TLMMemory::read_half_dbg(const unsigned&
+unsigned short int core_armcortexa9_funclt::TLMMemory::read_half_dbg(const unsigned&
 address) throw() {
   tlm::tlm_generic_payload trans;
   trans.set_address(address);
@@ -443,7 +443,7 @@ address) throw() {
 } // read_half_dbg()
 /// ----------------------------------------------------------------------------
 
-unsigned char core_armcortexa9_lt::TLMMemory::read_byte_dbg(const unsigned&
+unsigned char core_armcortexa9_funclt::TLMMemory::read_byte_dbg(const unsigned&
 address) throw() {
   tlm::tlm_generic_payload trans;
   trans.set_address(address);
@@ -457,7 +457,7 @@ address) throw() {
 } // read_byte_dbg()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_dword_dbg(
+void core_armcortexa9_funclt::TLMMemory::write_dword_dbg(
     const unsigned& address,
     sc_dt::uint64 datum) throw() {
 #ifdef BIG_ENDIAN_BO
@@ -477,7 +477,7 @@ void core_armcortexa9_lt::TLMMemory::write_dword_dbg(
 } // write_dword_dbg()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_word_dbg(
+void core_armcortexa9_funclt::TLMMemory::write_word_dbg(
     const unsigned& address,
     unsigned datum) throw() {
   // Endianess conversion: The processor is always modeled with the host endianess.
@@ -495,7 +495,7 @@ void core_armcortexa9_lt::TLMMemory::write_word_dbg(
 } // write_word_dbg()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_half_dbg(
+void core_armcortexa9_funclt::TLMMemory::write_half_dbg(
     const unsigned& address,
     unsigned short int datum) throw() {
   // Endianess conversion: The processor is always modeled with the host endianess.
@@ -516,7 +516,7 @@ void core_armcortexa9_lt::TLMMemory::write_half_dbg(
 } // write_half_dbg()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::write_byte_dbg(
+void core_armcortexa9_funclt::TLMMemory::write_byte_dbg(
     const unsigned& address,
     unsigned char datum) throw() {
 #ifdef BIG_ENDIAN_BO
@@ -532,17 +532,17 @@ void core_armcortexa9_lt::TLMMemory::write_byte_dbg(
 } // write_byte_dbg()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::lock() {
+void core_armcortexa9_funclt::TLMMemory::lock() {
 
 } // lock()
 /// ----------------------------------------------------------------------------
 
-void core_armcortexa9_lt::TLMMemory::unlock() {
+void core_armcortexa9_funclt::TLMMemory::unlock() {
 
 } // unlock()
 /// ----------------------------------------------------------------------------
 
-core_armcortexa9_lt::TLMMemory::TLMMemory(
+core_armcortexa9_funclt::TLMMemory::TLMMemory(
     sc_module_name port_name,
     tlm_utils::tlm_quantumkeeper& quant_keeper) :
   sc_module(port_name),

@@ -101,7 +101,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
           }
 #endif
         }
-        catch(annull_exception &etc) {
+        catch(annul_exception &etc) {
 //          curInstrPtr->printTrace();
           std::cerr << "Skipped Instruction " << curInstrPtr->get_name()
             << std::endl << std::endl;
@@ -134,7 +134,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
           }
 #endif
         }
-        catch(annull_exception &etc) {
+        catch(annul_exception &etc) {
 //          instr->printTrace();
           std::cerr << "Skipped Instruction " << instr->get_name() <<
             std::endl << std::endl;
@@ -176,7 +176,7 @@ void core_microblaze_lt::CoreMICROBLAZELT::mainLoop() {
         }
 #endif
       }
-      catch(annull_exception &etc) {
+      catch(annul_exception &etc) {
 //        instr->printTrace();
         std::cerr << "Skipped Instruction " << instr->get_name() <<
           std::endl << std::endl;
