@@ -5,6 +5,12 @@
       "remote_url": "https://github.com/waf-project/waf.git"
     }
   },
+  "amba": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/amba.git"
+    }
+  },
   "arm": {
     "pull": {
       "remote_branch": "master",
@@ -51,6 +57,12 @@
     "pull": {
       "remote_branch": "runtime",
       "remote_url": "../trap-gen2"
+    }
+  },
+  "gaisler": {
+    "pull": {
+      "remote_branch": "master",
+      "remote_url": "https://github.com/socrocket/gaisler.git"
     }
   },
   "microblaze": {
