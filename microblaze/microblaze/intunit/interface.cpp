@@ -708,8 +708,7 @@ void core_microblaze_lt::MICROBLAZE_ABIIf::write_char_mem(
   this->dataMem.write_byte_dbg(address, datum);
 } // writeCharMem()
 
-boost::circular_buffer<HistoryInstrType> & core_microblaze_lt::MICROBLAZE_ABIIf::getInstructionHistory()
-  {
+boost::circular_buffer<HistoryInstrType> & core_microblaze_lt::MICROBLAZE_ABIIf::get_history() {
   return this->instHistoryQueue;
 } // getInstructionHistory()
 

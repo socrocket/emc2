@@ -46,9 +46,9 @@
 /// Top-level class of the memory sub-system for the TrapGen LEON3 simulator
 class CortexA9 :
   public mmu_cache_base,
-  public core_armcortexa9_lt::MemoryInterface {
+  public core_armcortexa9_funclt::MemoryInterface {
 
-  typedef core_armcortexa9_lt::CoreARMCortexA9LT CortexA9LT;
+  typedef core_armcortexa9_funclt::CoreARMCortexA9FuncLT CortexA9LT;
  public:
 
   GC_HAS_CALLBACKS();

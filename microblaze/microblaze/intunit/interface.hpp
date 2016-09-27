@@ -88,7 +88,7 @@ namespace core_microblaze_lt {
         const unsigned int & address, unsigned int datum);
     void write_char_mem(
         const unsigned int & address, unsigned char datum);
-    boost::circular_buffer<HistoryInstrType> & getInstructionHistory();
+    boost::circular_buffer<HistoryInstrType> & get_history();
     virtual ~MICROBLAZE_ABIIf();
 
     private:

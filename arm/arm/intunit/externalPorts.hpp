@@ -59,7 +59,7 @@
 #define FUNC_MODEL
 #define LT_IF
 
-namespace core_armcortexa9_lt {
+namespace core_armcortexa9_funclt {
 
   /**
   * @brief Port Class
@@ -228,7 +228,7 @@ namespace core_armcortexa9_lt {
 
   }; // class TLMMemory
 
-} // namespace core_armcortexa9_lt
+} // namespace core_armcortexa9_funclt
 
 /// ****************************************************************************
 

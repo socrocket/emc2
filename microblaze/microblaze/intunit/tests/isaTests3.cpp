@@ -80,7 +80,7 @@ void ORI_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -124,7 +124,7 @@ void ORI_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -168,7 +168,7 @@ void ORI_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -212,7 +212,7 @@ void ANDNI_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -254,7 +254,7 @@ void BRD_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -300,7 +300,7 @@ void LHUI_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -348,7 +348,7 @@ void LHUI_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -398,7 +398,7 @@ void LHUI_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -446,7 +446,7 @@ void LHUI_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -494,7 +494,7 @@ void LHUI_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -545,7 +545,7 @@ void RSUBIKC_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -592,7 +592,7 @@ void RSUBIKC_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -639,7 +639,7 @@ void RSUBIKC_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -687,7 +687,7 @@ void RSUBIKC_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -735,7 +735,7 @@ void RSUBIKC_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -783,7 +783,7 @@ void RSUBIKC_5() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -830,7 +830,7 @@ void MULH_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -875,7 +875,7 @@ void MULH_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -920,7 +920,7 @@ void MULH_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -965,7 +965,7 @@ void MULH_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1010,7 +1010,7 @@ void MULH_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1055,7 +1055,7 @@ void MULH_5() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1100,7 +1100,7 @@ void FRSUB_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1142,7 +1142,7 @@ void BEQI_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500010);
@@ -1182,7 +1182,7 @@ void BEQI_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4ffff0);
@@ -1222,7 +1222,7 @@ void BEQI_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1264,7 +1264,7 @@ void BEQD_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1308,7 +1308,7 @@ void BEQD_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1351,7 +1351,7 @@ void RTID_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1396,7 +1396,7 @@ void RTID_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1440,7 +1440,7 @@ void RTID_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -1486,7 +1486,7 @@ void RTID_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1532,7 +1532,7 @@ void RTID_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1579,7 +1579,7 @@ void FMUL_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1625,7 +1625,7 @@ void LWI_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1673,7 +1673,7 @@ void LWI_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -1723,7 +1723,7 @@ void LWI_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -1773,7 +1773,7 @@ void LWI_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -1821,7 +1821,7 @@ void LWI_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -1870,7 +1870,7 @@ void BNEID_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1913,7 +1913,7 @@ void BNEID_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -1958,7 +1958,7 @@ void ADDIK_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2005,7 +2005,7 @@ void ADDIK_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2052,7 +2052,7 @@ void ADDIK_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2099,7 +2099,7 @@ void ADDIK_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2146,7 +2146,7 @@ void ADDIK_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2191,7 +2191,7 @@ void BGTID_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -2234,7 +2234,7 @@ void BGTID_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -2279,7 +2279,7 @@ void ADDIC_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2326,7 +2326,7 @@ void ADDIC_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2373,7 +2373,7 @@ void ADDIC_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2420,7 +2420,7 @@ void ADDIC_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2467,7 +2467,7 @@ void ADDIC_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2516,7 +2516,7 @@ void LW_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2565,7 +2565,7 @@ void LW_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -2616,7 +2616,7 @@ void LW_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -2667,7 +2667,7 @@ void LW_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2716,7 +2716,7 @@ void LW_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x20);
@@ -2768,7 +2768,7 @@ void RSUBC_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2816,7 +2816,7 @@ void RSUBC_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2864,7 +2864,7 @@ void RSUBC_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2912,7 +2912,7 @@ void RSUBC_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -2960,7 +2960,7 @@ void RSUBC_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3005,7 +3005,7 @@ void BLTID_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -3048,7 +3048,7 @@ void BLTID_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -3093,7 +3093,7 @@ void RSUBI_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3140,7 +3140,7 @@ void RSUBI_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3187,7 +3187,7 @@ void RSUBI_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3235,7 +3235,7 @@ void RSUBI_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3283,7 +3283,7 @@ void RSUBI_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3331,7 +3331,7 @@ void RSUBI_5() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3377,7 +3377,7 @@ void MTS_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3423,7 +3423,7 @@ void MTS_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3471,7 +3471,7 @@ void RSUBK_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3519,7 +3519,7 @@ void RSUBK_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3567,7 +3567,7 @@ void RSUBK_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3615,7 +3615,7 @@ void RSUBK_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3663,7 +3663,7 @@ void RSUBK_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3709,7 +3709,7 @@ void BGED_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -3753,7 +3753,7 @@ void BGED_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -3794,7 +3794,7 @@ void BRID_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -3839,7 +3839,7 @@ void PCMPBF_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3884,7 +3884,7 @@ void PCMPBF_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3929,7 +3929,7 @@ void PCMPBF_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -3974,7 +3974,7 @@ void PCMPBF_3() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -4019,7 +4019,7 @@ void PCMPBF_4() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -4064,7 +4064,7 @@ void PCMPBF_5() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -4111,7 +4111,7 @@ void IDIVU_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -4158,7 +4158,7 @@ void IDIVU_1() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -4205,7 +4205,7 @@ void IDIVU_2() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x4);
@@ -4251,7 +4251,7 @@ void BRAD_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x500004);
@@ -4292,7 +4292,7 @@ void BRAI_0() {
   try {
     toTest.behavior();
   }
-  catch(annull_exception &etc) {
+  catch(annul_exception &etc) {
   }
 
   BOOST_CHECK_EQUAL(PC.readNewValue(), (unsigned int)0x50);
