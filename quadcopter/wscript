@@ -14,7 +14,8 @@ def build(self):
         features     = 'cxx cxxshlib',
         source = [
           'models/commitregister/commitregister.cpp',
-          'models/voter/voter.cpp'
+          'models/voter/voter.cpp',
+          'sensorintrinsic.cpp'
         ],
         includes          = self.repository_root.abspath(),
         use          = [
