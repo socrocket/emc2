@@ -62,8 +62,7 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     public:
-    TLMIntrPort_1(
-    sc_module_name port_name, bool& irq_signal);
+    TLMIntrPort_1(sc_module_name port_name, bool& irq_signal);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -72,12 +71,11 @@ namespace core_armcortexa9_funclt {
 
     public:
     void b_transport(
-    int tag, tlm::tlm_generic_payload& trans, sc_time& delay);
-    unsigned transport_dbg(
-    int tag, tlm::tlm_generic_payload& trans);
+        int tag, tlm::tlm_generic_payload& trans, sc_time& delay);
+    unsigned transport_dbg(int tag, tlm::tlm_generic_payload& trans);
     tlm::tlm_sync_enum nb_transport_fw(
-    int tag, tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_time&
-    delay);
+        int tag, tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_time&
+        delay);
 
     /// @} Methods
     // -------------------------------------------------------------------------

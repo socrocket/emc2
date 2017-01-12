@@ -53,9 +53,9 @@
 #include "decoder.hpp"
 
 #include <systemc.h>
-#include <tlm_utils/tlm_quantumkeeper.h>
 #include <common/report.hpp>
 #include <string>
+#include <tlm_utils/tlm_quantumkeeper.h>
 #include <common/tools_if.hpp>
 #include <boost/circular_buffer.hpp>
 #include <modules/instruction.hpp>
@@ -103,11 +103,8 @@ namespace core_armcortexa9_funclt {
 
     public:
     CoreARMCortexA9FuncLT(
-    sc_module_name name, MemoryInterface* mem, bool extensions_vfp = true, bool extensions_simd = true, bool extensions_cp
-    = true, bool extensions_virtualization = true, bool extensions_security =
-    true, bool extensions_large_physical_address = false, bool extensions_mp =
-    true, bool extensions_debug = false, bool ismode_arm = true, bool ismode_thumb
-    = false, bool ismode_jazelle = false, bool ismode_thumbee = false);
+        sc_module_name name, sc_time latency, MemoryInterface& instr_memory,
+        MemoryInterface& data_memory);
     ~CoreARMCortexA9FuncLT();
 
     /// @} Constructors and Destructors
@@ -119,6 +116,7 @@ namespace core_armcortexa9_funclt {
     void main_loop();
     void reset();
     void end_of_elaboration();
+    void set_profiling_range(unsigned start_addr, unsigned end_addr);
     void enable_history(std::string file_name = "");
     Instruction* decode(unsigned bitstring);
     Interface& get_interface();
@@ -129,8 +127,8 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     public:
-    SC_HAS_PROCESS(CoreARMCortexA9FuncLT);unsigned total_cycles;
-    tlm_utils::tlm_quantumkeeper quantKeeper;
+    SC_HAS_PROCESS(CoreARMCortexA9FuncLT);sc_time latency;
+    tlm_utils::tlm_quantumkeeper quant_keeper;
     Registers R;
     MemoryInterface& instr_memory;
     MemoryInterface& data_memory;
@@ -140,12 +138,14 @@ namespace core_armcortexa9_funclt {
     IRQIntrInstruction* IRQ_instr;
     FIQIntrInstruction* FIQ_instr;
     ToolsManager<unsigned> tool_manager;
+    sc_time profiler_time_start;
+    sc_time profiler_time_end;
     boost::circular_buffer<HistoryInstrType> history_instr_queue;
     unsigned history_undumped_elements;
-    unsigned ENTRY_POINT;
     unsigned MPROC_ID;
-    unsigned PROGRAM_LIMIT;
+    unsigned ENTRY_POINT;
     unsigned PROGRAM_START;
+    unsigned PROGRAM_LIMIT;
     Interface* ABIIf;
 
     private:
@@ -155,21 +155,12 @@ namespace core_armcortexa9_funclt {
     bool FIQ;
     Instruction** INSTRUCTIONS;
     bool instr_executing;
+    sc_event instr_end_event;
     template_map<unsigned, CacheElem> instr_cache;
+    unsigned profiler_start_addr;
+    unsigned profiler_end_addr;
     bool history_en;
     std::ofstream history_file;
-    bool extensions_vfp;
-    bool extensions_simd;
-    bool extensions_cp;
-    bool extensions_virtualization;
-    bool extensions_security;
-    bool extensions_large_physical_address;
-    bool extensions_mp;
-    bool extensions_debug;
-    bool ismode_arm;
-    bool ismode_thumb;
-    bool ismode_jazelle;
-    bool ismode_thumbee;
     Decoder decoder;
 
     /// @} Data

@@ -53,6 +53,7 @@
 #include <systemc.h>
 #include <common/report.hpp>
 #include <string>
+#include <tlm_utils/tlm_quantumkeeper.h>
 #include <common/tools_if.hpp>
 #include <boost/circular_buffer.hpp>
 #include <modules/instruction.hpp>
@@ -87,33 +88,33 @@ using namespace core_armcortexa9_funclt;
 using namespace trap;
 
 core_armcortexa9_funclt::CoreARMCortexA9FuncLT::CoreARMCortexA9FuncLT(
-    sc_module_name name, MemoryInterface* mem,
-    bool extensions_vfp, bool extensions_simd, bool extensions_cp, bool extensions_virtualization,
-    bool extensions_security, bool extensions_large_physical_address, bool
-    extensions_mp, bool extensions_debug, bool ismode_arm, bool ismode_thumb,
-    bool ismode_jazelle, bool ismode_thumbee) :
+    sc_module_name name,
+    sc_time latency,
+    MemoryInterface& instr_memory,
+    MemoryInterface& data_memory) :
   sc_module(name),
+  latency(latency),
+  reset_called(false),
   R(MPROC_ID, ENTRY_POINT),
-  instr_memory(*mem),
-  data_memory(*mem),
-  //IRQ_port("IRQ_port", IRQ),
-  //FIQ_port("FIQ_port", FIQ),
-  extensions_vfp(extensions_vfp),
-  extensions_simd(extensions_simd),
-  extensions_cp(extensions_cp),
-  extensions_virtualization(extensions_virtualization),
-  extensions_security(extensions_security),
-  extensions_large_physical_address(extensions_large_physical_address),
-  extensions_mp(extensions_mp),
-  extensions_debug(extensions_debug),
-  ismode_arm(ismode_arm),
-  ismode_thumb(ismode_thumb),
-  ismode_jazelle(ismode_jazelle),
-  ismode_thumbee(ismode_thumbee) {
+  instr_memory(instr_memory),
+  data_memory(data_memory),
+  IRQ_port("IRQ_port", IRQ),
+  FIQ_port("FIQ_port", FIQ),
+  num_instructions(0),
+  profiler_time_start(SC_ZERO_TIME),
+  profiler_time_end(SC_ZERO_TIME),
+  profiler_start_addr((unsigned)-1),
+  profiler_end_addr((unsigned)-1),
+  history_en(false),
+  history_undumped_elements(0),
+  MPROC_ID(0),
+  ENTRY_POINT(0),
+  PROGRAM_START(0),
+  PROGRAM_LIMIT(0) {
 
   CoreARMCortexA9FuncLT::num_instances++;
-  this->total_cycles = 0;
-  this->reset_called = false;
+  this->quant_keeper.set_global_quantum(this->latency*100);
+  this->quant_keeper.reset();
   SC_THREAD(main_loop);
   // Initialize the array containing the initial instance of the instructions.
   this->INSTRUCTIONS = new Instruction*[162];
@@ -220,7 +221,7 @@ core_armcortexa9_funclt::CoreARMCortexA9FuncLT::CoreARMCortexA9FuncLT(
   this->INSTRUCTIONS[100] = new STRH_i(R, instr_memory, data_memory);
   this->INSTRUCTIONS[101] = new STRH_r(R, instr_memory, data_memory);
   this->INSTRUCTIONS[102] = new STREXH(R, instr_memory, data_memory);
-  this->INSTRUCTIONS[103] = new STRD(R, instr_memory, data_memory);
+  this->INSTRUCTIONS[103] = new STRD_i(R, instr_memory, data_memory);
   this->INSTRUCTIONS[104] = new STRD_r(R, instr_memory, data_memory);
   this->INSTRUCTIONS[105] = new STREXD(R, instr_memory, data_memory);
   this->INSTRUCTIONS[106] = new LDM(R, instr_memory, data_memory);
@@ -281,16 +282,9 @@ core_armcortexa9_funclt::CoreARMCortexA9FuncLT::CoreARMCortexA9FuncLT(
   this->INSTRUCTIONS[161] = new InvalidInstruction(R, instr_memory, data_memory);
   this->IRQ_instr = new IRQIntrInstruction(R, instr_memory, data_memory, this->IRQ);
   this->FIQ_instr = new FIQIntrInstruction(R, instr_memory, data_memory, this->FIQ);
-  this->num_instructions = 0;
-  this->history_en = false;
   this->history_instr_queue.set_capacity(1000);
-  this->history_undumped_elements = 0;
-  this->ENTRY_POINT = 0;
-  this->MPROC_ID = 0;
-  this->PROGRAM_LIMIT = 0;
-  this->PROGRAM_START = 0;
   this->ABIIf = new Interface(this->R, this->data_memory, this->instr_executing,
-  this->history_instr_queue, this->PROGRAM_LIMIT);
+  this->instr_end_event, this->history_instr_queue, this->PROGRAM_LIMIT);
   end_module();
 } // CoreARMCortexA9FuncLT()
 
@@ -346,6 +340,8 @@ core_armcortexa9_funclt::CoreARMCortexA9FuncLT::~CoreARMCortexA9FuncLT() {
 
 void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
 
+  // Wait for SystemC infrastructure, otherwise register callbacks will crash.
+  wait(SC_ZERO_TIME);
   Instruction* cur_instr = NULL;
   template_map<unsigned, CacheElem >::iterator icache_end = this->instr_cache.end();
 
@@ -374,12 +370,18 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
     }
     else /* !IRQ */ {
       unsigned cur_PC = this->RB[15];
+      if (cur_PC == this->profiler_start_addr) {
+        this->profiler_time_start = sc_time_stamp();
+      }
+      if (cur_PC == this->profiler_end_addr) {
+        this->profiler_time_end = sc_time_stamp();
+      }
 
       // Tools: Instruction History
 #ifdef ENABLE_HISTORY
       HistoryInstrType instr_queue_elem;
       if (this->history_en) {
-
+        instr_queue_elem.cycle = (unsigned)(this->quant_keeper.get_current_time()/this->latency);
         instr_queue_elem.address = cur_PC;
       }
 #endif
@@ -511,8 +513,13 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
       }
 #endif
     } // if (!IRQ)
-    this->total_cycles += (num_cycles + 1);
+    // Instruction-induced Latency
+    this->quant_keeper.inc((num_cycles + 1)*this->latency);
+    if (this->quant_keeper.need_sync()) {
+      this->quant_keeper.sync();
+    }
     this->instr_executing = false;
+    this->instr_end_event.notify();
     this->num_instructions++;
 
   }
@@ -542,6 +549,16 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::end_of_elaboration() {
     this->reset();
   }
 } // end_of_elaboration()
+
+// -----------------------------------------------------------------------------
+
+void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::set_profiling_range(
+    unsigned start_addr,
+    unsigned end_addr) {
+
+  this->profiler_start_addr = start_addr;
+  this->profiler_end_addr = end_addr;
+} // set_profiling_range()
 
 // -----------------------------------------------------------------------------
 

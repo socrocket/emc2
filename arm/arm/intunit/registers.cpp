@@ -53,80 +53,68 @@ using namespace core_armcortexa9_funclt;
 core_armcortexa9_funclt::Registers::Registers(
     unsigned MPROC_ID,
     unsigned ENTRY_POINT) :
-  cpsr("cpsr", trap::amba_LT, false, 0, 0, 0xd3, 6),
-  id_pfr0("id_pfr0", trap::amba_LT, false, 0, 0, 0x1, 6),
-  id_pfr1("id_pfr1", trap::amba_LT, false, 0, 0, 0x1011, 6),
-  id_dfr0("id_dfr0", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_afr0("id_afr0", trap::amba_LT, false, 0, 0, 0x1111, 6),
-  id_mmfr0("id_mmfr0", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_mmfr1("id_mmfr1", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_mmfr2("id_mmfr2", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_mmfr3("id_mmfr3", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_isar0("id_isar0", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_isar1("id_isar1", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_isar2("id_isar2", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_isar3("id_isar3", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_isar4("id_isar4", trap::amba_LT, false, 0, 0, 0x0, 6),
-  id_isar5("id_isar5", trap::amba_LT, false, 0, 0, 0x0, 6),
-  mp_id("mp_id", trap::amba_LT, false, 0, 0, MPROC_ID, 6),
-  spsr {{"spsr[0]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"spsr[1]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"spsr[2]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"spsr[3]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"spsr[4]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"spsr[5]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"spsr[6]", trap::amba_LT, false, 0, 0, 0x0, 6}},
-  rb {{"rb[0]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[1]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[2]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[3]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[4]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[5]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[6]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[7]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[8]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[9]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[10]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[11]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[12]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[13]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[14]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[15]", trap::amba_LT, false, 0, 0, ENTRY_POINT, 6},
-  {"rb[16]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[17]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[18]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[19]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[20]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[21]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[22]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[23]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[24]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[25]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[26]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[27]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[28]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[29]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[30]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[31]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[32]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[33]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"rb[34]", trap::amba_LT, false, 0, 0, 0x0, 6}},
-  cpregs {{"cpregs[0]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[1]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[2]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[3]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[4]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[5]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[6]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[7]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[8]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[9]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[10]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[11]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[12]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[13]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[14]", trap::amba_LT, false, 0, 0, 0x0, 6},
-  {"cpregs[15]", trap::amba_LT, false, 0, 0, 0x0, 6}},
+  cpsr("cpsr", trap::amba_LT, false, 0, 0, 0xd3, 8),
+  scr("scr", trap::amba_LT, false, 0, 0, 0x0, 8),
+  sctlr("sctlr", trap::amba_LT, false, 0, 0, 0x0, 8),
+  mp_id("mp_id", trap::amba_LT, false, 0, 0, MPROC_ID, 8),
+  spsr {{"spsr[0]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"spsr[1]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"spsr[2]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"spsr[3]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"spsr[4]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"spsr[5]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"spsr[6]", trap::amba_LT, false, 0, 0, 0x0, 8}},
+  rb {{"rb[0]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[1]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[2]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[3]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[4]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[5]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[6]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[7]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[8]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[9]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[10]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[11]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[12]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[13]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[14]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[15]", trap::amba_LT, false, 0, 0, ENTRY_POINT, 8},
+  {"rb[16]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[17]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[18]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[19]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[20]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[21]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[22]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[23]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[24]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[25]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[26]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[27]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[28]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[29]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[30]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[31]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[32]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[33]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"rb[34]", trap::amba_LT, false, 0, 0, 0x0, 8}},
+  cpregs {{"cpregs[0]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[1]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[2]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[3]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[4]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[5]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[6]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[7]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[8]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[9]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[10]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[11]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[12]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[13]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[14]", trap::amba_LT, false, 0, 0, 0x0, 8},
+  {"cpregs[15]", trap::amba_LT, false, 0, 0, 0x0, 8}},
   spsr_irq("spsr_irq"),
   spsr_fiq("spsr_fiq"),
   spsr_und("spsr_und"),
@@ -134,9 +122,6 @@ core_armcortexa9_funclt::Registers::Registers(
   spsr_svc("spsr_svc"),
   spsr_hyp("spsr_hyp"),
   spsr_mon("spsr_mon"),
-  sp("sp"),
-  lr("lr"),
-  pc("pc"),
   sp_irq("sp_irq"),
   lr_irq("lr_irq"),
   r8_fiq("r8_fiq"),
@@ -156,6 +141,9 @@ core_armcortexa9_funclt::Registers::Registers(
   elr_hyp("elr_hyp"),
   sp_mon("sp_mon"),
   lr_mon("lr_mon"),
+  sp("sp"),
+  lr("lr"),
+  pc("pc"),
   regs {{"regs[0]"},{"regs[1]"},{"regs[2]"},{"regs[3]"},{"regs[4]"},{"regs[5]"},
   {"regs[6]"},{"regs[7]"},{"regs[8]"},{"regs[9]"},{"regs[10]"},{"regs[11]"},
   {"regs[12]"},{"regs[13]"},{"regs[14]"},{"regs[15]"}} {
@@ -177,131 +165,44 @@ core_armcortexa9_funclt::Registers::Registers(
   cpsr.add_field("IT10", 26, 25);
   cpsr.add_field("IT72", 15, 10);
 
-  id_pfr0.add_field("W7", 31, 28);
-  id_pfr0.add_field("W6", 27, 24);
-  id_pfr0.add_field("W5", 23, 20);
-  id_pfr0.add_field("W4", 19, 16);
-  id_pfr0.add_field("W3", 15, 12);
-  id_pfr0.add_field("W2", 11, 8);
-  id_pfr0.add_field("W1", 7, 4);
-  id_pfr0.add_field("W0", 3, 0);
+  scr.add_field("FIQ", 2, 2);
+  scr.add_field("AW", 5, 5);
+  scr.add_field("FW", 4, 4);
+  scr.add_field("IRQ", 1, 1);
+  scr.add_field("EA", 3, 3);
+  scr.add_field("SIF", 9, 9);
+  scr.add_field("UNK_SBZP", 31, 10);
+  scr.add_field("HCE", 8, 8);
+  scr.add_field("SCD", 7, 7);
+  scr.add_field("nET", 6, 6);
+  scr.add_field("NS", 0, 0);
 
-  id_pfr1.add_field("W7", 31, 28);
-  id_pfr1.add_field("W6", 27, 24);
-  id_pfr1.add_field("W5", 23, 20);
-  id_pfr1.add_field("W4", 19, 16);
-  id_pfr1.add_field("W3", 15, 12);
-  id_pfr1.add_field("W2", 11, 8);
-  id_pfr1.add_field("W1", 7, 4);
-  id_pfr1.add_field("W0", 3, 0);
-
-  id_dfr0.add_field("W7", 31, 28);
-  id_dfr0.add_field("W6", 27, 24);
-  id_dfr0.add_field("W5", 23, 20);
-  id_dfr0.add_field("W4", 19, 16);
-  id_dfr0.add_field("W3", 15, 12);
-  id_dfr0.add_field("W2", 11, 8);
-  id_dfr0.add_field("W1", 7, 4);
-  id_dfr0.add_field("W0", 3, 0);
-
-  id_afr0.add_field("W7", 31, 28);
-  id_afr0.add_field("W6", 27, 24);
-  id_afr0.add_field("W5", 23, 20);
-  id_afr0.add_field("W4", 19, 16);
-  id_afr0.add_field("W3", 15, 12);
-  id_afr0.add_field("W2", 11, 8);
-  id_afr0.add_field("W1", 7, 4);
-  id_afr0.add_field("W0", 3, 0);
-
-  id_mmfr0.add_field("W7", 31, 28);
-  id_mmfr0.add_field("W6", 27, 24);
-  id_mmfr0.add_field("W5", 23, 20);
-  id_mmfr0.add_field("W4", 19, 16);
-  id_mmfr0.add_field("W3", 15, 12);
-  id_mmfr0.add_field("W2", 11, 8);
-  id_mmfr0.add_field("W1", 7, 4);
-  id_mmfr0.add_field("W0", 3, 0);
-
-  id_mmfr1.add_field("W7", 31, 28);
-  id_mmfr1.add_field("W6", 27, 24);
-  id_mmfr1.add_field("W5", 23, 20);
-  id_mmfr1.add_field("W4", 19, 16);
-  id_mmfr1.add_field("W3", 15, 12);
-  id_mmfr1.add_field("W2", 11, 8);
-  id_mmfr1.add_field("W1", 7, 4);
-  id_mmfr1.add_field("W0", 3, 0);
-
-  id_mmfr2.add_field("W7", 31, 28);
-  id_mmfr2.add_field("W6", 27, 24);
-  id_mmfr2.add_field("W5", 23, 20);
-  id_mmfr2.add_field("W4", 19, 16);
-  id_mmfr2.add_field("W3", 15, 12);
-  id_mmfr2.add_field("W2", 11, 8);
-  id_mmfr2.add_field("W1", 7, 4);
-  id_mmfr2.add_field("W0", 3, 0);
-
-  id_mmfr3.add_field("W7", 31, 28);
-  id_mmfr3.add_field("W6", 27, 24);
-  id_mmfr3.add_field("W5", 23, 20);
-  id_mmfr3.add_field("W4", 19, 16);
-  id_mmfr3.add_field("W3", 15, 12);
-  id_mmfr3.add_field("W2", 11, 8);
-  id_mmfr3.add_field("W1", 7, 4);
-  id_mmfr3.add_field("W0", 3, 0);
-
-  id_isar0.add_field("W7", 31, 28);
-  id_isar0.add_field("W6", 27, 24);
-  id_isar0.add_field("W5", 23, 20);
-  id_isar0.add_field("W4", 19, 16);
-  id_isar0.add_field("W3", 15, 12);
-  id_isar0.add_field("W2", 11, 8);
-  id_isar0.add_field("W1", 7, 4);
-  id_isar0.add_field("W0", 3, 0);
-
-  id_isar1.add_field("W7", 31, 28);
-  id_isar1.add_field("W6", 27, 24);
-  id_isar1.add_field("W5", 23, 20);
-  id_isar1.add_field("W4", 19, 16);
-  id_isar1.add_field("W3", 15, 12);
-  id_isar1.add_field("W2", 11, 8);
-  id_isar1.add_field("W1", 7, 4);
-  id_isar1.add_field("W0", 3, 0);
-
-  id_isar2.add_field("W7", 31, 28);
-  id_isar2.add_field("W6", 27, 24);
-  id_isar2.add_field("W5", 23, 20);
-  id_isar2.add_field("W4", 19, 16);
-  id_isar2.add_field("W3", 15, 12);
-  id_isar2.add_field("W2", 11, 8);
-  id_isar2.add_field("W1", 7, 4);
-  id_isar2.add_field("W0", 3, 0);
-
-  id_isar3.add_field("W7", 31, 28);
-  id_isar3.add_field("W6", 27, 24);
-  id_isar3.add_field("W5", 23, 20);
-  id_isar3.add_field("W4", 19, 16);
-  id_isar3.add_field("W3", 15, 12);
-  id_isar3.add_field("W2", 11, 8);
-  id_isar3.add_field("W1", 7, 4);
-  id_isar3.add_field("W0", 3, 0);
-
-  id_isar4.add_field("W7", 31, 28);
-  id_isar4.add_field("W6", 27, 24);
-  id_isar4.add_field("W5", 23, 20);
-  id_isar4.add_field("W4", 19, 16);
-  id_isar4.add_field("W3", 15, 12);
-  id_isar4.add_field("W2", 11, 8);
-  id_isar4.add_field("W1", 7, 4);
-  id_isar4.add_field("W0", 3, 0);
-
-  id_isar5.add_field("W7", 31, 28);
-  id_isar5.add_field("W6", 27, 24);
-  id_isar5.add_field("W5", 23, 20);
-  id_isar5.add_field("W4", 19, 16);
-  id_isar5.add_field("W3", 15, 12);
-  id_isar5.add_field("W2", 11, 8);
-  id_isar5.add_field("W1", 7, 4);
-  id_isar5.add_field("W0", 3, 0);
+  sctlr.add_field("M", 0, 0);
+  sctlr.add_field("FI", 21, 21);
+  sctlr.add_field("HA", 17, 17);
+  sctlr.add_field("B18", 18, 18);
+  sctlr.add_field("RR", 14, 14);
+  sctlr.add_field("B34", 4, 3);
+  sctlr.add_field("B31", 31, 31);
+  sctlr.add_field("I", 12, 12);
+  sctlr.add_field("TE", 30, 30);
+  sctlr.add_field("A", 1, 1);
+  sctlr.add_field("C", 2, 2);
+  sctlr.add_field("VE", 24, 24);
+  sctlr.add_field("EE", 25, 25);
+  sctlr.add_field("AFE", 29, 29);
+  sctlr.add_field("TRE", 28, 28);
+  sctlr.add_field("B69", 9, 6);
+  sctlr.add_field("NMFI", 27, 27);
+  sctlr.add_field("V", 13, 13);
+  sctlr.add_field("WXN", 19, 19);
+  sctlr.add_field("Z", 11, 11);
+  sctlr.add_field("B2223", 23, 22);
+  sctlr.add_field("B26", 26, 26);
+  sctlr.add_field("UWXN", 20, 20);
+  sctlr.add_field("SW", 10, 10);
+  sctlr.add_field("B1516", 16, 15);
+  sctlr.add_field("CP15BEN", 5, 5);
 
   // Initialize register banks.
   for (unsigned i = 0; i < 7; ++i) {
@@ -323,18 +224,24 @@ core_armcortexa9_funclt::Registers::Registers(
   }
 
   // Initialize alias registers and alias register banks.
+  this->lr_svc.update_alias(this->rb[30], 0);
+  this->spsr_fiq.update_alias(this->spsr[1], 0);
+  this->sp_svc.update_alias(this->rb[29], 0);
+  this->spsr_irq.update_alias(this->spsr[0], 0);
+  this->lr_abt.update_alias(this->rb[28], 0);
+  this->sp_abt.update_alias(this->rb[27], 0);
+  this->lr_und.update_alias(this->rb[26], 0);
+  this->sp_und.update_alias(this->rb[25], 0);
+  this->lr_fiq.update_alias(this->rb[24], 0);
+  this->sp_fiq.update_alias(this->rb[23], 0);
+  this->r12_fiq.update_alias(this->rb[22], 0);
+  this->r11_fiq.update_alias(this->rb[21], 0);
   this->r10_fiq.update_alias(this->rb[20], 0);
   this->r9_fiq.update_alias(this->rb[19], 0);
-  this->spsr_mon.update_alias(this->spsr[6], 0);
   this->r8_fiq.update_alias(this->rb[18], 0);
-  this->spsr_hyp.update_alias(this->spsr[5], 0);
   this->lr_irq.update_alias(this->rb[17], 0);
-  this->spsr_svc.update_alias(this->spsr[4], 0);
   this->sp_irq.update_alias(this->rb[16], 0);
-  this->spsr_abt.update_alias(this->spsr[3], 0);
-  this->spsr_und.update_alias(this->spsr[2], 0);
-  this->spsr_fiq.update_alias(this->spsr[1], 0);
-  this->spsr_irq.update_alias(this->spsr[0], 0);
+  this->spsr_mon.update_alias(this->spsr[6], 0);
   this->regs[0].update_alias(this->rb[0], 0);
   this->regs[1].update_alias(this->rb[1], 0);
   this->regs[2].update_alias(this->rb[2], 0);
@@ -351,23 +258,17 @@ core_armcortexa9_funclt::Registers::Registers(
   this->regs[13].update_alias(this->rb[13], 0);
   this->regs[14].update_alias(this->rb[14], 0);
   this->regs[15].update_alias(this->rb[15], 8);
-  this->pc.update_alias(this->regs[15], 0);
   this->sp.update_alias(this->regs[13], 0);
+  this->pc.update_alias(this->regs[15], 0);
   this->lr.update_alias(this->regs[14], 0);
+  this->spsr_hyp.update_alias(this->spsr[5], 0);
   this->lr_mon.update_alias(this->rb[34], 0);
+  this->spsr_svc.update_alias(this->spsr[4], 0);
   this->sp_mon.update_alias(this->rb[33], 0);
+  this->spsr_abt.update_alias(this->spsr[3], 0);
   this->elr_hyp.update_alias(this->rb[32], 0);
+  this->spsr_und.update_alias(this->spsr[2], 0);
   this->sp_hyp.update_alias(this->rb[31], 0);
-  this->lr_svc.update_alias(this->rb[30], 0);
-  this->sp_svc.update_alias(this->rb[29], 0);
-  this->lr_abt.update_alias(this->rb[28], 0);
-  this->sp_abt.update_alias(this->rb[27], 0);
-  this->lr_und.update_alias(this->rb[26], 0);
-  this->sp_und.update_alias(this->rb[25], 0);
-  this->lr_fiq.update_alias(this->rb[24], 0);
-  this->sp_fiq.update_alias(this->rb[23], 0);
-  this->r12_fiq.update_alias(this->rb[22], 0);
-  this->r11_fiq.update_alias(this->rb[21], 0);
 } // Registers()
 
 // -----------------------------------------------------------------------------
@@ -376,20 +277,8 @@ void core_armcortexa9_funclt::Registers::reset() {
 
   // Reset registers.
   cpsr.reset();
-  id_pfr0.reset();
-  id_pfr1.reset();
-  id_dfr0.reset();
-  id_afr0.reset();
-  id_mmfr0.reset();
-  id_mmfr1.reset();
-  id_mmfr2.reset();
-  id_mmfr3.reset();
-  id_isar0.reset();
-  id_isar1.reset();
-  id_isar2.reset();
-  id_isar3.reset();
-  id_isar4.reset();
-  id_isar5.reset();
+  scr.reset();
+  sctlr.reset();
   mp_id.reset();
 
   // Reset register banks.
@@ -414,20 +303,8 @@ bool core_armcortexa9_funclt::Registers::write(const unsigned& data) {
 
   // Write registers.
   ret = ret && cpsr.write(data);
-  ret = ret && id_pfr0.write(data);
-  ret = ret && id_pfr1.write(data);
-  ret = ret && id_dfr0.write(data);
-  ret = ret && id_afr0.write(data);
-  ret = ret && id_mmfr0.write(data);
-  ret = ret && id_mmfr1.write(data);
-  ret = ret && id_mmfr2.write(data);
-  ret = ret && id_mmfr3.write(data);
-  ret = ret && id_isar0.write(data);
-  ret = ret && id_isar1.write(data);
-  ret = ret && id_isar2.write(data);
-  ret = ret && id_isar3.write(data);
-  ret = ret && id_isar4.write(data);
-  ret = ret && id_isar5.write(data);
+  ret = ret && scr.write(data);
+  ret = ret && sctlr.write(data);
   ret = ret && mp_id.write(data);
 
   // Write register banks.
@@ -454,20 +331,8 @@ bool core_armcortexa9_funclt::Registers::write_dbg(const unsigned& data) {
 
   // Write registers.
   ret = ret && cpsr.write_dbg(data);
-  ret = ret && id_pfr0.write_dbg(data);
-  ret = ret && id_pfr1.write_dbg(data);
-  ret = ret && id_dfr0.write_dbg(data);
-  ret = ret && id_afr0.write_dbg(data);
-  ret = ret && id_mmfr0.write_dbg(data);
-  ret = ret && id_mmfr1.write_dbg(data);
-  ret = ret && id_mmfr2.write_dbg(data);
-  ret = ret && id_mmfr3.write_dbg(data);
-  ret = ret && id_isar0.write_dbg(data);
-  ret = ret && id_isar1.write_dbg(data);
-  ret = ret && id_isar2.write_dbg(data);
-  ret = ret && id_isar3.write_dbg(data);
-  ret = ret && id_isar4.write_dbg(data);
-  ret = ret && id_isar5.write_dbg(data);
+  ret = ret && scr.write_dbg(data);
+  ret = ret && sctlr.write_dbg(data);
   ret = ret && mp_id.write_dbg(data);
 
   // Write register banks.
@@ -494,20 +359,8 @@ bool core_armcortexa9_funclt::Registers::write_force(const unsigned& data) {
 
   // Write registers.
   ret = ret && cpsr.write_force(data);
-  ret = ret && id_pfr0.write_force(data);
-  ret = ret && id_pfr1.write_force(data);
-  ret = ret && id_dfr0.write_force(data);
-  ret = ret && id_afr0.write_force(data);
-  ret = ret && id_mmfr0.write_force(data);
-  ret = ret && id_mmfr1.write_force(data);
-  ret = ret && id_mmfr2.write_force(data);
-  ret = ret && id_mmfr3.write_force(data);
-  ret = ret && id_isar0.write_force(data);
-  ret = ret && id_isar1.write_force(data);
-  ret = ret && id_isar2.write_force(data);
-  ret = ret && id_isar3.write_force(data);
-  ret = ret && id_isar4.write_force(data);
-  ret = ret && id_isar5.write_force(data);
+  ret = ret && scr.write_force(data);
+  ret = ret && sctlr.write_force(data);
   ret = ret && mp_id.write_force(data);
 
   // Write register banks.
@@ -535,20 +388,8 @@ void core_armcortexa9_funclt::Registers::execute_callbacks(
 
   // Execute callbacks on registers.
   cpsr.execute_callbacks(type, 0, sizeof(unsigned));
-  id_pfr0.execute_callbacks(type, 0, sizeof(unsigned));
-  id_pfr1.execute_callbacks(type, 0, sizeof(unsigned));
-  id_dfr0.execute_callbacks(type, 0, sizeof(unsigned));
-  id_afr0.execute_callbacks(type, 0, sizeof(unsigned));
-  id_mmfr0.execute_callbacks(type, 0, sizeof(unsigned));
-  id_mmfr1.execute_callbacks(type, 0, sizeof(unsigned));
-  id_mmfr2.execute_callbacks(type, 0, sizeof(unsigned));
-  id_mmfr3.execute_callbacks(type, 0, sizeof(unsigned));
-  id_isar0.execute_callbacks(type, 0, sizeof(unsigned));
-  id_isar1.execute_callbacks(type, 0, sizeof(unsigned));
-  id_isar2.execute_callbacks(type, 0, sizeof(unsigned));
-  id_isar3.execute_callbacks(type, 0, sizeof(unsigned));
-  id_isar4.execute_callbacks(type, 0, sizeof(unsigned));
-  id_isar5.execute_callbacks(type, 0, sizeof(unsigned));
+  scr.execute_callbacks(type, 0, sizeof(unsigned));
+  sctlr.execute_callbacks(type, 0, sizeof(unsigned));
   mp_id.execute_callbacks(type, 0, sizeof(unsigned));
 
   // Execute callbacks on register banks.
@@ -571,20 +412,8 @@ void core_armcortexa9_funclt::Registers::set_stage(unsigned stage) {
 
   // Set pipeline stage for registers.
   cpsr.get_strategy()->set_stage(stage);
-  id_pfr0.get_strategy()->set_stage(stage);
-  id_pfr1.get_strategy()->set_stage(stage);
-  id_dfr0.get_strategy()->set_stage(stage);
-  id_afr0.get_strategy()->set_stage(stage);
-  id_mmfr0.get_strategy()->set_stage(stage);
-  id_mmfr1.get_strategy()->set_stage(stage);
-  id_mmfr2.get_strategy()->set_stage(stage);
-  id_mmfr3.get_strategy()->set_stage(stage);
-  id_isar0.get_strategy()->set_stage(stage);
-  id_isar1.get_strategy()->set_stage(stage);
-  id_isar2.get_strategy()->set_stage(stage);
-  id_isar3.get_strategy()->set_stage(stage);
-  id_isar4.get_strategy()->set_stage(stage);
-  id_isar5.get_strategy()->set_stage(stage);
+  scr.get_strategy()->set_stage(stage);
+  sctlr.get_strategy()->set_stage(stage);
   mp_id.get_strategy()->set_stage(stage);
 
   // Set pipeline stage for register banks.
@@ -607,20 +436,8 @@ void core_armcortexa9_funclt::Registers::unset_stage() {
 
   // Unset pipeline stage for registers.
   cpsr.get_strategy()->unset_stage();
-  id_pfr0.get_strategy()->unset_stage();
-  id_pfr1.get_strategy()->unset_stage();
-  id_dfr0.get_strategy()->unset_stage();
-  id_afr0.get_strategy()->unset_stage();
-  id_mmfr0.get_strategy()->unset_stage();
-  id_mmfr1.get_strategy()->unset_stage();
-  id_mmfr2.get_strategy()->unset_stage();
-  id_mmfr3.get_strategy()->unset_stage();
-  id_isar0.get_strategy()->unset_stage();
-  id_isar1.get_strategy()->unset_stage();
-  id_isar2.get_strategy()->unset_stage();
-  id_isar3.get_strategy()->unset_stage();
-  id_isar4.get_strategy()->unset_stage();
-  id_isar5.get_strategy()->unset_stage();
+  scr.get_strategy()->unset_stage();
+  sctlr.get_strategy()->unset_stage();
   mp_id.get_strategy()->unset_stage();
 
   // Unset pipeline stage for register banks.
@@ -643,20 +460,8 @@ void core_armcortexa9_funclt::Registers::clock_cycle() {
 
   // Propagate pipeline stage for registers.
   cpsr.clock_cycle();
-  id_pfr0.clock_cycle();
-  id_pfr1.clock_cycle();
-  id_dfr0.clock_cycle();
-  id_afr0.clock_cycle();
-  id_mmfr0.clock_cycle();
-  id_mmfr1.clock_cycle();
-  id_mmfr2.clock_cycle();
-  id_mmfr3.clock_cycle();
-  id_isar0.clock_cycle();
-  id_isar1.clock_cycle();
-  id_isar2.clock_cycle();
-  id_isar3.clock_cycle();
-  id_isar4.clock_cycle();
-  id_isar5.clock_cycle();
+  scr.clock_cycle();
+  sctlr.clock_cycle();
   mp_id.clock_cycle();
   // Propagate pipeline stage for register banks.
   for (int i = 0; i < 7; ++i) {
@@ -678,20 +483,8 @@ void core_armcortexa9_funclt::Registers::stall(unsigned stage) {
 
   // Stall pipeline for registers.
   cpsr.stall(stage);
-  id_pfr0.stall(stage);
-  id_pfr1.stall(stage);
-  id_dfr0.stall(stage);
-  id_afr0.stall(stage);
-  id_mmfr0.stall(stage);
-  id_mmfr1.stall(stage);
-  id_mmfr2.stall(stage);
-  id_mmfr3.stall(stage);
-  id_isar0.stall(stage);
-  id_isar1.stall(stage);
-  id_isar2.stall(stage);
-  id_isar3.stall(stage);
-  id_isar4.stall(stage);
-  id_isar5.stall(stage);
+  scr.stall(stage);
+  sctlr.stall(stage);
   mp_id.stall(stage);
   // Stall pipeline for register banks.
   for (int i = 0; i < 7; ++i) {
@@ -713,20 +506,8 @@ void core_armcortexa9_funclt::Registers::advance() {
 
   // Advance pipeline for registers.
   cpsr.advance();
-  id_pfr0.advance();
-  id_pfr1.advance();
-  id_dfr0.advance();
-  id_afr0.advance();
-  id_mmfr0.advance();
-  id_mmfr1.advance();
-  id_mmfr2.advance();
-  id_mmfr3.advance();
-  id_isar0.advance();
-  id_isar1.advance();
-  id_isar2.advance();
-  id_isar3.advance();
-  id_isar4.advance();
-  id_isar5.advance();
+  scr.advance();
+  sctlr.advance();
   mp_id.advance();
   // Advance pipeline for register banks.
   for (int i = 0; i < 7; ++i) {
@@ -748,20 +529,8 @@ void core_armcortexa9_funclt::Registers::flush(unsigned stage) {
 
   // Flush registers.
   cpsr.flush(stage);
-  id_pfr0.flush(stage);
-  id_pfr1.flush(stage);
-  id_dfr0.flush(stage);
-  id_afr0.flush(stage);
-  id_mmfr0.flush(stage);
-  id_mmfr1.flush(stage);
-  id_mmfr2.flush(stage);
-  id_mmfr3.flush(stage);
-  id_isar0.flush(stage);
-  id_isar1.flush(stage);
-  id_isar2.flush(stage);
-  id_isar3.flush(stage);
-  id_isar4.flush(stage);
-  id_isar5.flush(stage);
+  scr.flush(stage);
+  sctlr.flush(stage);
   mp_id.flush(stage);
   // Flush register banks.
   for (int i = 0; i < 7; ++i) {
@@ -786,20 +555,8 @@ const {
 
   // Print registers.
   os << cpsr.name() << ": " << cpsr.read_dbg() << '\n';
-  os << id_pfr0.name() << ": " << id_pfr0.read_dbg() << '\n';
-  os << id_pfr1.name() << ": " << id_pfr1.read_dbg() << '\n';
-  os << id_dfr0.name() << ": " << id_dfr0.read_dbg() << '\n';
-  os << id_afr0.name() << ": " << id_afr0.read_dbg() << '\n';
-  os << id_mmfr0.name() << ": " << id_mmfr0.read_dbg() << '\n';
-  os << id_mmfr1.name() << ": " << id_mmfr1.read_dbg() << '\n';
-  os << id_mmfr2.name() << ": " << id_mmfr2.read_dbg() << '\n';
-  os << id_mmfr3.name() << ": " << id_mmfr3.read_dbg() << '\n';
-  os << id_isar0.name() << ": " << id_isar0.read_dbg() << '\n';
-  os << id_isar1.name() << ": " << id_isar1.read_dbg() << '\n';
-  os << id_isar2.name() << ": " << id_isar2.read_dbg() << '\n';
-  os << id_isar3.name() << ": " << id_isar3.read_dbg() << '\n';
-  os << id_isar4.name() << ": " << id_isar4.read_dbg() << '\n';
-  os << id_isar5.name() << ": " << id_isar5.read_dbg() << '\n';
+  os << scr.name() << ": " << scr.read_dbg() << '\n';
+  os << sctlr.name() << ": " << sctlr.read_dbg() << '\n';
   os << mp_id.name() << ": " << mp_id.read_dbg() << '\n';
 
   // Print register banks.

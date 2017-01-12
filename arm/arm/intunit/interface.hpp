@@ -49,6 +49,7 @@
 #include "memory.hpp"
 
 #include <modules/abi_if.hpp>
+#include <systemc.h>
 #include <boost/circular_buffer.hpp>
 #include <modules/instruction.hpp>
 #include <vector>
@@ -74,8 +75,9 @@ namespace core_armcortexa9_funclt {
 
     public:
     Interface(
-    Registers& R, MemoryInterface& data_memory, bool& instr_executing, boost::circular_buffer<HistoryInstrType>&
-    history_instr_queue, unsigned& PROGRAM_LIMIT);
+        Registers& R, MemoryInterface& data_memory, bool& instr_executing,
+        sc_event& instr_end_event, boost::circular_buffer<HistoryInstrType>&
+        history_instr_queue, unsigned& PROGRAM_LIMIT);
     virtual ~Interface() {}
 
 
@@ -87,8 +89,7 @@ namespace core_armcortexa9_funclt {
     public:
     unsigned num_gdb_regs() const throw();
     unsigned read_gdb_reg(const unsigned& gdb_id) const throw();
-    void set_gdb_reg(
-    const unsigned& new_value, const unsigned& gdb_id) throw();
+    void set_gdb_reg(const unsigned& new_value, const unsigned& gdb_id) throw();
     std::vector<unsigned> read_args() const throw();
     void set_args(const std::vector<unsigned>& args) throw();
     unsigned read_PC() const throw();
@@ -101,10 +102,8 @@ namespace core_armcortexa9_funclt {
     void set_return_value(const unsigned& new_value) throw();
     unsigned read_mem(const unsigned& address);
     unsigned char read_char_mem(const unsigned& address);
-    void write_mem(
-    const unsigned& address, unsigned datum);
-    void write_char_mem(
-    const unsigned& address, unsigned char datum);
+    void write_mem(const unsigned& address, unsigned datum);
+    void write_char_mem(const unsigned& address, unsigned char datum);
     unsigned char* get_state() const throw();
     void set_state(unsigned char* state) throw();
     unsigned get_exit_value() throw();
@@ -127,6 +126,7 @@ namespace core_armcortexa9_funclt {
     Registers& R;
     MemoryInterface& data_memory;
     bool& instr_executing;
+    sc_event& instr_end_event;
     boost::circular_buffer<HistoryInstrType>& history_instr_queue;
     unsigned& PROGRAM_LIMIT;
     int routine_entry_state;

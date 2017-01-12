@@ -59,7 +59,7 @@ class CortexA9 :
 
   /// @brief Constructor of the top-level class of the memory sub-system (caches and mmu).
   CortexA9(
-      ModuleName name = "",  ///< SystemC module name
+      ModuleName name = "",               ///< SystemC module name
       bool icen = true,                   ///< instruction cache enable
       uint32_t irepl = 1,                 ///< instruction cache replacement strategy
       uint32_t isets = 4,                 ///< number of instruction cache sets

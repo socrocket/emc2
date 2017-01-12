@@ -85,7 +85,7 @@ CortexA9::CortexA9(
       hindex,
       pow_mon,
       abstractionLayer),
-  cpu("cpu", this),
+  cpu("cpu", sc_core::sc_time(10, sc_core::SC_NS), *this, *this),
   debugger(NULL),
   m_intrinsics("intrinsics", *(cpu.ABIIf)),
   g_gdb("gdb", 0, m_generics),
@@ -226,7 +226,7 @@ gs::cnf::callback_return_type CortexA9::g_args_callback(gs::gs_param_base& chang
 unsigned int CortexA9::read_instr(const unsigned int & address, const unsigned int asi, const unsigned int flush) throw() {
 
     unsigned int datum = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     unsigned int debug = 0;
     exec_instr(
         address,
@@ -238,10 +238,10 @@ unsigned int CortexA9::read_instr(const unsigned int & address, const unsigned i
         false);
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
 //std::cout << "Quantum (external) sync" << std::endl;
-      this->cpu.quantKeeper.sync();
+      this->cpu.quant_keeper.sync();
     }
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
@@ -261,7 +261,7 @@ sc_dt::uint64 CortexA9::read_dword(
     const uint32_t lock) throw() {
 
     sc_dt::uint64 datum = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -279,9 +279,9 @@ sc_dt::uint64 CortexA9::read_dword(
         response);
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-        this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+        this->cpu.quant_keeper.sync();
     }
 
     #ifdef LITTLE_ENDIAN_BO
@@ -303,7 +303,7 @@ uint32_t CortexA9::read_word(
     const uint32_t lock) throw() {
 
     uint32_t datum = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -321,9 +321,9 @@ uint32_t CortexA9::read_word(
         response);
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-      this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+      this->cpu.quant_keeper.sync();
     }
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
@@ -346,7 +346,7 @@ uint16_t CortexA9::read_half(
     const uint32_t lock) throw() {
 
     uint16_t datum = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -364,9 +364,9 @@ uint16_t CortexA9::read_half(
         response);
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-        this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+        this->cpu.quant_keeper.sync();
     }
 
     //Now the code for endianess conversion: the processor is always modeled
@@ -384,7 +384,7 @@ uint8_t CortexA9::read_byte(
     const uint32_t lock) throw() {
 
     uint8_t datum = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -402,9 +402,9 @@ uint8_t CortexA9::read_byte(
         response);
 
     // Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-        this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+        this->cpu.quant_keeper.sync();
     }
 
     return datum;
@@ -427,7 +427,7 @@ void CortexA9::write_dword(
         this->debugger->notify_address(address, sizeof(datum));
     }
 
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -445,9 +445,9 @@ void CortexA9::write_dword(
         response);
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-        this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+        this->cpu.quant_keeper.sync();
     }
 }
 
@@ -466,7 +466,7 @@ void CortexA9::write_word(
         v::debug << name() << "Debugger" << endl;
         this->debugger->notify_address(address, sizeof(datum));
     }
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     unsigned int debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -488,9 +488,9 @@ void CortexA9::write_word(
              << address << endl;
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-      this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+      this->cpu.quant_keeper.sync();
     }
 }
 
@@ -510,7 +510,7 @@ void CortexA9::write_half(
         this->debugger->notify_address(address, sizeof(datum));
     }
 
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -528,9 +528,9 @@ void CortexA9::write_half(
         response);
 
     // Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-        this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+        this->cpu.quant_keeper.sync();
     }
 }
 
@@ -545,7 +545,7 @@ void CortexA9::write_byte(
     if(this->debugger != NULL){
         this->debugger->notify_address(address, sizeof(datum));
     }
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -563,16 +563,16 @@ void CortexA9::write_byte(
         response);
 
     //Now lets keep track of time
-    this->cpu.quantKeeper.set(delay);
-    if(this->cpu.quantKeeper.need_sync()){
-        this->cpu.quantKeeper.sync();
+    this->cpu.quant_keeper.set(delay);
+    if(this->cpu.quant_keeper.need_sync()){
+        this->cpu.quant_keeper.sync();
     }
 }
 
 sc_dt::uint64 CortexA9::read_dword_dbg(const uint32_t &address) throw() {
 
     sc_dt::uint64 datum = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -600,7 +600,7 @@ sc_dt::uint64 CortexA9::read_dword_dbg(const uint32_t &address) throw() {
 
 uint32_t CortexA9::read_word_dbg(const uint32_t &address) throw(){
     uint32_t debug = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t datum = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -627,7 +627,7 @@ uint32_t CortexA9::read_word_dbg(const uint32_t &address) throw(){
 
 uint16_t CortexA9::read_half_dbg(const uint32_t &address) throw() {
     uint32_t debug = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint16_t datum = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -653,7 +653,7 @@ uint16_t CortexA9::read_half_dbg(const uint32_t &address) throw() {
 
 uint8_t CortexA9::read_byte_dbg(const uint32_t &address) throw(){
     uint32_t debug = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint8_t datum = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -680,7 +680,7 @@ void CortexA9::write_dword_dbg(const uint32_t &address, sc_dt::uint64 datum) thr
     swapEndianess(datum2);
     datum = datum1 | (((sc_dt::uint64)datum2) << 32);
 
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
@@ -705,7 +705,7 @@ void CortexA9::write_word_dbg(const uint32_t &address, uint32_t datum) throw() {
     swapEndianess(datum);
 
     uint32_t debug = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
     exec_data(
@@ -728,7 +728,7 @@ void CortexA9::write_half_dbg(const uint32_t &address, uint16_t datum) throw() {
     //is turned
     swapEndianess(datum);
     uint32_t debug = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
     exec_data(
@@ -747,7 +747,7 @@ void CortexA9::write_half_dbg(const uint32_t &address, uint16_t datum) throw() {
 
 void CortexA9::write_byte_dbg(const uint32_t &address, uint8_t datum) throw() {
     uint32_t debug = 0;
-    sc_time delay = this->cpu.quantKeeper.get_local_time();
+    sc_time delay = this->cpu.quant_keeper.get_local_time();
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;
 
     exec_data(

@@ -229,8 +229,7 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                     }
                     else {
                       if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                      & 0x1f0000U) != 0x1f0000) && ((instr_code & 0xf80U) !=
-                      0x0)) {
+                      & 0xf80U) != 0x0)) {
                         // Instruction LSL_r
                         return 56;
                       }
@@ -239,15 +238,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                   else {
                     if ((instr_code & 0x200000U) != 0x0) {
                       if (((instr_code & 0x40U) == 0x40) && ((instr_code &
-                      0xf0000000U) != 0xf0000000) && ((instr_code & 0x1f0000U)
-                      != 0x1f0000)) {
+                      0xf0000000U) != 0xf0000000)) {
                         // Instruction ASR_r
                         return 52;
                       }
                     }
                     else {
-                      if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                      & 0x10f000U) != 0x10f000)) {
+                      if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                         // Instruction ORR_r
                         return 44;
                       }
@@ -257,23 +254,20 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 case 0x20U: {
                   if ((instr_code & 0x200000U) != 0x0) {
                     if ((instr_code & 0x40U) != 0x0) {
-                      if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                      & 0x1f0000U) != 0x1f0000)) {
+                      if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                         // Instruction ROR_r
                         return 58;
                       }
                     }
                     else {
-                      if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                      & 0x1f0000U) != 0x1f0000)) {
+                      if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                         // Instruction LSR_r
                         return 54;
                       }
                     }
                   }
                   else {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                    & 0x10f000U) != 0x10f000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                       // Instruction ORR_r
                       return 44;
                     }
@@ -307,7 +301,7 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                       else {
                         if ((instr_code & 0x100000U) == 0x0) {
                           if (((instr_code & 0xf0000000U) != 0xf0000000)) {
-                            // Instruction STRD
+                            // Instruction STRD_i
                             return 103;
                           }
                         }
@@ -715,7 +709,7 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                     else {
                       if ((instr_code & 0x100000U) == 0x0) {
                         if (((instr_code & 0xf0000000U) != 0xf0000000)) {
-                          // Instruction STRD
+                          // Instruction STRD_i
                           return 103;
                         }
                       }
@@ -807,15 +801,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 break;}
                 case 0x0U: {
                   if ((instr_code & 0x200000U) != 0x0) {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                    & 0x10f000U) != 0x10f000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                       // Instruction MVN_r
                       return 41;
                     }
                   }
                   else {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                    & 0x10f000U) != 0x10f000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                       // Instruction BIC_r
                       return 62;
                     }
@@ -823,15 +815,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 break;}
                 case 0x20U: {
                   if ((instr_code & 0x200000U) != 0x0) {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                    & 0x10f000U) != 0x10f000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                       // Instruction MVN_r
                       return 41;
                     }
                   }
                   else {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
-                    & 0x10f000U) != 0x10f000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                       // Instruction BIC_r
                       return 62;
                     }
@@ -874,7 +864,7 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                         case 0x60U: {
                           if ((instr_code & 0x100000U) == 0x0) {
                             if (((instr_code & 0xf0000000U) != 0xf0000000)) {
-                              // Instruction STRD
+                              // Instruction STRD_i
                               return 103;
                             }
                           }
@@ -943,8 +933,7 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 }
               }
               else {
-                if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-                0x10f000U) != 0x10f000)) {
+                if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                   // Instruction SUB_r
                   return 7;
                 }
@@ -1042,16 +1031,14 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 }
                 else {
                   if (((instr_code & 0x200000U) == 0x200000) && ((instr_code &
-                  0xf0000000U) != 0xf0000000) && ((instr_code & 0x10f000U) !=
-                  0x10f000)) {
+                  0xf0000000U) != 0xf0000000)) {
                     // Instruction ADC_r
                     return 4;
                   }
                 }
               }
               else {
-                if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-                0x10f000U) != 0x10f000)) {
+                if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                   // Instruction ADD_r
                   return 1;
                 }
@@ -1141,16 +1128,14 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 }
                 else {
                   if (((instr_code & 0x200000U) == 0x200000) && ((instr_code &
-                  0xf0000000U) != 0xf0000000) && ((instr_code & 0x10f000U) !=
-                  0x10f000)) {
+                  0xf0000000U) != 0xf0000000)) {
                     // Instruction EOR_r
                     return 38;
                   }
                 }
               }
               else {
-                if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-                0x10f000U) != 0x10f000)) {
+                if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                   // Instruction AND_r
                   return 35;
                 }
@@ -1179,7 +1164,7 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                         case 0x60U: {
                           if ((instr_code & 0x100000U) == 0x0) {
                             if (((instr_code & 0xf0000000U) != 0xf0000000)) {
-                              // Instruction STRD
+                              // Instruction STRD_i
                               return 103;
                             }
                           }
@@ -1233,16 +1218,14 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 }
                 else {
                   if (((instr_code & 0x200000U) == 0x200000) && ((instr_code &
-                  0xf0000000U) != 0xf0000000) && ((instr_code & 0x10f000U) !=
-                  0x10f000)) {
+                  0xf0000000U) != 0xf0000000)) {
                     // Instruction RSC_r
                     return 16;
                   }
                 }
               }
               else {
-                if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-                0x10f000U) != 0x10f000)) {
+                if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                   // Instruction SBC_r
                   return 10;
                 }
@@ -1376,15 +1359,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
         case 0x1800000U: {
           if ((instr_code & 0x200000U) != 0x0) {
             if ((instr_code & 0x400000U) == 0x0) {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction MOV_i
                 return 118;
               }
             }
             else {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction MVN_i
                 return 40;
               }
@@ -1392,15 +1373,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
           }
           else {
             if ((instr_code & 0x400000U) == 0x0) {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction ORR_i
                 return 43;
               }
             }
             else {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction BIC_i
                 return 61;
               }
@@ -1410,15 +1389,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
         case 0x0U: {
           if ((instr_code & 0x200000U) == 0x0) {
             if ((instr_code & 0x400000U) == 0x0) {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction AND_i
                 return 34;
               }
             }
             else {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction SUB_i
                 return 6;
               }
@@ -1426,15 +1403,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
           }
           else {
             if ((instr_code & 0x400000U) == 0x0) {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction EOR_i
                 return 37;
               }
             }
             else {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction RSB_i
                 return 12;
               }
@@ -1444,15 +1419,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
         case 0x800000U: {
           if ((instr_code & 0x200000U) == 0x0) {
             if ((instr_code & 0x400000U) == 0x0) {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction ADD_i
                 return 0;
               }
             }
             else {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction SBC_i
                 return 9;
               }
@@ -1460,15 +1433,13 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
           }
           else {
             if ((instr_code & 0x400000U) == 0x0) {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction ADC_i
                 return 3;
               }
             }
             else {
-              if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code &
-              0x10f000U) != 0x10f000)) {
+              if (((instr_code & 0xf0000000U) != 0xf0000000)) {
                 // Instruction RSC_i
                 return 15;
               }
@@ -1590,7 +1561,8 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                     }
                   }
                   else {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
+                    & 0x300000U) != 0x0)) {
                       // Instruction USHQASX
                       return 22;
                     }
@@ -1623,13 +1595,15 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 break;}
                 case 0x40U: {
                   if ((instr_code & 0x800000U) != 0x0) {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
+                    & 0x300000U) != 0x100000)) {
                       // Instruction USXTAHB
                       return 21;
                     }
                   }
                   else {
-                    if (((instr_code & 0xf0000000U) != 0xf0000000)) {
+                    if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
+                    & 0x300000U) != 0x0)) {
                       // Instruction USHQSUB
                       return 19;
                     }
@@ -1637,7 +1611,8 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
                 break;}
                 case 0xc0U: {
                   if (((instr_code & 0x800000U) == 0x0) && ((instr_code &
-                  0xf0000000U) != 0xf0000000)) {
+                  0xf0000000U) != 0xf0000000) && ((instr_code & 0x300000U) !=
+                  0x0)) {
                     // Instruction USHQSUB
                     return 19;
                   }
@@ -1667,13 +1642,14 @@ int core_armcortexa9_funclt::Decoder::decode(unsigned instr_code) const throw()
               else {
                 if ((instr_code & 0x40U) != 0x0) {
                   if (((instr_code & 0x80U) == 0x0) && ((instr_code & 0xf0000000U)
-                  != 0xf0000000)) {
+                  != 0xf0000000) && ((instr_code & 0x300000U) != 0x0)) {
                     // Instruction USHQSAX
                     return 23;
                   }
                 }
                 else {
-                  if (((instr_code & 0xf0000000U) != 0xf0000000)) {
+                  if (((instr_code & 0xf0000000U) != 0xf0000000) && ((instr_code
+                  & 0x300000U) != 0x0)) {
                     // Instruction USHQADD
                     return 18;
                   }

@@ -52,7 +52,6 @@
 #include <common/report.hpp>
 #include <string>
 #include <modules/register.hpp>
-#include <systemc.h>
 #include <sstream>
 
 
@@ -72,7 +71,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     Instruction(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~Instruction() {}
 
 
@@ -108,47 +107,44 @@ namespace core_armcortexa9_funclt {
     void BranchWritePC(unsigned addr);
     void BXWritePC(unsigned addr);
     unsigned Rmode(
-    unsigned reg_index, unsigned mode, bool write = false, unsigned value = 0);
-    bool valid_banked_reg_access(unsigned sys_mode);
-    void update_alias(
-    unsigned cur_mode, unsigned next_mode);
-    int get_spsr_idx(unsigned mode);
+        unsigned reg_index, unsigned mode, bool write = false, unsigned value =
+        0);
+    bool valid_banked_reg_access(unsigned sys_mode) const;
+    void update_alias(unsigned cur_mode, unsigned next_mode);
+    int get_spsr_idx(unsigned mode) const;
     void restore_spsr();
     unsigned psr_mask(
-    unsigned next_value, unsigned byte_mask, unsigned cur_mode, bool is_spsr,
-    bool is_exception);
-    unsigned CurrentInstrSet();
-    bool valid_psr_mode(unsigned mode);
+        unsigned next_value, unsigned byte_mask, unsigned cur_mode, bool is_spsr,
+        bool is_exception) const;
+    unsigned CurrentInstrSet() const;
+    bool valid_psr_mode(unsigned mode) const;
     void ITAdvance();
-    bool InITBlock();
-    bool LastInITBlock();
+    bool InITBlock() const;
+    bool LastInITBlock() const;
     void AddWithCarry(
-    int operand1, int operand2, bool carry);
-    void update_psr_sub(
-    int operand1, int operand2, bool carry);
-    void update_psr_bit(
-    int result, bool carry);
-    int sign_extend(
-    int bits, unsigned len_bits);
+        int operand1, int operand2, bool carry);
+    void update_psr_bit(int result, bool carry);
+    long long sign_extend(long long bits, unsigned len_bits) const;
     unsigned LSL(
-    unsigned to_shift, unsigned shift_amm, bool& carry);
+        unsigned to_shift, unsigned shift_amm, bool& carry);
     unsigned LSR(
-    unsigned to_shift, unsigned shift_amm, bool& carry);
-    int ASR(
-    unsigned to_shift, unsigned shift_amm, bool& carry);
+        unsigned to_shift, unsigned shift_amm, bool& carry);
+    unsigned ASR(
+        unsigned to_shift, unsigned shift_amm, bool& carry);
     unsigned ROR(
-    unsigned to_rotate, unsigned rotate_amm, bool& carry);
+        unsigned to_rotate, unsigned rotate_amm, bool& carry);
     unsigned RRX(
-    unsigned to_rotate, bool carry_in, bool& carry);
+        unsigned to_rotate, unsigned rotate_amm, bool carry_in, bool& carry);
     unsigned sat_q(
-    long long operand, unsigned saturate_to, bool is_signed, bool set_q_en);
-    unsigned BitCount(unsigned operand);
-    unsigned ExcVectorBase();
-    bool HaveLPAE();
-    bool HaveMPExt();
-    bool HaveSecurityExt();
-    bool HaveVirtExt();
-    bool IsSecure();
+        long long operand, unsigned saturate_to, bool is_signed, bool set_q_en)
+        const;
+    unsigned BitCount(unsigned operand) const;
+    unsigned ExcVectorBase() const;
+    bool HaveLPAE() const;
+    bool HaveMPExt() const;
+    bool HaveSecurityExt() const;
+    bool HaveVirtExt() const;
+    bool IsSecure() const;
     bool JazelleAcceptsExecution();
 
     /// @} Methods
@@ -175,7 +171,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     InvalidInstruction(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~InvalidInstruction() {}
 
 
@@ -198,13 +194,37 @@ namespace core_armcortexa9_funclt {
 
   // ***************************************************************************
 
+  class ARMExpandImmOp : public virtual Instruction {
+    /// @name Constructors and Destructors
+    /// @{
+
+    public:
+    ARMExpandImmOp(
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+
+    /// @} Constructors and Destructors
+    // -------------------------------------------------------------------------
+    /// @name Methods
+    /// @{
+
+    protected:
+    unsigned ARMExpandImm(
+        unsigned& rotate, unsigned& imm, unsigned& operand, bool& carry);
+
+    /// @} Methods
+    // -------------------------------------------------------------------------
+
+  }; // class ARMExpandImmOp
+
+  // ***************************************************************************
+
   class UpdatePSRAddOp : public virtual Instruction {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     UpdatePSRAddOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -213,8 +233,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned UpdatePSRAdd(
-    trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
-    operand1, int& operand2, bool& carry);
+        trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
+        operand1, int& operand2, int& result);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -229,7 +249,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ConditionPassedOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -246,37 +266,13 @@ namespace core_armcortexa9_funclt {
 
   // ***************************************************************************
 
-  class ARMExpandImmOp : public virtual Instruction {
-    /// @name Constructors and Destructors
-    /// @{
-
-    public:
-    ARMExpandImmOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
-
-    /// @} Constructors and Destructors
-    // -------------------------------------------------------------------------
-    /// @name Methods
-    /// @{
-
-    protected:
-    unsigned ARMExpandImm(
-    unsigned& rotate, unsigned& imm, unsigned& operand, bool& carry);
-
-    /// @} Methods
-    // -------------------------------------------------------------------------
-
-  }; // class ARMExpandImmOp
-
-  // ***************************************************************************
-
   class DecodeImmShiftOp : public virtual Instruction {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     DecodeImmShiftOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -285,8 +281,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned DecodeImmShift(
-    trap::RegisterAlias<unsigned>& rm, unsigned& rm_bit, unsigned& shift_amm,
-    unsigned& shift_op, unsigned& operand, bool& carry);
+        trap::RegisterAlias<unsigned>& rm, unsigned& rm_bit, unsigned& shift_amm,
+        unsigned& shift_op, unsigned& operand, bool& carry);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -301,7 +297,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     DecodeRegShiftOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -310,8 +306,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned DecodeRegShift(
-    trap::RegisterAlias<unsigned>& rm, unsigned& rm_bit, trap::RegisterAlias<unsigned>&
-    rs, unsigned& rs_bit, unsigned& shift_op, unsigned& operand, bool& carry);
+        trap::RegisterAlias<unsigned>& rm, unsigned& rm_bit, trap::RegisterAlias<unsigned>& rs,
+        unsigned& rs_bit, unsigned& shift_op, unsigned& operand, bool& carry);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -326,7 +322,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UpdatePSRAddWithCarryOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -335,8 +331,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned UpdatePSRAddWithCarry(
-    trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
-    operand1, int& operand2, bool& carry);
+        trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
+        operand1, int& operand2, int& result);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -351,7 +347,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UpdatePSRSubOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -360,8 +356,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned UpdatePSRSub(
-    trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
-    operand1, int& operand2, bool& carry);
+        trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
+        operand1, int& operand2, int& result);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -376,7 +372,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UpdatePSRSubWithCarryOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -385,8 +381,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned UpdatePSRSubWithCarry(
-    trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
-    operand1, int& operand2, bool& carry);
+        trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
+        operand1, int& operand2, int& result);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -401,7 +397,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UpdatePSRMulOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -410,7 +406,7 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned UpdatePSRMul(
-    unsigned& ss, unsigned& s, unsigned& l, sc_dt::uint64& result);
+        unsigned& ss, unsigned& s, unsigned& l, long long& result);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -425,7 +421,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UpdatePSRBitOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -434,8 +430,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned UpdatePSRBit(
-    trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
-    result, bool& carry);
+        trap::RegisterAlias<unsigned>& rd, unsigned& rd_bit, unsigned& s, int&
+        result, bool& carry);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -450,7 +446,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LSOffsetOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -459,8 +455,8 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned LSOffset(
-    trap::RegisterAlias<unsigned>& rn, unsigned& rn_bit, unsigned& p, unsigned&
-    u, unsigned& w, unsigned& operand, unsigned& address);
+        trap::RegisterAlias<unsigned>& rn, unsigned& rn_bit, unsigned& p,
+        unsigned& u, unsigned& w, unsigned& operand, unsigned& address);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -475,7 +471,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LSMReglistOp(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -484,8 +480,9 @@ namespace core_armcortexa9_funclt {
 
     protected:
     unsigned LSMReglist(
-    trap::RegisterAlias<unsigned>& rn, unsigned& rn_bit, unsigned& p, unsigned&
-    u, unsigned& reg_list, unsigned& start_address, unsigned& wb_address);
+        trap::RegisterAlias<unsigned>& rn, unsigned& rn_bit, unsigned& p,
+        unsigned& u, unsigned& reg_list, unsigned& start_address, unsigned&
+        wb_address);
 
     /// @} Methods
     // -------------------------------------------------------------------------
@@ -495,22 +492,28 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ADD/ADR
+  * @brief ADD/ADR/SUBS PC
   *
   * Add adds a register value and either an immediate value, another register
   * value, or a shifted register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
   * Address adds an immediate value to the PC value to form a PC-relative
   * address, and writes the result to the destination register.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class ADD_i : public UpdatePSRAddOp, public ConditionPassedOp, public ARMExpandImmOp
+  class ADD_i : public ARMExpandImmOp, public UpdatePSRAddOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     ADD_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ADD_i() {}
 
 
@@ -533,10 +536,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -556,22 +560,28 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ADD/ADR
+  * @brief ADD/ADR/SUBS PC
   *
   * Add adds a register value and either an immediate value, another register
   * value, or a shifted register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
   * Address adds an immediate value to the PC value to form a PC-relative
   * address, and writes the result to the destination register.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class ADD_r : public UpdatePSRAddOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class ADD_r : public DecodeImmShiftOp, public UpdatePSRAddOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     ADD_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ADD_r() {}
 
 
@@ -594,10 +604,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -619,13 +630,19 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ADD/ADR
+  * @brief ADD/ADR/SUBS PC
   *
   * Add adds a register value and either an immediate value, another register
   * value, or a shifted register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
   * Address adds an immediate value to the PC value to form a PC-relative
   * address, and writes the result to the destination register.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ADD_sr : public DecodeRegShiftOp, public UpdatePSRAddOp, public ConditionPassedOp
   {
@@ -634,7 +651,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ADD_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ADD_sr() {}
 
 
@@ -661,6 +678,7 @@ namespace core_armcortexa9_funclt {
     bool carry;
     int operand1;
     int operand2;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -683,7 +701,7 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ADC
+  * @brief ADC/SUBS PC
   *
   * Add with Carry adds a register value, the carry flag and either an immediate
   * value, another register value, or a shifted register value, and writes the
@@ -693,16 +711,21 @@ namespace core_armcortexa9_funclt {
   * sum will be written to R4/R5:
   * ADDS R4, R0, R2
   * ADC R5, R1, R3
-  * 
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class ADC_i : public UpdatePSRAddWithCarryOp, public ConditionPassedOp, public
-  ARMExpandImmOp {
+  class ADC_i : public ARMExpandImmOp, public UpdatePSRAddWithCarryOp, public
+  ConditionPassedOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     ADC_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ADC_i() {}
 
 
@@ -725,10 +748,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -748,7 +772,7 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ADC
+  * @brief ADC/SUBS PC
   *
   * Add with Carry adds a register value, the carry flag and either an immediate
   * value, another register value, or a shifted register value, and writes the
@@ -758,16 +782,21 @@ namespace core_armcortexa9_funclt {
   * sum will be written to R4/R5:
   * ADDS R4, R0, R2
   * ADC R5, R1, R3
-  * 
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class ADC_r : public UpdatePSRAddWithCarryOp, public ConditionPassedOp, public
-  DecodeImmShiftOp {
+  class ADC_r : public DecodeImmShiftOp, public UpdatePSRAddWithCarryOp, public
+  ConditionPassedOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     ADC_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ADC_r() {}
 
 
@@ -790,10 +819,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -815,7 +845,7 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ADC
+  * @brief ADC/SUBS PC
   *
   * Add with Carry adds a register value, the carry flag and either an immediate
   * value, another register value, or a shifted register value, and writes the
@@ -825,7 +855,12 @@ namespace core_armcortexa9_funclt {
   * sum will be written to R4/R5:
   * ADDS R4, R0, R2
   * ADC R5, R1, R3
-  * 
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ADC_sr : public DecodeRegShiftOp, public UpdatePSRAddWithCarryOp, public
   ConditionPassedOp {
@@ -834,7 +869,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ADC_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ADC_sr() {}
 
 
@@ -861,6 +896,7 @@ namespace core_armcortexa9_funclt {
     bool carry;
     int operand1;
     int operand2;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -883,22 +919,28 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief SUB/ADR
+  * @brief SUB/ADR/SUBS PC
   *
   * Subtract subtracts either an immediate value, a register value, or a shifted
   * register value from a register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
   * Address adds an immediate value to the PC value to form a PC-relative
   * address, and writes the result to the destination register.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class SUB_i : public UpdatePSRSubOp, public ConditionPassedOp, public ARMExpandImmOp
+  class SUB_i : public ARMExpandImmOp, public UpdatePSRSubOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     SUB_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SUB_i() {}
 
 
@@ -921,10 +963,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -944,22 +987,28 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief SUB/ADR
+  * @brief SUB/ADR/SUBS PC
   *
   * Subtract subtracts either an immediate value, a register value, or a shifted
   * register value from a register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
   * Address adds an immediate value to the PC value to form a PC-relative
   * address, and writes the result to the destination register.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class SUB_r : public UpdatePSRSubOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class SUB_r : public DecodeImmShiftOp, public UpdatePSRSubOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     SUB_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SUB_r() {}
 
 
@@ -982,10 +1031,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1007,13 +1057,19 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief SUB/ADR
+  * @brief SUB/ADR/SUBS PC
   *
   * Subtract subtracts either an immediate value, a register value, or a shifted
   * register value from a register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
   * Address adds an immediate value to the PC value to form a PC-relative
   * address, and writes the result to the destination register.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class SUB_sr : public DecodeRegShiftOp, public UpdatePSRSubOp, public ConditionPassedOp
   {
@@ -1022,7 +1078,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SUB_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SUB_sr() {}
 
 
@@ -1049,6 +1105,7 @@ namespace core_armcortexa9_funclt {
     bool carry;
     int operand1;
     int operand2;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1071,21 +1128,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief SBC
+  * @brief SBC/SUBS PC
   *
   * Subtract with Carry subtracts the NOT(carry) flag and either an immediate
   * value, a register value, or a shifted register value from a register value,
   * and writes the result to the destination register. It can optionally update
   * the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class SBC_i : public UpdatePSRSubWithCarryOp, public ConditionPassedOp, public
-  ARMExpandImmOp {
+  class SBC_i : public ARMExpandImmOp, public UpdatePSRSubWithCarryOp, public
+  ConditionPassedOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     SBC_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SBC_i() {}
 
 
@@ -1108,10 +1171,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1131,21 +1195,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief SBC
+  * @brief SBC/SUBS PC
   *
   * Subtract with Carry subtracts the NOT(carry) flag and either an immediate
   * value, a register value, or a shifted register value from a register value,
   * and writes the result to the destination register. It can optionally update
   * the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class SBC_r : public UpdatePSRSubWithCarryOp, public ConditionPassedOp, public
-  DecodeImmShiftOp {
+  class SBC_r : public DecodeImmShiftOp, public UpdatePSRSubWithCarryOp, public
+  ConditionPassedOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     SBC_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SBC_r() {}
 
 
@@ -1168,10 +1238,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1193,12 +1264,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief SBC
+  * @brief SBC/SUBS PC
   *
   * Subtract with Carry subtracts the NOT(carry) flag and either an immediate
   * value, a register value, or a shifted register value from a register value,
   * and writes the result to the destination register. It can optionally update
   * the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class SBC_sr : public DecodeRegShiftOp, public UpdatePSRSubWithCarryOp, public
   ConditionPassedOp {
@@ -1207,7 +1284,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SBC_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SBC_sr() {}
 
 
@@ -1234,6 +1311,7 @@ namespace core_armcortexa9_funclt {
     bool carry;
     int operand1;
     int operand2;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1256,21 +1334,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief RSB
+  * @brief RSB/SUBS PC
   *
   * Reverse Subtract subtracts a register value from either an immediate value,
   * another register value, or a shifted register value, and writes the result
   * to the destination register. It can optionally update the condition flags
   * based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class RSB_i : public UpdatePSRSubOp, public ConditionPassedOp, public ARMExpandImmOp
+  class RSB_i : public ARMExpandImmOp, public UpdatePSRSubOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     RSB_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RSB_i() {}
 
 
@@ -1293,10 +1377,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1316,21 +1401,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief RSB
+  * @brief RSB/SUBS PC
   *
   * Reverse Subtract subtracts a register value from either an immediate value,
   * another register value, or a shifted register value, and writes the result
   * to the destination register. It can optionally update the condition flags
   * based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class RSB_r : public UpdatePSRSubOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class RSB_r : public DecodeImmShiftOp, public UpdatePSRSubOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     RSB_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RSB_r() {}
 
 
@@ -1353,10 +1444,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1378,12 +1470,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief RSB
+  * @brief RSB/SUBS PC
   *
   * Reverse Subtract subtracts a register value from either an immediate value,
   * another register value, or a shifted register value, and writes the result
   * to the destination register. It can optionally update the condition flags
   * based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class RSB_sr : public DecodeRegShiftOp, public UpdatePSRSubOp, public ConditionPassedOp
   {
@@ -1392,7 +1490,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     RSB_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RSB_sr() {}
 
 
@@ -1419,6 +1517,7 @@ namespace core_armcortexa9_funclt {
     bool carry;
     int operand1;
     int operand2;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1441,21 +1540,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief RSC
+  * @brief RSC/SUBS PC
   *
   * Reverse Subtract with Carry subtracts a register value and the NOT(carry)
   * flag from either an immediate value, a register value, or a shifted register
   * value, and writes the result to the destination register. It can optionally
   * update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class RSC_i : public UpdatePSRSubWithCarryOp, public ConditionPassedOp, public
-  ARMExpandImmOp {
+  class RSC_i : public ARMExpandImmOp, public UpdatePSRSubWithCarryOp, public
+  ConditionPassedOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     RSC_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RSC_i() {}
 
 
@@ -1478,10 +1583,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1501,21 +1607,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief RSC
+  * @brief RSC/SUBS PC
   *
   * Reverse Subtract with Carry subtracts a register value and the NOT(carry)
   * flag from either an immediate value, a register value, or a shifted register
   * value, and writes the result to the destination register. It can optionally
   * update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class RSC_r : public UpdatePSRSubWithCarryOp, public ConditionPassedOp, public
-  DecodeImmShiftOp {
+  class RSC_r : public DecodeImmShiftOp, public UpdatePSRSubWithCarryOp, public
+  ConditionPassedOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     RSC_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RSC_r() {}
 
 
@@ -1538,10 +1650,11 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
+    unsigned operand;
+    bool carry;
     int operand1;
     int operand2;
-    bool carry;
-    unsigned operand;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1563,12 +1676,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief RSC
+  * @brief RSC/SUBS PC
   *
   * Reverse Subtract with Carry subtracts a register value and the NOT(carry)
   * flag from either an immediate value, a register value, or a shifted register
   * value, and writes the result to the destination register. It can optionally
   * update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class RSC_sr : public DecodeRegShiftOp, public UpdatePSRSubWithCarryOp, public
   ConditionPassedOp {
@@ -1577,7 +1696,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     RSC_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RSC_sr() {}
 
 
@@ -1604,6 +1723,7 @@ namespace core_armcortexa9_funclt {
     bool carry;
     int operand1;
     int operand2;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -1641,7 +1761,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USHQADD(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USHQADD() {}
 
 
@@ -1703,7 +1823,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USHQSUB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USHQSUB() {}
 
 
@@ -1760,7 +1880,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USADA8(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USADA8() {}
 
 
@@ -1817,7 +1937,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USXTAHB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USXTAHB() {}
 
 
@@ -1875,7 +1995,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USHQASX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USHQASX() {}
 
 
@@ -1934,7 +2054,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USHQSAX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USHQSAX() {}
 
 
@@ -1990,7 +2110,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USSAT(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USSAT() {}
 
 
@@ -2049,7 +2169,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USSAT16(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USSAT16() {}
 
 
@@ -2105,7 +2225,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     QDADDSUB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~QDADDSUB() {}
 
 
@@ -2163,7 +2283,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MUL(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MUL() {}
 
 
@@ -2186,7 +2306,7 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    sc_dt::uint64 result;
+    long long result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -2227,7 +2347,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SMMUL(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SMMUL() {}
 
 
@@ -2277,7 +2397,7 @@ namespace core_armcortexa9_funclt {
   * to produce a 64-bit result. It can optionally update the condition flags
   * based on the result.
   * UMLAL/SMLAL: 64 = 64 + 32 x 32
-  * Unsigned/Signed Multiply Accumulate Long multiplinties two unsigned/signed
+  * Unsigned/Signed Multiply Accumulate Long multiplies two unsigned/signed
   * 32-bit values, and accumulates the product with a 64-bit value to produce a
   * 64-bit result. It can optionally update the condition flags based on the
   * result.
@@ -2289,7 +2409,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MULL(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MULL() {}
 
 
@@ -2312,7 +2432,7 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    sc_dt::uint64 result;
+    long long result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -2349,7 +2469,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UMAAL(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~UMAAL() {}
 
 
@@ -2423,7 +2543,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SMULBW(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SMULBW() {}
 
 
@@ -2489,7 +2609,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SMMULD(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SMMULD() {}
 
 
@@ -2546,7 +2666,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     DIV(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~DIV() {}
 
 
@@ -2588,21 +2708,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief AND
+  * @brief AND/SUBS PC
   *
   * And performs a bitwise AND of a register value and either an immediate
   * value, another register value, or a shifted register value, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the results.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class AND_i : public UpdatePSRBitOp, public ConditionPassedOp, public ARMExpandImmOp
+  class AND_i : public ARMExpandImmOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     AND_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~AND_i() {}
 
 
@@ -2625,9 +2751,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -2647,21 +2773,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief AND
+  * @brief AND/SUBS PC
   *
   * And performs a bitwise AND of a register value and either an immediate
   * value, another register value, or a shifted register value, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the results.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class AND_r : public UpdatePSRBitOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class AND_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     AND_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~AND_r() {}
 
 
@@ -2684,9 +2816,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -2708,12 +2840,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief AND
+  * @brief AND/SUBS PC
   *
   * And performs a bitwise AND of a register value and either an immediate
   * value, another register value, or a shifted register value, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the results.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class AND_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -2722,7 +2860,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     AND_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~AND_sr() {}
 
 
@@ -2770,21 +2908,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief EOR
+  * @brief EOR/SUBS PC
   *
   * Bitwise Exclusive OR performs a bitwise XOR of a register value and either
   * an immediate value, another register value, or a shifted register value, and
   * writes the result to the destination register. It can optionally update the
   * condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class EOR_i : public UpdatePSRBitOp, public ConditionPassedOp, public ARMExpandImmOp
+  class EOR_i : public ARMExpandImmOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     EOR_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~EOR_i() {}
 
 
@@ -2807,9 +2951,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -2829,21 +2973,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief EOR
+  * @brief EOR/SUBS PC
   *
   * Bitwise Exclusive OR performs a bitwise XOR of a register value and either
   * an immediate value, another register value, or a shifted register value, and
   * writes the result to the destination register. It can optionally update the
   * condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class EOR_r : public UpdatePSRBitOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class EOR_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     EOR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~EOR_r() {}
 
 
@@ -2866,9 +3016,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -2890,12 +3040,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief EOR
+  * @brief EOR/SUBS PC
   *
   * Bitwise Exclusive OR performs a bitwise XOR of a register value and either
   * an immediate value, another register value, or a shifted register value, and
   * writes the result to the destination register. It can optionally update the
   * condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class EOR_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -2904,7 +3060,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     EOR_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~EOR_sr() {}
 
 
@@ -2952,11 +3108,17 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief MVN
+  * @brief MVN/SUBS PC
   *
   * Not writes the bitwise inverse of either an immediate value, a register
   * value, or a shifted register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class MVN_i : public ARMExpandImmOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -2965,7 +3127,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MVN_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MVN_i() {}
 
 
@@ -3010,11 +3172,17 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief MVN
+  * @brief MVN/SUBS PC
   *
   * Not writes the bitwise inverse of either an immediate value, a register
   * value, or a shifted register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class MVN_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3023,7 +3191,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MVN_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MVN_r() {}
 
 
@@ -3070,11 +3238,17 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief MVN
+  * @brief MVN/SUBS PC
   *
   * Not writes the bitwise inverse of either an immediate value, a register
   * value, or a shifted register value, and writes the result to the destination
   * register. It can optionally update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class MVN_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3083,7 +3257,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MVN_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MVN_sr() {}
 
 
@@ -3131,21 +3305,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ORR
+  * @brief ORR/SUBS PC
   *
   * Or performs a bitwise OR of a register value and either an immediate value,
   * another register value, or a shifted register value, and writes the result
   * to the destination register. It can optionally update the condition flags
   * based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class ORR_i : public UpdatePSRBitOp, public ConditionPassedOp, public ARMExpandImmOp
+  class ORR_i : public ARMExpandImmOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     ORR_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ORR_i() {}
 
 
@@ -3168,9 +3348,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -3190,21 +3370,27 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ORR
+  * @brief ORR/SUBS PC
   *
   * Or performs a bitwise OR of a register value and either an immediate value,
   * another register value, or a shifted register value, and writes the result
   * to the destination register. It can optionally update the condition flags
   * based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class ORR_r : public UpdatePSRBitOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class ORR_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     ORR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ORR_r() {}
 
 
@@ -3227,9 +3413,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -3251,12 +3437,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ORR
+  * @brief ORR/SUBS PC
   *
   * Or performs a bitwise OR of a register value and either an immediate value,
   * another register value, or a shifted register value, and writes the result
   * to the destination register. It can optionally update the condition flags
   * based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ORR_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3265,7 +3457,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ORR_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ORR_sr() {}
 
 
@@ -3325,7 +3517,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     TEQ_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~TEQ_i() {}
 
 
@@ -3380,7 +3572,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     TEQ_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~TEQ_r() {}
 
 
@@ -3437,7 +3629,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     TEQ_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~TEQ_sr() {}
 
 
@@ -3495,7 +3687,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     TST_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~TST_i() {}
 
 
@@ -3550,7 +3742,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     TST_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~TST_r() {}
 
 
@@ -3607,7 +3799,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     TST_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~TST_sr() {}
 
 
@@ -3653,12 +3845,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ASR
+  * @brief ASR/SUBS PC
   *
   * Arithmetic Shift Right shifts a register value right by an immediate number
   * of bits or a value specified in a register, shifting in copies of its sign
   * bit, and writes the result to the destination register. It can optionally
   * update update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ASR_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3667,7 +3865,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ASR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ASR_r() {}
 
 
@@ -3714,12 +3912,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ASR
+  * @brief ASR/SUBS PC
   *
   * Arithmetic Shift Right shifts a register value right by an immediate number
   * of bits or a value specified in a register, shifting in copies of its sign
   * bit, and writes the result to the destination register. It can optionally
   * update update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ASR_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3728,7 +3932,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ASR_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ASR_sr() {}
 
 
@@ -3776,12 +3980,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief LSR
+  * @brief LSR/SUBS PC
   *
   * Logical Shift Right shifts a register value right by an immediate number of
   * bits or a value specified in a register, shifting in zeros, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class LSR_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3790,7 +4000,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LSR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LSR_r() {}
 
 
@@ -3837,12 +4047,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief LSR
+  * @brief LSR/SUBS PC
   *
   * Logical Shift Right shifts a register value right by an immediate number of
   * bits or a value specified in a register, shifting in zeros, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class LSR_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3851,7 +4067,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LSR_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LSR_sr() {}
 
 
@@ -3899,12 +4115,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief LSL
+  * @brief LSL/SUBS PC
   *
   * Logical Shift Left shifts a register value right by an immediate number of
   * bits or a value specified in a register, shifting in zeros, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class LSL_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3913,7 +4135,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LSL_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LSL_r() {}
 
 
@@ -3960,12 +4182,18 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief LSL
+  * @brief LSL/SUBS PC
   *
   * Logical Shift Left shifts a register value right by an immediate number of
   * bits or a value specified in a register, shifting in zeros, and writes the
   * result to the destination register. It can optionally update the condition
   * flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class LSL_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -3974,7 +4202,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LSL_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LSL_sr() {}
 
 
@@ -4022,13 +4250,19 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ROR/RRX
+  * @brief ROR/RRX/SUBS PC
   *
   * Rotate Right rotates a register value by an immediate number of bits or a
   * value specified in a register. The bits that are rotated off the right end
   * are inserted into the vacated bit positions on the left, and the result is
   * written to the destination register. It can optionally update the condition
   * flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ROR_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -4037,7 +4271,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ROR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ROR_r() {}
 
 
@@ -4084,13 +4318,19 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief ROR/RRX
+  * @brief ROR/RRX/SUBS PC
   *
   * Rotate Right rotates a register value by an immediate number of bits or a
   * value specified in a register. The bits that are rotated off the right end
   * are inserted into the vacated bit positions on the left, and the result is
   * written to the destination register. It can optionally update the condition
   * flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class ROR_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -4099,7 +4339,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ROR_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ROR_sr() {}
 
 
@@ -4160,7 +4400,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BFCI(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BFCI() {}
 
 
@@ -4199,20 +4439,26 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief BIC
+  * @brief BIC/SUBS PC
   *
   * Bitwise Bit Clear performs a bitwise AND of a register value and the complement
   * of an immediate value, and writes the result to the destination register. It
   * can optionally update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class BIC_i : public UpdatePSRBitOp, public ConditionPassedOp, public ARMExpandImmOp
+  class BIC_i : public ARMExpandImmOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     BIC_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BIC_i() {}
 
 
@@ -4235,9 +4481,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -4257,20 +4503,26 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief BIC
+  * @brief BIC/SUBS PC
   *
   * Bitwise Bit Clear performs a bitwise AND of a register value and the complement
   * of an immediate value, and writes the result to the destination register. It
   * can optionally update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class BIC_r : public UpdatePSRBitOp, public ConditionPassedOp, public DecodeImmShiftOp
+  class BIC_r : public DecodeImmShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     BIC_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BIC_r() {}
 
 
@@ -4293,9 +4545,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -4317,11 +4569,17 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief BIC
+  * @brief BIC/SUBS PC
   *
   * Bitwise Bit Clear performs a bitwise AND of a register value and the complement
   * of an immediate value, and writes the result to the destination register. It
   * can optionally update the condition flags based on the result.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class BIC_sr : public DecodeRegShiftOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
@@ -4330,7 +4588,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BIC_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BIC_sr() {}
 
 
@@ -4389,7 +4647,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CLZ(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CLZ() {}
 
 
@@ -4441,7 +4699,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PKH(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PKH() {}
 
 
@@ -4498,7 +4756,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     RBIT(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RBIT() {}
 
 
@@ -4549,7 +4807,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     REV(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~REV() {}
 
 
@@ -4601,7 +4859,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     REV16(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~REV16() {}
 
 
@@ -4653,7 +4911,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     REVSH(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~REVSH() {}
 
 
@@ -4706,7 +4964,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     USBFX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~USBFX() {}
 
 
@@ -4757,7 +5015,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SEL(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SEL() {}
 
 
@@ -4801,7 +5059,7 @@ namespace core_armcortexa9_funclt {
   * @brief CMN
   *
   * Compare Negative adds a register value and an immediate value. Updates the
-  * condition flags based on the results, then discards the results.
+  * condition flags based on the result, then discards the result.
   */
   class CMN_i : public ARMExpandImmOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -4809,7 +5067,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CMN_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CMN_i() {}
 
 
@@ -4855,7 +5113,7 @@ namespace core_armcortexa9_funclt {
   * @brief CMN
   *
   * Compare Negative adds a register value and an immediate value. Updates the
-  * condition flags based on the results, then discards the results.
+  * condition flags based on the result, then discards the result.
   */
   class CMN_r : public DecodeImmShiftOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -4863,7 +5121,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CMN_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CMN_r() {}
 
 
@@ -4911,7 +5169,7 @@ namespace core_armcortexa9_funclt {
   * @brief CMN
   *
   * Compare Negative adds a register value and an immediate value. Updates the
-  * condition flags based on the results, then discards the results.
+  * condition flags based on the result, then discards the result.
   */
   class CMN_sr : public DecodeRegShiftOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -4919,7 +5177,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CMN_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CMN_sr() {}
 
 
@@ -4968,7 +5226,7 @@ namespace core_armcortexa9_funclt {
   * @brief CMP
   *
   * Compare Positive subtracts an immediate value from a register value. Updates
-  * the condition flags based on the results, then discards the results.
+  * the condition flags based on the result, then discards the result.
   */
   class CMP_i : public ARMExpandImmOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -4976,7 +5234,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CMP_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CMP_i() {}
 
 
@@ -5022,7 +5280,7 @@ namespace core_armcortexa9_funclt {
   * @brief CMP
   *
   * Compare Positive subtracts an immediate value from a register value. Updates
-  * the condition flags based on the results, then discards the results.
+  * the condition flags based on the result, then discards the result.
   */
   class CMP_r : public DecodeImmShiftOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -5030,7 +5288,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CMP_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CMP_r() {}
 
 
@@ -5078,7 +5336,7 @@ namespace core_armcortexa9_funclt {
   * @brief CMP
   *
   * Compare Positive subtracts an immediate value from a register value. Updates
-  * the condition flags based on the results, then discards the results.
+  * the condition flags based on the result, then discards the result.
   */
   class CMP_sr : public DecodeRegShiftOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -5086,7 +5344,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CMP_sr(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CMP_sr() {}
 
 
@@ -5147,7 +5405,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDR_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDR_i() {}
 
 
@@ -5208,7 +5466,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDR_r() {}
 
 
@@ -5272,7 +5530,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDREX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDREX() {}
 
 
@@ -5329,7 +5587,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRB_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRB_i() {}
 
 
@@ -5391,7 +5649,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRB_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRB_r() {}
 
 
@@ -5455,7 +5713,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDREXB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDREXB() {}
 
 
@@ -5512,7 +5770,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRSB_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRSB_i() {}
 
 
@@ -5575,7 +5833,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRSB_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRSB_r() {}
 
 
@@ -5638,7 +5896,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRH_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRH_i() {}
 
 
@@ -5701,7 +5959,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRH_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRH_r() {}
 
 
@@ -5763,7 +6021,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDREXH(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDREXH() {}
 
 
@@ -5820,7 +6078,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRSH_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRSH_i() {}
 
 
@@ -5883,7 +6141,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRSH_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRSH_r() {}
 
 
@@ -5946,7 +6204,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRD_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRD_i() {}
 
 
@@ -6009,7 +6267,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDRD_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDRD_r() {}
 
 
@@ -6071,7 +6329,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDREXD(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDREXD() {}
 
 
@@ -6127,7 +6385,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STR_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STR_i() {}
 
 
@@ -6188,7 +6446,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STR_r() {}
 
 
@@ -6249,7 +6507,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STREX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STREX() {}
 
 
@@ -6303,7 +6561,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STRB_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STRB_i() {}
 
 
@@ -6362,7 +6620,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STRB_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STRB_r() {}
 
 
@@ -6423,7 +6681,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STREXB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STREXB() {}
 
 
@@ -6477,7 +6735,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STRH_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STRH_i() {}
 
 
@@ -6537,7 +6795,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STRH_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STRH_r() {}
 
 
@@ -6596,7 +6854,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STREXH(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STREXH() {}
 
 
@@ -6644,14 +6902,14 @@ namespace core_armcortexa9_funclt {
   * two words from two registers to memory. It can use offset, post-indexed, or
   * pre-indexed addressing.
   */
-  class STRD : public ConditionPassedOp, public LSOffsetOp {
+  class STRD_i : public ConditionPassedOp, public LSOffsetOp {
     /// @name Constructors and Destructors
     /// @{
 
     public:
-    STRD(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
-    virtual ~STRD() {}
+    STRD_i(
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+    virtual ~STRD_i() {}
 
 
     /// @} Constructors and Destructors
@@ -6692,7 +6950,7 @@ namespace core_armcortexa9_funclt {
     /// @} Data
     // -------------------------------------------------------------------------
 
-  }; // class STRD
+  }; // class STRD_i
 
   // ***************************************************************************
 
@@ -6710,7 +6968,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STRD_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STRD_r() {}
 
 
@@ -6769,7 +7027,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STREXD(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STREXD() {}
 
 
@@ -6830,7 +7088,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDM(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDM() {}
 
 
@@ -6890,7 +7148,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDMIB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDMIB() {}
 
 
@@ -6950,7 +7208,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDMDA(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDMDA() {}
 
 
@@ -7010,7 +7268,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDMDB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDMDB() {}
 
 
@@ -7066,7 +7324,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     POP_single(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~POP_single() {}
 
 
@@ -7115,7 +7373,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     POP_block(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~POP_block() {}
 
 
@@ -7170,7 +7428,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STM(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STM() {}
 
 
@@ -7228,7 +7486,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STMIB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STMIB() {}
 
 
@@ -7285,7 +7543,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STMDA(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STMDA() {}
 
 
@@ -7342,7 +7600,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STMDB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STMDB() {}
 
 
@@ -7398,7 +7656,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PUSH_single(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PUSH_single() {}
 
 
@@ -7447,7 +7705,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PUSH_block(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PUSH_block() {}
 
 
@@ -7485,19 +7743,25 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief MOV
+  * @brief MOV/SUBS PC
   *
   * Move writes either an immediate or a register value to the destination
   * register. It can optionally update the condition flags based on the value.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
-  class MOV_i : public UpdatePSRBitOp, public ConditionPassedOp, public ARMExpandImmOp
+  class MOV_i : public ARMExpandImmOp, public UpdatePSRBitOp, public ConditionPassedOp
   {
     /// @name Constructors and Destructors
     /// @{
 
     public:
     MOV_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MOV_i() {}
 
 
@@ -7520,9 +7784,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     protected:
-    int result;
-    bool carry;
     unsigned operand;
+    bool carry;
+    int result;
 
     private:
     trap::RegisterAlias<unsigned> rd;
@@ -7542,10 +7806,16 @@ namespace core_armcortexa9_funclt {
   // ***************************************************************************
 
   /**
-  * @brief MOV
+  * @brief MOV/SUBS PC
   *
   * Move writes either an immediate or a register value to the destination
   * register. It can optionally update the condition flags based on the value.
+  * SUBS PC provides an exception return without the use of the stack. It
+  * subtracts the immediate constant from LR, branches to the resulting address,
+  * and also copies the SPSR to the CPSR. The ARM instruction set contains
+  * similar instructions based on other data-processing operations, or with a
+  * wider range of operands, or both. ARM deprecates using these other instructions,
+  * except for MOVS PC, LR.
   */
   class MOV_r : public UpdatePSRBitOp, public ConditionPassedOp {
     /// @name Constructors and Destructors
@@ -7553,7 +7823,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MOV_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MOV_r() {}
 
 
@@ -7607,7 +7877,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MOVW(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MOVW() {}
 
 
@@ -7660,7 +7930,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MOVT(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MOVT() {}
 
 
@@ -7723,7 +7993,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SWP(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SWP() {}
 
 
@@ -7778,7 +8048,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MRS(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MRS() {}
 
 
@@ -7838,7 +8108,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MSR_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MSR_i() {}
 
 
@@ -7904,7 +8174,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MSR_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MSR_r() {}
 
 
@@ -7963,7 +8233,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     B(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~B() {}
 
 
@@ -8007,7 +8277,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BL(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BL() {}
 
 
@@ -8052,7 +8322,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BX() {}
 
 
@@ -8104,7 +8374,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BLX_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BLX_i() {}
 
 
@@ -8150,7 +8420,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BLX_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BLX_r() {}
 
 
@@ -8203,7 +8473,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BXJ(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BXJ() {}
 
 
@@ -8254,7 +8524,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     BKPT(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~BKPT() {}
 
 
@@ -8306,7 +8576,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CLREX(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CLREX() {}
 
 
@@ -8357,7 +8627,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CPS(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CPS() {}
 
 
@@ -8411,7 +8681,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     DBG(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~DBG() {}
 
 
@@ -8460,7 +8730,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     DMB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~DMB() {}
 
 
@@ -8511,7 +8781,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     DSB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~DSB() {}
 
 
@@ -8571,7 +8841,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     ISB(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~ISB() {}
 
 
@@ -8622,7 +8892,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     NOP(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~NOP() {}
 
 
@@ -8674,7 +8944,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PLI_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PLI_i() {}
 
 
@@ -8732,7 +9002,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PLI_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PLI_r() {}
 
 
@@ -8792,7 +9062,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PLD_i(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PLD_i() {}
 
 
@@ -8854,7 +9124,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     PLD_r(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~PLD_r() {}
 
 
@@ -8908,7 +9178,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     RFE(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~RFE() {}
 
 
@@ -8959,7 +9229,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SETEND(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SETEND() {}
 
 
@@ -9008,7 +9278,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SEV(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SEV() {}
 
 
@@ -9056,7 +9326,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SRS(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SRS() {}
 
 
@@ -9112,7 +9382,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SVC(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SVC() {}
 
 
@@ -9156,7 +9426,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     UDF(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~UDF() {}
 
 
@@ -9206,7 +9476,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     WFE(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~WFE() {}
 
 
@@ -9254,7 +9524,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     WFI(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~WFI() {}
 
 
@@ -9304,7 +9574,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     YIELD(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~YIELD() {}
 
 
@@ -9351,7 +9621,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     SMC(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~SMC() {}
 
 
@@ -9404,7 +9674,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     CDP(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~CDP() {}
 
 
@@ -9458,7 +9728,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     LDC(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~LDC() {}
 
 
@@ -9513,7 +9783,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     STC(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~STC() {}
 
 
@@ -9568,7 +9838,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MCR(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MCR() {}
 
 
@@ -9622,7 +9892,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MCRR(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MCRR() {}
 
 
@@ -9676,7 +9946,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MRC(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MRC() {}
 
 
@@ -9730,7 +10000,7 @@ namespace core_armcortexa9_funclt {
 
     public:
     MRRC(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory);
     virtual ~MRRC() {}
 
 
@@ -9782,8 +10052,8 @@ namespace core_armcortexa9_funclt {
 
     public:
     IRQIntrInstruction(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory,
-    bool& IRQ);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory,
+        bool& IRQ);
     virtual ~IRQIntrInstruction() {}
 
 
@@ -9831,8 +10101,8 @@ namespace core_armcortexa9_funclt {
 
     public:
     FIQIntrInstruction(
-    Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory,
-    bool& FIQ);
+        Registers& R, MemoryInterface& instr_memory, MemoryInterface& data_memory,
+        bool& FIQ);
     virtual ~FIQIntrInstruction() {}
 
 

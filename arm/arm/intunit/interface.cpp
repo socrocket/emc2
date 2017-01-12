@@ -47,6 +47,7 @@
 #include "memory.hpp"
 
 #include <modules/abi_if.hpp>
+#include <systemc.h>
 #include <boost/circular_buffer.hpp>
 #include <modules/instruction.hpp>
 #include <vector>
@@ -62,11 +63,13 @@ core_armcortexa9_funclt::Interface::Interface(
     Registers& R,
     MemoryInterface& data_memory,
     bool& instr_executing,
+    sc_event& instr_end_event,
     boost::circular_buffer<HistoryInstrType>& history_instr_queue,
     unsigned& PROGRAM_LIMIT) :
   R(R),
   data_memory(data_memory),
   instr_executing(instr_executing),
+  instr_end_event(instr_end_event),
   history_instr_queue(history_instr_queue),
   PROGRAM_LIMIT(PROGRAM_LIMIT) {
 
@@ -354,37 +357,13 @@ void core_armcortexa9_funclt::Interface::write_char_mem(
 
 unsigned char* core_armcortexa9_funclt::Interface::get_state() const throw() {
 
-  unsigned char* cur_state = new unsigned char[296];
+  unsigned char* cur_state = new unsigned char[248];
   unsigned char* cur_state_temp = cur_state;
   *((unsigned*)cur_state_temp) = CPSR.read_force();
   cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_PFR0.read_force();
+  *((unsigned*)cur_state_temp) = SCR.read_force();
   cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_PFR1.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_DFR0.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_AFR0.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_MMFR0.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_MMFR1.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_MMFR2.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_MMFR3.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_ISAR0.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_ISAR1.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_ISAR2.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_ISAR3.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_ISAR4.read_force();
-  cur_state_temp += 4;
-  *((unsigned*)cur_state_temp) = ID_ISAR5.read_force();
+  *((unsigned*)cur_state_temp) = SCTLR.read_force();
   cur_state_temp += 4;
   *((unsigned*)cur_state_temp) = SPSR[0].read_force();
   cur_state_temp += 4;
@@ -513,33 +492,9 @@ void core_armcortexa9_funclt::Interface::set_state(unsigned char* state) throw()
   unsigned char* cur_state_temp = state;
   CPSR.write_force(*((unsigned*)cur_state_temp));
   cur_state_temp += 4;
-  ID_PFR0.write_force(*((unsigned*)cur_state_temp));
+  SCR.write_force(*((unsigned*)cur_state_temp));
   cur_state_temp += 4;
-  ID_PFR1.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_DFR0.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_AFR0.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_MMFR0.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_MMFR1.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_MMFR2.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_MMFR3.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_ISAR0.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_ISAR1.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_ISAR2.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_ISAR3.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_ISAR4.write_force(*((unsigned*)cur_state_temp));
-  cur_state_temp += 4;
-  ID_ISAR5.write_force(*((unsigned*)cur_state_temp));
+  SCTLR.write_force(*((unsigned*)cur_state_temp));
   cur_state_temp += 4;
   SPSR[0].write_force(*((unsigned*)cur_state_temp));
   cur_state_temp += 4;
@@ -685,8 +640,8 @@ bool core_armcortexa9_funclt::Interface::is_executing_instr() const throw() {
 
 void core_armcortexa9_funclt::Interface::wait_instr_end() const throw() {
 
-  while(this->instr_executing) {
-    ;
+  if (this->instr_executing) {
+    wait(this->instr_end_event);
   }
 } // wait_instr_end()
 

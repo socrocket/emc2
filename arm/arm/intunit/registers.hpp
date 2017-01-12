@@ -61,7 +61,7 @@ enum class ISMODE: unsigned {
   THUMBEE     // 0x3
 };
 
-/// Execution Modes/Privilege Levels:
+/// Execution States/Privilege Levels:
 /// PL0: USR
 /// PL1: SYS, IRQ, FIQ, UND, ABT, SVC, MON (only in Secure State)
 /// PL2: HYP (only in Non-secure State and Virtualization Extensions)
@@ -78,20 +78,8 @@ enum class EXECMODE: unsigned {
 };
 
 #define CPSR R.cpsr
-#define ID_PFR0 R.id_pfr0
-#define ID_PFR1 R.id_pfr1
-#define ID_DFR0 R.id_dfr0
-#define ID_AFR0 R.id_afr0
-#define ID_MMFR0 R.id_mmfr0
-#define ID_MMFR1 R.id_mmfr1
-#define ID_MMFR2 R.id_mmfr2
-#define ID_MMFR3 R.id_mmfr3
-#define ID_ISAR0 R.id_isar0
-#define ID_ISAR1 R.id_isar1
-#define ID_ISAR2 R.id_isar2
-#define ID_ISAR3 R.id_isar3
-#define ID_ISAR4 R.id_isar4
-#define ID_ISAR5 R.id_isar5
+#define SCR R.scr
+#define SCTLR R.sctlr
 #define MP_ID R.mp_id
 #define SPSR R.spsr
 #define RB R.rb
@@ -103,9 +91,6 @@ enum class EXECMODE: unsigned {
 #define SPSR_SVC R.spsr_svc
 #define SPSR_HYP R.spsr_hyp
 #define SPSR_MON R.spsr_mon
-#define SP R.sp
-#define LR R.lr
-#define PC R.pc
 #define SP_IRQ R.sp_irq
 #define LR_IRQ R.lr_irq
 #define R8_FIQ R.r8_fiq
@@ -125,6 +110,9 @@ enum class EXECMODE: unsigned {
 #define ELR_HYP R.elr_hyp
 #define SP_MON R.sp_mon
 #define LR_MON R.lr_mon
+#define SP R.sp
+#define LR R.lr
+#define PC R.pc
 #define REGS R.regs
 
 enum FIELDS_CPSR {
@@ -145,159 +133,48 @@ enum FIELDS_CPSR {
   CPSR_M
 }; // enum FIELDS_CPSR
 
-enum FIELDS_ID_PFR0 {
-  ID_PFR0_W7,
-  ID_PFR0_W6,
-  ID_PFR0_W5,
-  ID_PFR0_W4,
-  ID_PFR0_W3,
-  ID_PFR0_W2,
-  ID_PFR0_W1,
-  ID_PFR0_W0
-}; // enum FIELDS_ID_PFR0
+enum FIELDS_SCR {
+  SCR_UNK_SBZP,
+  SCR_SIF,
+  SCR_HCE,
+  SCR_SCD,
+  SCR_nET,
+  SCR_AW,
+  SCR_FW,
+  SCR_EA,
+  SCR_FIQ,
+  SCR_IRQ,
+  SCR_NS
+}; // enum FIELDS_SCR
 
-enum FIELDS_ID_PFR1 {
-  ID_PFR1_W7,
-  ID_PFR1_W6,
-  ID_PFR1_W5,
-  ID_PFR1_W4,
-  ID_PFR1_W3,
-  ID_PFR1_W2,
-  ID_PFR1_W1,
-  ID_PFR1_W0
-}; // enum FIELDS_ID_PFR1
-
-enum FIELDS_ID_DFR0 {
-  ID_DFR0_W7,
-  ID_DFR0_W6,
-  ID_DFR0_W5,
-  ID_DFR0_W4,
-  ID_DFR0_W3,
-  ID_DFR0_W2,
-  ID_DFR0_W1,
-  ID_DFR0_W0
-}; // enum FIELDS_ID_DFR0
-
-enum FIELDS_ID_AFR0 {
-  ID_AFR0_W7,
-  ID_AFR0_W6,
-  ID_AFR0_W5,
-  ID_AFR0_W4,
-  ID_AFR0_W3,
-  ID_AFR0_W2,
-  ID_AFR0_W1,
-  ID_AFR0_W0
-}; // enum FIELDS_ID_AFR0
-
-enum FIELDS_ID_MMFR0 {
-  ID_MMFR0_W7,
-  ID_MMFR0_W6,
-  ID_MMFR0_W5,
-  ID_MMFR0_W4,
-  ID_MMFR0_W3,
-  ID_MMFR0_W2,
-  ID_MMFR0_W1,
-  ID_MMFR0_W0
-}; // enum FIELDS_ID_MMFR0
-
-enum FIELDS_ID_MMFR1 {
-  ID_MMFR1_W7,
-  ID_MMFR1_W6,
-  ID_MMFR1_W5,
-  ID_MMFR1_W4,
-  ID_MMFR1_W3,
-  ID_MMFR1_W2,
-  ID_MMFR1_W1,
-  ID_MMFR1_W0
-}; // enum FIELDS_ID_MMFR1
-
-enum FIELDS_ID_MMFR2 {
-  ID_MMFR2_W7,
-  ID_MMFR2_W6,
-  ID_MMFR2_W5,
-  ID_MMFR2_W4,
-  ID_MMFR2_W3,
-  ID_MMFR2_W2,
-  ID_MMFR2_W1,
-  ID_MMFR2_W0
-}; // enum FIELDS_ID_MMFR2
-
-enum FIELDS_ID_MMFR3 {
-  ID_MMFR3_W7,
-  ID_MMFR3_W6,
-  ID_MMFR3_W5,
-  ID_MMFR3_W4,
-  ID_MMFR3_W3,
-  ID_MMFR3_W2,
-  ID_MMFR3_W1,
-  ID_MMFR3_W0
-}; // enum FIELDS_ID_MMFR3
-
-enum FIELDS_ID_ISAR0 {
-  ID_ISAR0_W7,
-  ID_ISAR0_W6,
-  ID_ISAR0_W5,
-  ID_ISAR0_W4,
-  ID_ISAR0_W3,
-  ID_ISAR0_W2,
-  ID_ISAR0_W1,
-  ID_ISAR0_W0
-}; // enum FIELDS_ID_ISAR0
-
-enum FIELDS_ID_ISAR1 {
-  ID_ISAR1_W7,
-  ID_ISAR1_W6,
-  ID_ISAR1_W5,
-  ID_ISAR1_W4,
-  ID_ISAR1_W3,
-  ID_ISAR1_W2,
-  ID_ISAR1_W1,
-  ID_ISAR1_W0
-}; // enum FIELDS_ID_ISAR1
-
-enum FIELDS_ID_ISAR2 {
-  ID_ISAR2_W7,
-  ID_ISAR2_W6,
-  ID_ISAR2_W5,
-  ID_ISAR2_W4,
-  ID_ISAR2_W3,
-  ID_ISAR2_W2,
-  ID_ISAR2_W1,
-  ID_ISAR2_W0
-}; // enum FIELDS_ID_ISAR2
-
-enum FIELDS_ID_ISAR3 {
-  ID_ISAR3_W7,
-  ID_ISAR3_W6,
-  ID_ISAR3_W5,
-  ID_ISAR3_W4,
-  ID_ISAR3_W3,
-  ID_ISAR3_W2,
-  ID_ISAR3_W1,
-  ID_ISAR3_W0
-}; // enum FIELDS_ID_ISAR3
-
-enum FIELDS_ID_ISAR4 {
-  ID_ISAR4_W7,
-  ID_ISAR4_W6,
-  ID_ISAR4_W5,
-  ID_ISAR4_W4,
-  ID_ISAR4_W3,
-  ID_ISAR4_W2,
-  ID_ISAR4_W1,
-  ID_ISAR4_W0
-}; // enum FIELDS_ID_ISAR4
-
-enum FIELDS_ID_ISAR5 {
-  ID_ISAR5_W7,
-  ID_ISAR5_W6,
-  ID_ISAR5_W5,
-  ID_ISAR5_W4,
-  ID_ISAR5_W3,
-  ID_ISAR5_W2,
-  ID_ISAR5_W1,
-  ID_ISAR5_W0
-}; // enum FIELDS_ID_ISAR5
+enum FIELDS_SCTLR {
+  SCTLR_B31,
+  SCTLR_TE,
+  SCTLR_AFE,
+  SCTLR_TRE,
+  SCTLR_NMFI,
+  SCTLR_B26,
+  SCTLR_EE,
+  SCTLR_VE,
+  SCTLR_B2223,
+  SCTLR_FI,
+  SCTLR_UWXN,
+  SCTLR_WXN,
+  SCTLR_B18,
+  SCTLR_HA,
+  SCTLR_B1516,
+  SCTLR_RR,
+  SCTLR_V,
+  SCTLR_I,
+  SCTLR_Z,
+  SCTLR_SW,
+  SCTLR_B69,
+  SCTLR_CP15BEN,
+  SCTLR_B34,
+  SCTLR_C,
+  SCTLR_A,
+  SCTLR_M
+}; // enum FIELDS_SCTLR
 
 enum FIELDS_SPSR {
   SPSR_N,
@@ -332,8 +209,7 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     public:
-    Registers(
-    unsigned MPROC_ID, unsigned ENTRY_POINT);
+    Registers(unsigned MPROC_ID, unsigned ENTRY_POINT);
 
     /// @} Constructors and Destructors
     // -------------------------------------------------------------------------
@@ -346,8 +222,8 @@ namespace core_armcortexa9_funclt {
     bool write_dbg(const unsigned& data);
     bool write_force(const unsigned& data);
     void execute_callbacks(
-    const scireg_ns::scireg_callback_type& type, const uint32_t& offset = 0,
-    const uint32_t& size = 0);
+        const scireg_ns::scireg_callback_type& type, const uint32_t& offset = 0,
+        const uint32_t& size = 0);
     void set_stage(unsigned stage);
     void unset_stage();
     void clock_cycle();
@@ -363,20 +239,8 @@ namespace core_armcortexa9_funclt {
 
     public:
     trap::Register<unsigned> cpsr;
-    trap::Register<unsigned> id_pfr0;
-    trap::Register<unsigned> id_pfr1;
-    trap::Register<unsigned> id_dfr0;
-    trap::Register<unsigned> id_afr0;
-    trap::Register<unsigned> id_mmfr0;
-    trap::Register<unsigned> id_mmfr1;
-    trap::Register<unsigned> id_mmfr2;
-    trap::Register<unsigned> id_mmfr3;
-    trap::Register<unsigned> id_isar0;
-    trap::Register<unsigned> id_isar1;
-    trap::Register<unsigned> id_isar2;
-    trap::Register<unsigned> id_isar3;
-    trap::Register<unsigned> id_isar4;
-    trap::Register<unsigned> id_isar5;
+    trap::Register<unsigned> scr;
+    trap::Register<unsigned> sctlr;
     trap::Register<unsigned> mp_id;
     trap::Register<unsigned> spsr[7];
     trap::Register<unsigned> rb[35];
@@ -388,9 +252,6 @@ namespace core_armcortexa9_funclt {
     trap::RegisterAlias<unsigned> spsr_svc;
     trap::RegisterAlias<unsigned> spsr_hyp;
     trap::RegisterAlias<unsigned> spsr_mon;
-    trap::RegisterAlias<unsigned> sp;
-    trap::RegisterAlias<unsigned> lr;
-    trap::RegisterAlias<unsigned> pc;
     trap::RegisterAlias<unsigned> sp_irq;
     trap::RegisterAlias<unsigned> lr_irq;
     trap::RegisterAlias<unsigned> r8_fiq;
@@ -410,6 +271,9 @@ namespace core_armcortexa9_funclt {
     trap::RegisterAlias<unsigned> elr_hyp;
     trap::RegisterAlias<unsigned> sp_mon;
     trap::RegisterAlias<unsigned> lr_mon;
+    trap::RegisterAlias<unsigned> sp;
+    trap::RegisterAlias<unsigned> lr;
+    trap::RegisterAlias<unsigned> pc;
     trap::RegisterAlias<unsigned> regs[16];
 
     /// @} Data

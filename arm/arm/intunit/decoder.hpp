@@ -59,8 +59,7 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     public:
-    CacheElem(
-    Instruction* instr, unsigned count);
+    CacheElem(Instruction* instr, unsigned count);
     CacheElem();
 
     /// @} Constructors and Destructors

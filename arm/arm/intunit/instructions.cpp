@@ -50,7 +50,6 @@
 #include <common/report.hpp>
 #include <string>
 #include <modules/register.hpp>
-#include <systemc.h>
 #include <sstream>
 
 
@@ -119,13 +118,15 @@ void core_armcortexa9_funclt::Instruction::BXWritePC(unsigned addr) {
   if (CurrentInstrSet() != 0x3) {
     // ARM/Thumb/Jazelle -> Thumb
     if (addr & 0x1) {
+      /* TODO:
       CPSR[CPSR_T] = 0x1;
       CPSR[CPSR_J] = 0x0;
-      PC.update_alias(REGS[15], 4);
+      REGS[15].update_alias(RB[15], 4); */
+      THROW_WARNING("Thumb Instruction Set unimplemented.");
       // ARM/Thumb/Jazelle -> ARM
     } else if (!(addr & 0x2)) {
       CPSR[CPSR_J] = CPSR[CPSR_T] = 0x0;
-      PC.update_alias(REGS[15], 8);
+      REGS[15].update_alias(RB[15], 8);
     }
   }
 
@@ -143,14 +144,18 @@ unsigned core_armcortexa9_funclt::Instruction::Rmode(
 
   if ((reg_index < 0) || (reg_index > 14))
   THROW_EXCEPTION("Invalid register " << reg_index << ".");
-  /*if (!valid_psr_mode(mode))
+  /* TODO:
+  if (!valid_psr_mode(mode))
   THROW_EXCEPTION("Invalid execution mode " << mode << ".");
+
   if ((mode == (unsigned)EXECMODE::MON) && !IsSecure())
   THROW_EXCEPTION("Attempted use of Monitor mode in non-secure state.");
+
   if ((mode == (unsigned)EXECMODE::FIQ) && !IsSecure() && NSACR[NSACR_RFR] == 1)
-  THROW_EXCEPTION("Attempted use of FIQ registers reserved by the Security Extensions.");*/
-  /*TODO: This should be added as a pre-write callback for SP.
-  if ((reg_index == 13) && (value & 0x3) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
+  THROW_EXCEPTION("Attempted use of FIQ registers reserved by the Security Extensions.");
+
+  if ((reg_index == 13) && write && (value & 0x3) && (CurrentInstrSet() !=
+  (unsigned)(ISMODE::ARM)))
   THROW_EXCEPTION("Writes of non word-aligned values to SP are only permitted in ARM state.");*/
 
   if ((reg_index > 12) && (reg_index < 15)) {
@@ -182,6 +187,8 @@ unsigned core_armcortexa9_funclt::Instruction::Rmode(
       break;
       case (unsigned)EXECMODE::HYP:
       // RB[31-32]: SP_hyp, ELR_hyp
+      // NOTE: HYP mode has access to LR_usr (as LR) as well as ELR_hyp
+      if (reg_index == 13)
       reg_index += 18;
       break;
       case (unsigned)EXECMODE::UND:
@@ -200,15 +207,15 @@ unsigned core_armcortexa9_funclt::Instruction::Rmode(
   }
 
   if (write) {
-    REGS[reg_index] = value;
+    RB[reg_index] = value;
     return 0;
-  } else return (REGS[reg_index]);
+  } else return (RB[reg_index]);
 } // Rmode()
 
 // -----------------------------------------------------------------------------
 
 bool core_armcortexa9_funclt::Instruction::valid_banked_reg_access(unsigned
-sys_mode) {
+sys_mode) const {
 
 
   unsigned cur_mode = CPSR[CPSR_M];
@@ -240,7 +247,8 @@ sys_mode) {
     } break;
     case 0x1:
     // Banked FIQ registers
-    if (((sys_mode & 0x7) == 0x7) || (cur_mode == (unsigned)EXECMODE::FIQ)) {
+    if (((sys_mode & 0x7) == 0x7) || (cur_mode == (unsigned)EXECMODE::FIQ) /*
+    TODO: || ((NSACR[NSACR_RFR] == 1) && (!IsSecure())) */) {
       result = false;
     } break;
     case 0x2:
@@ -275,16 +283,18 @@ sys_mode) {
       case 0x3:
       // Undefined sys_mode
       result = false;
+      break;
       case 0x4:
       case 0x5:
-      // Banked LR_MON / SP_MON registers: Inaccessible in non-secure state
-      if ((cur_mode == (unsigned)EXECMODE::MON) || (cur_mode == (unsigned)EXECMODE::HYP))
-      result = false;
+      // Banked LR_MON / SP_MON registers: Inaccessible in non-secure state or
+      // MON mode
+      if (!IsSecure() || (cur_mode == (unsigned)EXECMODE::MON)) result = false;
       break;
       case 0x6:
       // Banked ELR_HYP register: Inaccessible in non-secure state; accessible
       // only from MON mode in secure state
-      if (cur_mode != (unsigned)EXECMODE::HYP) result = false;
+      if ((cur_mode != (unsigned)EXECMODE::MON) && (cur_mode != (unsigned)EXECMODE::HYP))
+      result = false;
       break;
       case 0x7:
       // Banked SP_HYP register: Inaccessible in non-secure state; accessible
@@ -345,7 +355,8 @@ void core_armcortexa9_funclt::Instruction::update_alias(
     case (unsigned)EXECMODE::HYP:
     // RB[31-32]: SP_hyp, ELR_hyp
     REGS[13].update_alias(RB[31]);
-    REGS[14].update_alias(RB[32]);
+    // NOTE: HYP mode has access to LR_usr (as LR) as well as ELR_hyp
+    //REGS[14].update_alias(RB[32]);
     break;
     case (unsigned)EXECMODE::UND:
     // RB[25-26]: SP_und, LR_und
@@ -368,12 +379,12 @@ void core_armcortexa9_funclt::Instruction::update_alias(
 
 // -----------------------------------------------------------------------------
 
-int core_armcortexa9_funclt::Instruction::get_spsr_idx(unsigned mode) {
+int core_armcortexa9_funclt::Instruction::get_spsr_idx(unsigned mode) const {
 
 
   /// Gives access to the PSRs.
   switch(mode) {
-    //return ((&SPSR.<mode>.get_reg() - SPSR) / sizeof(SPSR[0]));
+    // return ((&SPSR.<mode>.get_reg() - SPSR) / sizeof(SPSR[0]));
     case (unsigned)EXECMODE::USR:
     case (unsigned)EXECMODE::SYS:
     return -1;
@@ -442,7 +453,7 @@ unsigned core_armcortexa9_funclt::Instruction::psr_mask(
     unsigned byte_mask,
     unsigned cur_mode,
     bool is_spsr,
-    bool is_exception) {
+    bool is_exception) const {
 
 
   /// Gives access to the PSRs.
@@ -504,7 +515,7 @@ unsigned core_armcortexa9_funclt::Instruction::psr_mask(
         // Check for attempts to enter modes only permitted in Secure state from
         // Non-secure state. These are Monitor cur_mode, and FIQ cur_mode if the
         // Security Extensions have reserved it.
-        /* && (IsSecure()
+        /* TODO: && (IsSecure()
         || ((next_mode != (unsigned)EXECMODE::MON)
         && !((next_mode == (unsigned)EXECMODE::FIQ) && NSACR[NSACR_RFR])))
         // There is no Hyp cur_mode in Secure state.
@@ -527,7 +538,7 @@ unsigned core_armcortexa9_funclt::Instruction::psr_mask(
 
 // -----------------------------------------------------------------------------
 
-unsigned core_armcortexa9_funclt::Instruction::CurrentInstrSet() {
+unsigned core_armcortexa9_funclt::Instruction::CurrentInstrSet() const {
 
 
   /// Returns the current instruction set.
@@ -539,7 +550,7 @@ unsigned core_armcortexa9_funclt::Instruction::CurrentInstrSet() {
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::valid_psr_mode(unsigned mode) {
+bool core_armcortexa9_funclt::Instruction::valid_psr_mode(unsigned mode) const {
 
 
   /// Tests whether a 5-bit mode number corresponds to one of the permitted
@@ -554,9 +565,11 @@ bool core_armcortexa9_funclt::Instruction::valid_psr_mode(unsigned mode) {
     case (unsigned)EXECMODE::SYS:
     return true;
     case (unsigned)EXECMODE::MON:
-    return (HaveSecurityExt());
+    // TODO: return HaveSecurityExt();
+    return true;
     case (unsigned)EXECMODE::HYP:
-    return (HaveVirtExt());
+    // TODO: return HaveVirtExt();
+    return true;
     default:
     return false;
   }
@@ -568,7 +581,7 @@ void core_armcortexa9_funclt::Instruction::ITAdvance() {
 
 
   /// Advances after normal execution of an IT block instruction.
-  //unsigned IT = ((CPSR[CPSR_IT72] << 2) & 0xFC) | (CPSR[CPSR_IT10] & 0x3);
+  // unsigned IT = ((CPSR[CPSR_IT72] << 2) & 0xFC) | (CPSR[CPSR_IT10] & 0x3);
   if (!(CPSR[CPSR_IT10] || (CPSR[CPSR_IT72] & 0x1)))
   CPSR[CPSR_IT72] = CPSR[CPSR_IT10] = 0x0;
   else {
@@ -576,15 +589,15 @@ void core_armcortexa9_funclt::Instruction::ITAdvance() {
     CPSR[CPSR_IT10] = (CPSR[CPSR_IT10] << 1) & 0x2;
     CPSR[CPSR_IT72] = (CPSR[CPSR_IT72] & 0x38) | ((CPSR[CPSR_IT72] << 1) & 0x6)
     | ((CPSR[CPSR_IT10] >> 1) & 0x1);
-    //IT = (IT & 0xE0) | ((IT << 1) & 0x1F);
-    //CPSR[CPSR_IT72] = ((IT >> 2) & 0x3F);
-    //CPSR[CPSR_IT10] = (IT & 0x3);
+    // IT = (IT & 0xE0) | ((IT << 1) & 0x1F);
+    // CPSR[CPSR_IT72] = ((IT >> 2) & 0x3F);
+    // CPSR[CPSR_IT10] = (IT & 0x3);
   }
 } // ITAdvance()
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::InITBlock() {
+bool core_armcortexa9_funclt::Instruction::InITBlock() const {
 
 
   /// Tests whether the current instruction is in an IT block.
@@ -593,7 +606,7 @@ bool core_armcortexa9_funclt::Instruction::InITBlock() {
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::LastInITBlock() {
+bool core_armcortexa9_funclt::Instruction::LastInITBlock() const {
 
 
   /// Tests whether the current instruction is the last instruction of an IT
@@ -609,8 +622,8 @@ void core_armcortexa9_funclt::Instruction::AddWithCarry(
     bool carry) {
 
 
-  long long result_signed = (long long)((long long)((int)operand1) + (long
-  long)((int)operand2)) + (long long)((unsigned)carry);
+  long long result_signed = sign_extend(operand1, 32) + sign_extend(operand2,
+  32) + (unsigned)carry;
 
   // Update N (negative flag) if result is negative (bit[63]).
   CPSR[CPSR_N] = ((result_signed & 0x0000000080000000LL) != 0);
@@ -618,100 +631,113 @@ void core_armcortexa9_funclt::Instruction::AddWithCarry(
   // Update Z (zero flag) if result is 0.
   CPSR[CPSR_Z] = (result_signed == 0);
 
-  // Update C (carry flag; unsigned overflow) if operation generated a carry.
-  // Carry is only relevant for unsigned and meaningless for signed additions.
-  // We can either test result_unsigned & 0x100000000LL or XOR the MSB of
-  // operands and result_signed. The first method is easier, but we want to
-  // avoid the extra unsigned addition:
-  // Ex1:
-  //   u: 0111b (7d) + 0111b (7d)
-  //   -> u = 0 1110b (14d)
-  //   -> u & 10000b = 0
-  //   s: 0111b (7d) + 0111b (7d)
-  //   -> s = 0 1110b (14d)
-  //   -> 0 ^ 0 ^ (s & 10000b) = 0
-  // Ex2:
-  //   u: 0111b (7d) + 1000b (8d)
-  //   -> u = 0 1111b (15d)
-  //   -> u & 10000b = 0
-  //   s: 0111b (7d) + 1000b (-8d)
-  //   -> s = 1 1111b (-1d)
-  //   -> 0 ^ 1 ^ (s & 10000b) = 0
-  // Ex3:
-  //   u: 0001b (1d) + 1111b (15d)
-  //   -> u = 1 0000b (16d)
-  //   -> u & 10000b = 1
-  //   s: 0001b (1d) + 1111b (-1d)
-  //   -> s = 0 0000b (0d)
-  //   -> 0 ^ 1 ^ (s & 10000b) = 1
-  // Ex4:
-  //   u: 0001b (1d) + 1110b (14d)
-  //   -> u = 0 1111b (15d)
-  //   -> u & 10000b = 0
-  //   s: 0001b (1d) + 1110b (-2d)
-  //   -> s = 1 1111b (-1d)
-  //   -> 0 ^ 1 ^ (s & 10000b) = 0
-  // Ex5:
-  //   u: 1000b (8d)  + 1000b (8d)
-  //   -> u = 1 0000b (16d)
-  //   -> u & 10000b = 1
-  //   s: 1000b (-8d) + 1000b (-8d)
-  //   -> s = 1 0000b (-16d)
-  //   -> 1 ^ 1 ^ (s & 10000b) = 1
+  /* Carry and Overflow
+  Carry is only relevant for unsigned and meaningless for signed calculations.
+  It is interpreted as carry for additions and !borrow for subtractions.
+  1. If the addition of two unsigned numbers is a larger positive number than
+  the unsigned limit.
+  => The carry flag should be added to the next higher word, if any, to obtain
+  the correct result.
+  2. If the subtraction of two unsigned numbers does NOT require a borrow, i.e.
+  if a >= b.
+  => The !carry flag should be subtracted from the next higher word, if any, to
+  obtain the correct result.
+
+  Overflow is only relevant for signed and meaningless for unsigned calculations.
+  1. If the addition/subtraction of two signed numbers is a larger positive
+  number than the signed positive limit.
+  2. If the addition/subtraction of two signed numbers is a smaller negative
+  number than the signed negative limit.
+  => In both cases, if this is part of a multi-word addition/subtraction, the
+  flag can be ignored. For the last word, an extra bit = !MSB needs to be
+  inserted as the new MSB to obtain the correct result.
+
+  Addition Examples
+  * 0xF + 0xF = 0x1E => 0xE, carry
+  ADDU: 15 + 15 != 14 (carry)
+  ADDS: -1 + (-1) = -2
+  * 0x7 + 0x7 = 0xE, overflow
+  ADDU: 7 + 7 = 14
+  ADDS: 7 + 7 != -2 (positive overflow)
+  * 0x8 + 0x8 = 0x10 => 0x0, carry, overflow
+  ADDU: 8 + 8 != 0 (carry)
+  ADDS: -8 + (-8) != 0 (negative overflow)
+
+  Subtraction Examples
+  * 0x0 - 0x1 => 0x0 + 0xE + 1 = 0xF, !carry
+  SUBU: 0 - 1 != 15 (borrow)
+  SUBS: 0 - 1 = -1
+  * 0x0 - 0x7 => 0x0 + 0x8 + 1 = 0x9, !carry
+  SUBU: 0 - 7 != 9 (borrow)
+  SUBS: 0 - 7 = -7
+  * 0x0 - 0xF => 0x0 + 0x0 + 1 = 0x1, !carry
+  SUBU: 0 - 15 != 1 (borrow)
+  SUBS: 0 - (-1) = 1
+  * 0x7 - 0 => 0x7 + 0xF + 1 = 0x17 => 0x7, carry
+  SUBU: 7 - 0 = 7
+  SUBS: 7 - 0 = 7
+  * 0x7 - 0x8 => 0x7 + 0x7 + 1 = 0xF, !carry, overflow
+  SUBU: 7 - 8 != 15 (borrow)
+  SUBS: 7 - (-8) != -1 (positive overflow)
+  * 0x8 - 0x7 => 0x8 + 0x8 + 1 = 0x11 = 0x1, carry, overflow
+  SUBU: 8 - 7 = 1
+  SUBS: (-8) - 7 != 1 (negative overflow)
+  */
+  /* Update C (carry/!borrow flag) if operation generated a carry. We can either
+  test result_unsigned & 0x100000000LL or XOR the MSB of operands and result_signed.
+  The first method is easier, but we want to avoid the extra unsigned addition:
+  Ex1: 1111b (-1d) + 1000b (-8d)
+  -> s = 1 0111b (-9d)
+  -> (s & 1000b) != (s & 10000b) -> 1
+  Ex2: 1111b (-1d) + 1001b (-7d)
+  -> s = 1 1000b (-8d)
+  -> (s & 1000b) == (s & 10000b) -> 0
+  */
   CPSR[CPSR_C] = (((operand1 ^ operand2 ^ (result_signed >> 1)) & 0x80000000) !=
   0);
 
-  // Update V (overflow flag; signed overflow) if operation generated an overflow.
-  // Overflow is only relevant for signed and meaningless for unsigned additions.
-  // Since we have already calculated result_signed, the easiest test would be
-  // (result_signed & 0x80000000LL) != (result_signed & 0x100000000LL):
-  // Ex1: 1111b (-1d) + 1000b (-8d)
-  //   -> s = 1 0111b (-9d)
-  //   -> (s & 1000b) != (s & 10000b) -> 1
-  // Ex2: 1111b (-1d) + 1001b (-7d)
-  //   -> s = 1 1000b (-8d)
-  //   -> (s & 1000b) == (s & 10000b) -> 0
+  /* Update V (overflow flag) if operation generated an overflow. Since we have
+  already calculated result_signed, the easiest test would be (result_signed &
+  0x80000000LL) != (result_signed & 0x100000000LL):
+  Ex1:
+  u: 0111b (7d) + 0111b (7d)
+  -> u = 0 1110b (14d)
+  -> u & 10000b = 0
+  s: 0111b (7d) + 0111b (7d)
+  -> s = 0 1110b (14d)
+  -> 0 ^ 0 ^ (s & 10000b) = 0
+  Ex2:
+  u: 0111b (7d) + 1000b (8d)
+  -> u = 0 1111b (15d)
+  -> u & 10000b = 0
+  s: 0111b (7d) + 1000b (-8d)
+  -> s = 1 1111b (-1d)
+  -> 0 ^ 1 ^ (s & 10000b) = 0
+  Ex3:
+  u: 0001b (1d) + 1111b (15d)
+  -> u = 1 0000b (16d)
+  -> u & 10000b = 1
+  s: 0001b (1d) + 1111b (-1d)
+  -> s = 0 0000b (0d)
+  -> 0 ^ 1 ^ (s & 10000b) = 1
+  Ex4:
+  u: 0001b (1d) + 1110b (14d)
+  -> u = 0 1111b (15d)
+  -> u & 10000b = 0
+  s: 0001b (1d) + 1110b (-2d)
+  -> s = 1 1111b (-1d)
+  -> 0 ^ 1 ^ (s & 10000b) = 0
+  Ex5:
+  u: 1000b (8d)  + 1000b (8d)
+  -> u = 1 0000b (16d)
+  -> u & 10000b = 1
+  s: 1000b (-8d) + 1000b (-8d)
+  -> s = 1 0000b (-16d)
+  -> 1 ^ 1 ^ (s & 10000b) = 1
+  */
   CPSR[CPSR_V] = (((result_signed >> 1) & 0x80000000) != (result_signed &
   0x80000000));
 } // AddWithCarry()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::Instruction::update_psr_sub(
-    int operand1,
-    int operand2,
-    bool carry) {
-
-
-  long long result_signed = (long long)((long long)((int)operand1) - (long
-  long)((int)operand2)) - (long long)((int)carry);
-
-  //unsigned long long result_unsigned = (unsigned long long)((unsigned long
-  // long)operand1 - (unsigned long long)operand2);
-
-  // Update N (negative flag) if result is negative (bit[63]).
-  CPSR[CPSR_N] = ((result_signed & 0x0000000080000000LL) != 0);
-
-  // Update Z (zero flag) if result is 0.
-  CPSR[CPSR_Z] = (result_signed == 0);
-
-  // Update C (carry flag; unsigned overflow) if operation generated a carry.
-  // Carry is only relevant for unsigned and meaningless for signed additions.
-  // We can't just test (result_signed >> 1) & 0x800000000 because result_signed
-  // is signed and therefore had the sign logically explanded. This e.g. should
-  // not generate a carry:
-  // 01b (1) + 10b (2|-2) -> 0001b + 1110b = 1111b (15|-1).
-  //operand2 = (int)-operand2;
-  CPSR[CPSR_C] = (((operand1 ^ operand2 ^ ((unsigned)(result_signed >> 1))) &
-  0x80000000) == 0);
-
-  // Update V (overflow flag; signed overflow) if operation generated an overflow.
-  // Definition 1: (op1[MSB] == op2[MSB]) && result[MSB] != opx[MSB]
-  // Definition 2: carry_in(result[MSB]) != carry_out(result[MSB])
-  // Overflow is only relevant for signed and meaningless for unsigned additions.
-  CPSR[CPSR_V] = ((((unsigned)(result_signed >> 1)) ^ ((unsigned)result_signed))
-  & 0x80000000) != 0;
-} // update_psr_sub()
 
 // -----------------------------------------------------------------------------
 
@@ -726,30 +752,29 @@ void core_armcortexa9_funclt::Instruction::update_psr_bit(
   // Update Z (zero flag) if result is 0.
   CPSR[CPSR_Z] = (result == 0);
 
-  // Update C (carry flag; unsigned overflow) if operation generated a carry.
-  // Carry is only relevant for unsigned and meaningless for signed additions We
-  // can't just test (resultSign >> 1) & 0x800000000 because resultSign is
-  // signed and therefore had the sign logically explanded. This e.g. should not
-  // generate a carry:
+  // Update C (carry flag) if operation generated a carry.
   // 01b (1) + 10b (2|-2) -> 0001b + 1110b = 1111b (15|-1).
-  CPSR[CPSR_C] = (carry != 0);
+  CPSR[CPSR_C] = carry;
 
-  // V (overflow flag; signed overflow) is not updated.
+  // V (overflow flag) is not updated.
 } // update_psr_bit()
 
 // -----------------------------------------------------------------------------
 
-int core_armcortexa9_funclt::Instruction::sign_extend(
-    int bits,
-    unsigned len_bits) {
+long long core_armcortexa9_funclt::Instruction::sign_extend(
+    long long bits,
+    unsigned len_bits) const {
 
+
+  if (len_bits >= 8*sizeof(long long)) return bits;
 
   // NOTE: This function assumes two's complement, which is implementation
   // defined according to the C++ LRM. Extend only if MSB == 1.
-  if ((bits & (1 << (len_bits - 1))) != 0)
-  bits |= (((unsigned)0xFFFFFFFF) << len_bits);
+  // if ((bits & ((long long)1 << (len_bits - 1))) != 0)
+  //   bits |= (((unsigned long long)0xFFFFFFFF) << len_bits);
   // NOTE: Branchless algorithm courtesy of http://aggregate.ee.engr.uky.edu/MAGIC/.
-  //bits = (bits ^ (1 << (len_bits - 1))) - (1 << (len_bits - 1))
+  bits = ((bits & (((long long)1 << len_bits) - 1)) ^ ((long long)1 << (len_bits
+  - 1))) - ((long long)1 << (len_bits - 1));
   return bits;
 } // sign_extend()
 
@@ -790,14 +815,14 @@ unsigned core_armcortexa9_funclt::Instruction::LSR(
 
   // Carry
   if (shift_amm > 32) carry = 0;
-  else carry = to_shift & ((unsigned long)0x1 << (shift_amm - 1));
+  else carry = to_shift & ((long)1 << (shift_amm - 1));
 
   return shifted;
 } // LSR()
 
 // -----------------------------------------------------------------------------
 
-int core_armcortexa9_funclt::Instruction::ASR(
+unsigned core_armcortexa9_funclt::Instruction::ASR(
     unsigned to_shift,
     unsigned shift_amm,
     bool& carry) {
@@ -809,17 +834,18 @@ int core_armcortexa9_funclt::Instruction::ASR(
   if (shift_amm <= 0) return to_shift;
   shifted = (unsigned long)to_shift >> shift_amm;
 
-  // Carry
-  if (shift_amm > 32) {
-    carry = 0;
-    shift_amm = 32;
-  } else carry = to_shift & ((unsigned long)0x1 << (shift_amm - 1));
+  // Sign Extension and Carry
+  bool sign = to_shift & 0x80000000;
+  if (shift_amm >= 32) {
+    if (sign) shifted = 0xFFFFFFFF;
+    carry = sign;
+  } else {
+    if (sign) shifted = (shifted ^ ((long)1 << (32 - shift_amm - 1))) - ((long)1
+    << (32 - shift_amm - 1));
+    carry = to_shift & ((long)1 << (shift_amm - 1));
+  }
 
-  // Sign Extension
-  if (to_shift & 0x80000000)
-  shifted |= (((unsigned long)0xFFFFFFFF) << (32 - shift_amm));
-
-  return shifted;
+  return shifted & 0xFFFFFFFF;
 } // ASR()
 
 // -----------------------------------------------------------------------------
@@ -844,6 +870,7 @@ unsigned core_armcortexa9_funclt::Instruction::ROR(
 
 unsigned core_armcortexa9_funclt::Instruction::RRX(
     unsigned to_rotate,
+    unsigned rotate_amm,
     bool carry_in,
     bool& carry) {
 
@@ -851,6 +878,7 @@ unsigned core_armcortexa9_funclt::Instruction::RRX(
   unsigned rotated;
 
   to_rotate &= 0xFFFFFFFF;
+  if (rotate_amm <= 0) return to_rotate;
   rotated = (carry_in? 0x80000000 : 0) | ((unsigned)to_rotate >> 1);
   carry = to_rotate & 0x1;
   return rotated;
@@ -862,28 +890,27 @@ unsigned core_armcortexa9_funclt::Instruction::sat_q(
     long long operand,
     unsigned saturate_to,
     bool is_signed,
-    bool set_q_en) {
+    bool set_q_en) const {
 
 
-  unsigned mask = ((unsigned long)0xFFFFFFFF >> (unsigned)(32 - (unsigned)saturate_to
+  unsigned highest = ((unsigned)0xFFFFFFFF >> (unsigned)(32 - (unsigned)saturate_to
   + is_signed)) & 0xFFFFFFFF;
+  int lowest = is_signed? -highest-1 : 0;
 
-  if ((unsigned long long)operand > (mask)) {
+  if (operand > highest) {
     if (set_q_en) CPSR[CPSR_Q] = 1;
-    return is_signed? ((int)(mask)):((unsigned)mask);
-  } else if (!is_signed && (operand < 0)) {
+    return highest;
+  } else if (operand < lowest) {
     if (set_q_en) CPSR[CPSR_Q] = 1;
-    return 0;
-  } else if (is_signed && (operand < (int)(-mask))) {
-    if (set_q_en) CPSR[CPSR_Q] = 1;
-    return ((int)(-mask))  & 0xFFFFFFFF;
-  }else if (set_q_en) CPSR[CPSR_Q] = 0;
+    return lowest & 0xFFFFFFFF;
+  } else if (set_q_en) CPSR[CPSR_Q] = 0;
   return operand;
 } // sat_q()
 
 // -----------------------------------------------------------------------------
 
-unsigned core_armcortexa9_funclt::Instruction::BitCount(unsigned operand) {
+unsigned core_armcortexa9_funclt::Instruction::BitCount(unsigned operand) const
+{
 
 
   unsigned setbits = 0;
@@ -896,7 +923,7 @@ unsigned core_armcortexa9_funclt::Instruction::BitCount(unsigned operand) {
 
 // -----------------------------------------------------------------------------
 
-unsigned core_armcortexa9_funclt::Instruction::ExcVectorBase() {
+unsigned core_armcortexa9_funclt::Instruction::ExcVectorBase() const {
 
 
   /// Determine the exception base address.
@@ -909,44 +936,44 @@ unsigned core_armcortexa9_funclt::Instruction::ExcVectorBase() {
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::HaveLPAE() {
+bool core_armcortexa9_funclt::Instruction::HaveLPAE() const {
 
 
   /// Returns TRUE if the implementation includes the Large Physical Address
   /// Extension.
-  return ID_AFR0[ID_AFR0_W4];
+  return false;
 } // HaveLPAE()
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::HaveMPExt() {
+bool core_armcortexa9_funclt::Instruction::HaveMPExt() const {
 
 
   /// Returns TRUE if the implementation includes the Multiprocessing Extensions.
-  return ID_AFR0[ID_AFR0_W3];
+  return false;
 } // HaveMPExt()
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::HaveSecurityExt() {
+bool core_armcortexa9_funclt::Instruction::HaveSecurityExt() const {
 
 
   /// Returns TRUE if the implementation includes the Security Extensions.
-  return ID_PFR1[ID_PFR1_W1];
+  return false;
 } // HaveSecurityExt()
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::HaveVirtExt() {
+bool core_armcortexa9_funclt::Instruction::HaveVirtExt() const {
 
 
   /// Returns TRUE if the implementation includes the Virtualization Extensions.
-  return ID_PFR1[ID_PFR1_W3];
+  return false;
 } // HaveVirtExt()
 
 // -----------------------------------------------------------------------------
 
-bool core_armcortexa9_funclt::Instruction::IsSecure() {
+bool core_armcortexa9_funclt::Instruction::IsSecure() const {
 
 
   /// Returns TRUE if the processor is in Secure state, or if the implementation
@@ -962,7 +989,7 @@ bool core_armcortexa9_funclt::Instruction::JazelleAcceptsExecution() {
 
   /// Indicates whether Jazelle hardware will take over execution when a BXJ
   /// instruction is executed.
-  return ID_PFR0[ID_PFR0_W2];
+  return false;
 } // JazelleAcceptsExecution()
 
 // -----------------------------------------------------------------------------
@@ -1024,6 +1051,37 @@ unsigned core_armcortexa9_funclt::InvalidInstruction::behavior() {
 
 // *****************************************************************************
 
+core_armcortexa9_funclt::ARMExpandImmOp::ARMExpandImmOp(
+    Registers& R,
+    MemoryInterface& instr_memory,
+    MemoryInterface& data_memory) :
+  Instruction(R, instr_memory, data_memory) {
+
+
+} // ARMExpandImmOp()
+
+// -----------------------------------------------------------------------------
+
+unsigned core_armcortexa9_funclt::ARMExpandImmOp::ARMExpandImm(
+    unsigned& rotate,
+    unsigned& imm,
+    unsigned& operand,
+    bool& carry) {
+
+  unsigned num_cycles = 0;
+
+
+  carry = CPSR[CPSR_C];
+  operand = ROR(imm, rotate<<1, carry);
+
+  return num_cycles;
+} // ARMExpandImm()
+
+// -----------------------------------------------------------------------------
+
+
+// *****************************************************************************
+
 core_armcortexa9_funclt::UpdatePSRAddOp::UpdatePSRAddOp(
     Registers& R,
     MemoryInterface& instr_memory,
@@ -1041,28 +1099,29 @@ unsigned core_armcortexa9_funclt::UpdatePSRAddOp::UpdatePSRAdd(
     unsigned& s,
     int& operand1,
     int& operand2,
-    bool& carry) {
+    int& result) {
 
   unsigned num_cycles = 0;
 
 
   if (rd_bit == 15) {
+    // SUBS PC
     if (s) {
       unsigned value = 0, mask = 0;
       int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
       if (spsr_idx >= 0) {
-        value = *(SPSR + spsr_idx);
+        value = SPSR[spsr_idx];
         mask = psr_mask(value, 0xF, CPSR[CPSR_M], false, true);
         if (mask) CPSR = (CPSR & !mask) | (value & mask);
       }
+      if (CPSR[CPSR_J] && CPSR[CPSR_T] && (CPSR[CPSR_M] == (unsigned)EXECMODE::HYP))
+      THROW_EXCEPTION("SUBS cannot return to HYP mode in ThumbEE.");
     }
-    if (!s || (CPSR[CPSR_M] != (unsigned)EXECMODE::HYP) || !CPSR[CPSR_J] ||
-    !CPSR[CPSR_T])
-    BranchWritePC(rd);
+    BranchWritePC(result);
   } else {
+    rd = result;
     // Update the flags only for s = 0x1.
-    if (s == 0x1) {
-      carry = CPSR[CPSR_C];
+    if (s) {
       AddWithCarry(operand1, operand2, 0);
     }
   }
@@ -1100,105 +1159,106 @@ cond) {
     // way makes the code a bit faster.
     switch(cond) {
       case 0x0: {
-        // EQ: CPSR[CPSR_Z]
+        // EQ (Equal): CPSR[CPSR_Z]
         if (CPSR[CPSR_Z] == 0x0) {
           annul();
         }
         break;
       }
       case 0x1: {
-        // NE: !CPSR[CPSR_Z]
+        // NE (Not equal): !CPSR[CPSR_Z]
         if (CPSR[CPSR_Z] != 0x0) {
           annul();
         }
         break;
       }
       case 0x2: {
-        // CS/HS: CPSR[CPSR_V]
+        // CS/HS (Carry set / Unsigned higher or same): CPSR[CPSR_V]
         if (CPSR[CPSR_C] == 0x0) {
           annul();
         }
         break;
       }
       case 0x3: {
-        // CC/LO: !CPSR[CPSR_C]
+        // CC/LO (Carry clear / Unsigned lower): !CPSR[CPSR_C]
         if (CPSR[CPSR_C] != 0x0) {
           annul();
         }
         break;
       }
       case 0x4: {
-        // MI: CPSR[CPSR_N]
+        // MI (Minus): CPSR[CPSR_N]
         if (CPSR[CPSR_N] == 0x0) {
           annul();
         }
         break;
       }
       case 0x5: {
-        // PL: !CPSR[CPSR_N]
+        // PL (Plus): !CPSR[CPSR_N]
         if (CPSR[CPSR_N] != 0x0) {
           annul();
         }
         break;
       }
       case 0x6: {
-        // VS: CPSR[CPSR_V]
+        // VS (Overflow): CPSR[CPSR_V]
         if (CPSR[CPSR_V] == 0x0) {
           annul();
         }
         break;
       }
       case 0x7: {
-        // VC: !CPSR[CPSR_V]
+        // VC (No overflow): !CPSR[CPSR_V]
         if (CPSR[CPSR_V] != 0x0) {
           annul();
         }
         break;
       }
       case 0x8: {
-        // HI: !CPSR[CPSR_Z] && CPSR[CPSR_C]
+        // HI (Unsigned higher): !CPSR[CPSR_Z] && CPSR[CPSR_C]
         if ((CPSR & 0x60000000) != 0x20000000) {
           annul();
         }
         break;
       }
       case 0x9: {
-        // LS: CPSR[CPSR_Z] || !CPSR[CPSR_C]
+        // LS (Unsigned lower or same): CPSR[CPSR_Z] || !CPSR[CPSR_C]
         if ((CPSR & 0x60000000) == 0x20000000) {
           annul();
         }
         break;
       }
       case 0xA: {
-        // GE: CPSR[CPSR_N] == CPSR[CPSR_V]
-        if (CPSR[CPSR_V] != CPSR[CPSR_N]) {
+        // GE (Signed greater than or equal): CPSR[CPSR_N] == CPSR[CPSR_V]
+        if (CPSR[CPSR_N] != CPSR[CPSR_V]) {
           annul();
         }
         break;
       }
       case 0xB: {
-        // LT: CPSR[CPSR_N] != CPSR[CPSR_V]
-        if (CPSR[CPSR_V] == CPSR[CPSR_N]) {
+        // LT (Signed less than): CPSR[CPSR_N] != CPSR[CPSR_V]
+        if (CPSR[CPSR_N] == CPSR[CPSR_V]) {
           annul();
         }
         break;
       }
       case 0xC: {
-        // GT: CPSR[CPSR_N] == CPSR[CPSR_V] && !CPSR[CPSR_Z]
+        // GT (Signed greater than): CPSR[CPSR_N] == CPSR[CPSR_V] && !CPSR[CPSR_Z]
         if ((CPSR[CPSR_Z] != 0x0) || (CPSR[CPSR_V] != CPSR[CPSR_N])) {
           annul();
         }
         break;
       }
       case 0xD: {
-        // LE: CPSR[CPSR_N] != CPSR[CPSR_V] || CPSR[CPSR_Z]
+        // LE (Signed less than or equal): CPSR[CPSR_N] != CPSR[CPSR_V] ||
+        // CPSR[CPSR_Z]
         if ((CPSR[CPSR_Z] == 0x0) && (CPSR[CPSR_V] == CPSR[CPSR_N])) {
           annul();
         }
         break;
       }
       case 0xF: {
-        // AL
+        // AL (Always)
         break;
       }
       default: {
@@ -1211,37 +1271,6 @@ cond) {
 
   return num_cycles;
 } // ConditionPassed()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::ARMExpandImmOp::ARMExpandImmOp(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // ARMExpandImmOp()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::ARMExpandImmOp::ARMExpandImm(
-    unsigned& rotate,
-    unsigned& imm,
-    unsigned& operand,
-    bool& carry) {
-
-  unsigned num_cycles = 0;
-
-
-  carry = CPSR[CPSR_C];
-  operand = ROR(imm, rotate<<1, carry);
-
-  return num_cycles;
-} // ARMExpandImm()
 
 // -----------------------------------------------------------------------------
 
@@ -1290,7 +1319,7 @@ unsigned core_armcortexa9_funclt::DecodeImmShiftOp::DecodeImmShift(
       operand = ROR(rm, shift_amm, carry);
     } else {
       // Rotate right with extend
-      operand = RRX(rm, carry, carry);
+      operand = RRX(rm, 1, carry, carry);
     }
     break;
   }
@@ -1326,7 +1355,7 @@ unsigned core_armcortexa9_funclt::DecodeRegShiftOp::DecodeRegShift(
   unsigned num_cycles = 0;
 
 
-  unsigned shift_amm = rs & 0x000000FF;
+  unsigned shift_amm = rs & 0xFF;
   carry = CPSR[CPSR_C];
   switch(shift_op & 0x3) {
     case 0x0:
@@ -1373,29 +1402,30 @@ unsigned core_armcortexa9_funclt::UpdatePSRAddWithCarryOp::UpdatePSRAddWithCarry
     unsigned& s,
     int& operand1,
     int& operand2,
-    bool& carry) {
+    int& result) {
 
   unsigned num_cycles = 0;
 
 
   if (rd_bit == 15) {
+    // SUBS PC
     if (s) {
       unsigned value = 0, mask = 0;
       int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
       if (spsr_idx >= 0) {
-        value = *(SPSR + spsr_idx);
+        value = SPSR[spsr_idx];
         mask = psr_mask(value, 0xF, CPSR[CPSR_M], false, true);
         if (mask) CPSR = (CPSR & !mask) | (value & mask);
       }
+      if (CPSR[CPSR_J] && CPSR[CPSR_T] && (CPSR[CPSR_M] == (unsigned)EXECMODE::HYP))
+      THROW_EXCEPTION("SUBS cannot return to HYP mode in ThumbEE.");
     }
-    if (!s || (CPSR[CPSR_M] != (unsigned)EXECMODE::HYP) || !CPSR[CPSR_J] ||
-    !CPSR[CPSR_T])
-    BranchWritePC(rd);
+    BranchWritePC(result);
   } else {
+    rd = result;
     // Update the flags only for s = 0x1.
-    if (s == 0x1) {
-      carry = CPSR[CPSR_C];
-      AddWithCarry(operand1, operand2, carry);
+    if (s) {
+      AddWithCarry(operand1, operand2, CPSR[CPSR_C]);
     }
   }
 
@@ -1424,29 +1454,30 @@ unsigned core_armcortexa9_funclt::UpdatePSRSubOp::UpdatePSRSub(
     unsigned& s,
     int& operand1,
     int& operand2,
-    bool& carry) {
+    int& result) {
 
   unsigned num_cycles = 0;
 
 
   if (rd_bit == 15) {
+    // SUBS PC
     if (s) {
       unsigned value = 0, mask = 0;
       int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
       if (spsr_idx >= 0) {
-        value = *(SPSR + spsr_idx);
+        value = SPSR[spsr_idx];
         mask = psr_mask(value, 0xF, CPSR[CPSR_M], false, true);
         if (mask) CPSR = (CPSR & !mask) | (value & mask);
       }
+      if (CPSR[CPSR_J] && CPSR[CPSR_T] && (CPSR[CPSR_M] == (unsigned)EXECMODE::HYP))
+      THROW_EXCEPTION("SUBS cannot return to HYP mode in ThumbEE.");
     }
-    if (!s || (CPSR[CPSR_M] != (unsigned)EXECMODE::HYP) || !CPSR[CPSR_J] ||
-    !CPSR[CPSR_T])
-    BranchWritePC(rd);
+    BranchWritePC(result);
   } else {
+    rd = result;
     // Update the flags only for s = 0x1.
-    if (s == 0x1) {
-      carry = CPSR[CPSR_C];
-      update_psr_sub(operand1, operand2, 0);
+    if (s) {
+      AddWithCarry(operand1, ~operand2 & 0xFFFFFFFF, 1);
     }
   }
 
@@ -1475,29 +1506,31 @@ unsigned core_armcortexa9_funclt::UpdatePSRSubWithCarryOp::UpdatePSRSubWithCarry
     unsigned& s,
     int& operand1,
     int& operand2,
-    bool& carry) {
+    int& result) {
 
   unsigned num_cycles = 0;
 
 
   if (rd_bit == 15) {
+    // SUBS PC
     if (s) {
       unsigned value = 0, mask = 0;
       int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
       if (spsr_idx >= 0) {
-        value = *(SPSR + spsr_idx);
+        value = SPSR[spsr_idx];
         mask = psr_mask(value, 0xF, CPSR[CPSR_M], false, true);
         if (mask) CPSR = (CPSR & !mask) | (value & mask);
       }
+      if (CPSR[CPSR_J] && CPSR[CPSR_T] && (CPSR[CPSR_M] == (unsigned)EXECMODE::HYP))
+      THROW_EXCEPTION("SUBS cannot return to HYP mode in ThumbEE.");
     }
-    if (!s || (CPSR[CPSR_M] != (unsigned)EXECMODE::HYP) || !CPSR[CPSR_J] ||
-    !CPSR[CPSR_T])
-    BranchWritePC(rd);
+    BranchWritePC(result);
   } else {
+    rd = result;
     // Update the flags only for s = 0x1.
-    if (s == 0x1) {
-      carry = (CPSR[CPSR_C] == 0);
-      update_psr_sub(operand1, operand2, carry);
+    if (s) {
+      bool carry = CPSR[CPSR_C];
+      AddWithCarry(operand1, ~operand2 & 0xFFFFFFFF, carry);
     }
   }
 
@@ -1524,19 +1557,19 @@ unsigned core_armcortexa9_funclt::UpdatePSRMulOp::UpdatePSRMul(
     unsigned& ss,
     unsigned& s,
     unsigned& l,
-    sc_dt::uint64& result) {
+    long long& result) {
 
   unsigned num_cycles = 0;
 
 
-  // Update the flags only for MUL/MLA and s = 0x1.
-  if (!ss && s == 0x1) {
+  // Update the flags only for s = 0x1. MLS does not set the flags!
+  if (s && (!ss || l)) {
     if (l) {
-      // Update N (negative flag) if result is negative (bit[31]).
-      CPSR[CPSR_N] = ((result & 0x80000000) != 0);
-    } else {
       // Update N (negative flag) if result is negative (bit[63]).
       CPSR[CPSR_N] = ((result & 0x8000000000000000LL) != 0);
+    } else {
+      // Update N (negative flag) if result is negative (bit[31]).
+      CPSR[CPSR_N] = ((result & 0x80000000) != 0);
     }
 
     // Update Z (zero flag) if result is 0.
@@ -1573,13 +1606,23 @@ unsigned core_armcortexa9_funclt::UpdatePSRBitOp::UpdatePSRBit(
 
 
   if (rd_bit == 15) {
-    // rd = 15 && s implies a different instruction and is not handled here.
-    if (!s) {
-      BranchWritePC(result);
+    // SUBS PC
+    if (s) {
+      unsigned value = 0, mask = 0;
+      int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
+      if (spsr_idx >= 0) {
+        value = SPSR[spsr_idx];
+        mask = psr_mask(value, 0xF, CPSR[CPSR_M], false, true);
+        if (mask) CPSR = (CPSR & !mask) | (value & mask);
+      }
+      if (CPSR[CPSR_J] && CPSR[CPSR_T] && (CPSR[CPSR_M] == (unsigned)EXECMODE::HYP))
+      THROW_EXCEPTION("SUBS cannot return to HYP mode in ThumbEE.");
     }
+    BranchWritePC(result);
   } else {
+    rd = result;
     // Update the flags only for s = 0x1.
-    if (s == 0x1) {
+    if (s) {
       update_psr_bit(result, carry);
     }
   }
@@ -1627,8 +1670,8 @@ unsigned core_armcortexa9_funclt::LSOffsetOp::LSOffset(
   through an array or memory block.
   **/
   unsigned disp = (u? rn + operand : rn - operand);
-  //address = (p? disp : rn);
-  //rn = ((w || !p)? disp : rn);
+  // address = (p? disp : rn);
+  // rn = ((w || !p)? disp : rn);
 
   if (p == 1) {
     // offset or pre-indexed
@@ -1724,9 +1767,9 @@ core_armcortexa9_funclt::ADD_i::ADD_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRAddOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // ADD_i()
@@ -1822,6 +1865,12 @@ unsigned core_armcortexa9_funclt::ADD_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
@@ -1830,10 +1879,11 @@ unsigned core_armcortexa9_funclt::ADD_i::behavior() {
   operand1 = PC & 0xFFFFFFFC;
   else
   operand1 = (int)rn;
+
   operand2 = (int)operand;
-  rd = operand1 + operand2;
+  result = operand1 + operand2;
   this->num_instr_cycles += UpdatePSRAdd(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -1859,9 +1909,9 @@ core_armcortexa9_funclt::ADD_r::ADD_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRAddOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // ADD_r()
@@ -1967,6 +2017,12 @@ unsigned core_armcortexa9_funclt::ADD_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
@@ -1975,10 +2031,11 @@ unsigned core_armcortexa9_funclt::ADD_r::behavior() {
   operand1 = PC & 0xFFFFFFFC;
   else
   operand1 = (int)rn;
+
   operand2 = (int)operand;
-  rd = operand1 + operand2;
+  result = operand1 + operand2;
   this->num_instr_cycles += UpdatePSRAdd(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2125,10 +2182,11 @@ unsigned core_armcortexa9_funclt::ADD_sr::behavior() {
   operand1 = PC & 0xFFFFFFFC;
   else
   operand1 = (int)rn;
+
   operand2 = (int)operand;
-  rd = operand1 + operand2;
+  result = operand1 + operand2;
   this->num_instr_cycles += UpdatePSRAdd(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2154,9 +2212,9 @@ core_armcortexa9_funclt::ADC_i::ADC_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRAddWithCarryOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // ADC_i()
@@ -2243,14 +2301,20 @@ unsigned core_armcortexa9_funclt::ADC_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 + operand2 + (unsigned)CPSR[CPSR_C];
+  result = operand1 + operand2 + (unsigned)CPSR[CPSR_C];
   this->num_instr_cycles += UpdatePSRAddWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2276,9 +2340,9 @@ core_armcortexa9_funclt::ADC_r::ADC_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRAddWithCarryOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // ADC_r()
@@ -2384,14 +2448,20 @@ unsigned core_armcortexa9_funclt::ADC_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 + operand2 + (unsigned)CPSR[CPSR_C];
+  result = operand1 + operand2 + (unsigned)CPSR[CPSR_C];
   this->num_instr_cycles += UpdatePSRAddWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2535,9 +2605,9 @@ unsigned core_armcortexa9_funclt::ADC_sr::behavior() {
 
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 + operand2 + (unsigned)CPSR[CPSR_C];
+  result = operand1 + operand2 + (unsigned)CPSR[CPSR_C];
   this->num_instr_cycles += UpdatePSRAddWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2563,9 +2633,9 @@ core_armcortexa9_funclt::SUB_i::SUB_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRSubOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // SUB_i()
@@ -2652,6 +2722,12 @@ unsigned core_armcortexa9_funclt::SUB_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
@@ -2661,9 +2737,9 @@ unsigned core_armcortexa9_funclt::SUB_i::behavior() {
   else
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
   this->num_instr_cycles += UpdatePSRSub(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2689,9 +2765,9 @@ core_armcortexa9_funclt::SUB_r::SUB_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRSubOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // SUB_r()
@@ -2797,6 +2873,12 @@ unsigned core_armcortexa9_funclt::SUB_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
@@ -2806,9 +2888,9 @@ unsigned core_armcortexa9_funclt::SUB_r::behavior() {
   else
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
   this->num_instr_cycles += UpdatePSRSub(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2956,9 +3038,9 @@ unsigned core_armcortexa9_funclt::SUB_sr::behavior() {
   else
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
   this->num_instr_cycles += UpdatePSRSub(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -2984,9 +3066,9 @@ core_armcortexa9_funclt::SBC_i::SBC_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRSubWithCarryOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // SBC_i()
@@ -3073,18 +3155,24 @@ unsigned core_armcortexa9_funclt::SBC_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
 
   if (CPSR[CPSR_C] == 0x0) {
-    rd = ((int)rd) - 1;
+    result = ((int)result) - 1;
   }
   this->num_instr_cycles += UpdatePSRSubWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3110,9 +3198,9 @@ core_armcortexa9_funclt::SBC_r::SBC_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRSubWithCarryOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // SBC_r()
@@ -3218,18 +3306,24 @@ unsigned core_armcortexa9_funclt::SBC_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
 
   if (CPSR[CPSR_C] == 0x0) {
-    rd = ((int)rd) - 1;
+    result = ((int)result) - 1;
   }
   this->num_instr_cycles += UpdatePSRSubWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3373,13 +3467,13 @@ unsigned core_armcortexa9_funclt::SBC_sr::behavior() {
 
   operand1 = (int)rn;
   operand2 = (int)operand;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
 
   if (CPSR[CPSR_C] == 0x0) {
-    rd = ((int)rd) - 1;
+    result = ((int)result) - 1;
   }
   this->num_instr_cycles += UpdatePSRSubWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3405,9 +3499,9 @@ core_armcortexa9_funclt::RSB_i::RSB_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRSubOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // RSB_i()
@@ -3494,14 +3588,20 @@ unsigned core_armcortexa9_funclt::RSB_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
   operand1 = (int)operand;
   operand2 = (int)rn;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
   this->num_instr_cycles += UpdatePSRSub(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3527,9 +3627,9 @@ core_armcortexa9_funclt::RSB_r::RSB_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRSubOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // RSB_r()
@@ -3635,14 +3735,20 @@ unsigned core_armcortexa9_funclt::RSB_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
   operand1 = (int)operand;
   operand2 = (int)rn;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
   this->num_instr_cycles += UpdatePSRSub(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3786,9 +3892,9 @@ unsigned core_armcortexa9_funclt::RSB_sr::behavior() {
 
   operand1 = (int)operand;
   operand2 = (int)rn;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
   this->num_instr_cycles += UpdatePSRSub(this->rd, this->rd_bit, this->s,
-  this->operand1, this->operand2, this->carry);
+  this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3814,9 +3920,9 @@ core_armcortexa9_funclt::RSC_i::RSC_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRSubWithCarryOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // RSC_i()
@@ -3903,18 +4009,24 @@ unsigned core_armcortexa9_funclt::RSC_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
   operand1 = (int)operand;
   operand2 = (int)rn;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
 
   if (CPSR[CPSR_C] == 0x0) {
-    rd = ((int)rd) - 1;
+    result = ((int)result) - 1;
   }
   this->num_instr_cycles += UpdatePSRSubWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -3940,9 +4052,9 @@ core_armcortexa9_funclt::RSC_r::RSC_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRSubWithCarryOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // RSC_r()
@@ -4048,18 +4160,24 @@ unsigned core_armcortexa9_funclt::RSC_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
   operand1 = (int)operand;
   operand2 = (int)rn;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
 
   if (CPSR[CPSR_C] == 0x0) {
-    rd = ((int)rd) - 1;
+    result = ((int)result) - 1;
   }
   this->num_instr_cycles += UpdatePSRSubWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -4203,13 +4321,13 @@ unsigned core_armcortexa9_funclt::RSC_sr::behavior() {
 
   operand1 = (int)operand;
   operand2 = (int)rn;
-  rd = operand1 - operand2;
+  result = operand1 - operand2;
 
   if (CPSR[CPSR_C] == 0x0) {
-    rd = ((int)rd) - 1;
+    result = ((int)result) - 1;
   }
   this->num_instr_cycles += UpdatePSRSubWithCarry(this->rd, this->rd_bit,
-  this->s, this->operand1, this->operand2, this->carry);
+  this->s, this->operand1, this->operand2, this->result);
   {
     unsigned num_cycles = 0;
 
@@ -4360,49 +4478,59 @@ unsigned core_armcortexa9_funclt::USHQADD::behavior() {
   if (rs_bit != 15)
   THROW_WARNING("Invalid (U|S|UH|SH|UQ|Q)ADD(8|16) encoding: rs != 0xF.");
 
-  int sum1, sum2, sum3, sum4;
-  unsigned mask1, mask2, mask3, mask4;
+  int sum1, sum2 = 0, sum3, sum4 = 0, sign;
+  unsigned mask;
   unsigned shift2, shift3, shift4;
   int overflow;
 
   // 16-bit vs. 8-bit
   if (b) {
     // xxADD8
-    mask1 = 0x000000FF;
-    mask2 = 0x0000FF00;
+    mask = 0x000000FF;
     shift2 = 8;
-    mask3 = 0x00FF0000;
     shift3 = 16;
-    mask4 = 0xFF000000;
     shift4 = 24;
   } else {
     // xxADD16
-    mask1 = 0x0000FFFF;
-    mask2 = 0;
+    mask = 0x0000FFFF;
     shift2 = 0;
-    mask3 = 0xFFFF0000;
     shift3 = 16;
-    mask4 = 0;
     shift4 = 0;
   }
 
   // Unsigned vs. signed
   if (u) {
     // UxADDx
-    sum1 = (unsigned)(rn & mask1) + (unsigned)(rm & mask1);
-    sum2 = ((unsigned)(rn & mask2) >> shift2) + ((unsigned)(rm & mask2) >>
-    shift2);
-    sum3 = ((unsigned)(rn & mask3) >> shift3) + ((unsigned)(rm & mask3) >>
-    shift3);
-    sum4 = ((unsigned)(rn & mask4) >> shift4) + ((unsigned)(rm & mask4) >>
-    shift4);
-    overflow = mask1;
+    sum1 = (unsigned)(rn & mask) + (unsigned)(rm & mask);
+    sum2 = shift2? ((unsigned)(rn >> shift2) & mask) + ((unsigned)(rm >> shift2)
+    & mask) : 0;
+    sum3 = ((unsigned)(rn >> shift3) & mask) + ((unsigned)(rm >> shift3) &
+    mask);
+    sum4 = shift4? ((unsigned)(rn >> shift4) & mask) + ((unsigned)(rm >> shift4)
+    & mask) : 0;
+    overflow = mask;
   } else {
     // SxADDx
-    sum1 = (rn & mask1) + (rm & mask1);
-    sum2 = ((rn & mask2) >> shift2) + ((rm & mask2) >> shift2);
-    sum3 = ((rn & mask3) >> shift3) + ((rm & mask3) >> shift3);
-    sum4 = ((rn & mask4) >> shift4) + ((rm & mask4) >> shift4);
+    // Detect sign to enable sign extension.
+    sign = 0x1 << (shift2? shift2 - 1 : shift3 - 1);
+    sum1 = ((int)(rn & mask) | (rn & sign? ~mask : 0))
+    + ((int)(rm & mask) | (rm & sign? ~mask : 0));
+
+    if (shift2) {
+      sign = 0x1 << (shift3 - 1);
+      sum2 = (((int)(rn >> shift2) & mask) | (rn & sign? ~mask : 0))
+      + (((int)(rm >> shift2) & mask) | (rm & sign? ~mask : 0));
+    }
+
+    sign = 0x1 << (shift4? shift4 - 1 : 31);
+    sum3 = (((int)(rn >> shift3) & mask) | (rn & sign? ~mask : 0))
+    + (((int)(rm >> shift3) & mask) | (rm & sign? ~mask : 0));
+
+    if (shift4) {
+      sign = 0x1 << 31;
+      sum4 = (((int)(rn >> shift4) & mask) | (rn & sign? ~mask : 0))
+      + (((int)(rm >> shift4) & mask) | (rm & sign? ~mask : 0));
+    }
     overflow = -1;
   }
 
@@ -4424,20 +4552,20 @@ unsigned core_armcortexa9_funclt::USHQADD::behavior() {
     CPSR[CPSR_GE] = 0;
     if (sum1 > overflow) {
       CPSR[CPSR_GE] = 0x1;
-      if (!mask2) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
+      if (!shift2) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
     }
-    if (sum2 > overflow) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
+    if (sum2 > overflow && shift2) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
     if (sum3 > overflow) {
       CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x4;
-      if (!mask4) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
+      if (!shift4) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
     }
-    if (sum4 > overflow) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
+    if (sum4 > overflow && shift4) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
   }
 
-  rd = ((sum4 & mask1) << shift4)
-  | ((sum3 & mask1) << shift3)
-  | ((sum2 & mask1) << shift2)
-  | (sum1 & mask1);
+  rd = (shift4? ((sum4 & mask) << shift4) : 0)
+  | ((sum3 & mask) << shift3)
+  | (shift2? ((sum2 & mask) << shift2) : 0)
+  | (sum1 & mask);
   {
     unsigned num_cycles = 0;
 
@@ -4588,47 +4716,57 @@ unsigned core_armcortexa9_funclt::USHQSUB::behavior() {
   if (rs_bit != 15)
   THROW_WARNING("Invalid (U|S|UH|SH|UQ|Q)SUB(8|16) encoding: rs != 0xF.");
 
-  int sum1, sum2, sum3, sum4;
-  unsigned mask1, mask2, mask3, mask4;
+  int sum1, sum2 = 0, sum3, sum4 = 0, sign;
+  unsigned mask;
   unsigned shift2, shift3, shift4;
 
   // 16-bit vs. 8-bit
   if (b) {
     // xxSUB8
-    mask1 = 0x000000FF;
-    mask2 = 0x0000FF00;
+    mask = 0x000000FF;
     shift2 = 8;
-    mask3 = 0x00FF0000;
     shift3 = 16;
-    mask4 = 0xFF000000;
     shift4 = 24;
   } else {
     // xxSUB16
-    mask1 = 0x0000FFFF;
-    mask2 = 0;
+    mask = 0x0000FFFF;
     shift2 = 0;
-    mask3 = 0xFFFF0000;
     shift3 = 16;
-    mask4 = 0;
     shift4 = 0;
   }
 
   // Unsigned vs. signed
   if (u) {
     // UxSUBx
-    sum1 = (unsigned)(rn & mask1) - (unsigned)(rm & mask1);
-    sum2 = ((unsigned)(rn & mask2) >> shift2) - ((unsigned)(rm & mask2) >>
-    shift2);
-    sum3 = ((unsigned)(rn & mask3) >> shift3) - ((unsigned)(rm & mask3) >>
-    shift3);
-    sum4 = ((unsigned)(rn & mask4) >> shift4) - ((unsigned)(rm & mask4) >>
-    shift4);
+    sum1 = (unsigned)(rn & mask) - (unsigned)(rm & mask);
+    sum2 = shift2? (((unsigned)rn >> shift2) & mask) - (((unsigned)rm >> shift2)
+    & mask) : 0;
+    sum3 = (((unsigned)rn >> shift3) & mask) - (((unsigned)rm >> shift3) &
+    mask);
+    sum4 = shift4? (((unsigned)rn >> shift4) & mask) - (((unsigned)rm >> shift4)
+    & mask) : 0;
   } else {
     // SxSUBx
-    sum1 = (rn & mask1) - (rm & mask1);
-    sum2 = ((rn & mask2) >> shift2) - ((rm & mask2) >> shift2);
-    sum3 = ((rn & mask3) >> shift3) - ((rm & mask3) >> shift3);
-    sum4 = ((rn & mask4) >> shift4) - ((rm & mask4) >> shift4);
+    // Detect sign to enable sign extension.
+    sign = 0x1 << (shift2? shift2 - 1 : shift3 - 1);
+    sum1 = ((int)(rn & mask) | (rn & sign? ~mask : 0))
+    - ((int)(rm & mask) | (rm & sign? ~mask : 0));
+
+    if (shift2) {
+      sign = 0x1 << (shift3 - 1);
+      sum2 = (((int)(rn >> shift2) & mask) | (rn & sign? ~mask : 0))
+      - (((int)(rm >> shift2) & mask) | (rm & sign? ~mask : 0));
+    }
+
+    sign = 0x1 << (shift4? shift4 - 1 : 31);
+    sum3 = (((int)(rn >> shift3) & mask) | (rn & sign? ~mask : 0))
+    - (((int)(rm >> shift3) & mask) | (rm & sign? ~mask : 0));
+
+    if (shift4) {
+      sign = 0x1 << 31;
+      sum4 = (((int)(rn >> shift4) & mask) | (rn & sign? ~mask : 0))
+      - (((int)(rm >> shift4) & mask) | (rm & sign? ~mask : 0));
+    }
   }
 
   // Halving vs. saturating vs. regular
@@ -4649,20 +4787,20 @@ unsigned core_armcortexa9_funclt::USHQSUB::behavior() {
     CPSR[CPSR_GE] = 0;
     if (sum1 >= 0) {
       CPSR[CPSR_GE] = 0x1;
-      if (!mask2) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
+      if (!shift2) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
     }
-    if (sum2 >= 0) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
+    if (sum2 >= 0 && shift2) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x2;
     if (sum3 >= 0) {
       CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x4;
-      if (!mask4) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
+      if (!shift4) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
     }
-    if (sum4 >= 0) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
+    if (sum4 >= 0 && shift4) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x8;
   }
 
-  rd = ((sum4 & mask1) << shift4)
-  | ((sum3 & mask1) << shift3)
-  | ((sum2 & mask1) << shift2)
-  | (sum1 & mask1);
+  rd = (shift4? ((sum4 & mask) << shift4) : 0)
+  | ((sum3 & mask) << shift3)
+  | (shift2? ((sum2 & mask) << shift2) : 0)
+  | (sum1 & mask);
   {
     unsigned num_cycles = 0;
 
@@ -4784,21 +4922,21 @@ unsigned core_armcortexa9_funclt::USADA8::behavior() {
   int diff1, diff2, diff3, diff4;
 
   diff1 = (unsigned)(rn & 0x000000FF) - (unsigned)(rm & 0x000000FF);
-  diff1 = (diff1 < 0)? diff1 : -diff1;
+  diff1 = (diff1 < 0)? -diff1 : diff1;
   diff2 = ((unsigned)(rn & 0x0000FF00) >> 8) - ((unsigned)(rm & 0x0000FF00) >>
   8);
-  diff2 = (diff2 < 0)? diff2 : -diff2;
+  diff2 = (diff2 < 0)? -diff2 : diff2;
   diff3 = ((unsigned)(rn & 0x00FF0000) >> 16) - ((unsigned)(rm & 0x00FF0000) >>
   16);
-  diff3 = (diff3 < 0)? diff3 : -diff3;
+  diff3 = (diff3 < 0)? -diff3 : diff3;
   diff4 = ((unsigned)(rn & 0xFF000000) >> 24) - ((unsigned)(rm & 0xFF000000) >>
   24);
-  diff4 = (diff4 < 0)? diff4 : -diff4;
+  diff4 = (diff4 < 0)? -diff4 : diff4;
   // NOTE: Alternative abs():
   // mask = 0 for diff1 > 0 else mask = 0xFFFFFFFF because of signed shift.
-  //int mask = diff1 >> 31;
+  // int mask = diff1 >> 31;
   // diff1 + mask = diff1 for diff1 > 0 else diff1 + mask = ~abs(diff1)
-  //diff1 = (diff1 + mask) ^ mask;
+  // diff1 = (diff1 + mask) ^ mask;
 
   if (ra != 0xF)
   rd = (ra + diff1 + diff2 + diff3 + diff4) & 0xFFFFFFFF;
@@ -4961,7 +5099,7 @@ unsigned core_armcortexa9_funclt::USXTAHB::behavior() {
   else mask = 0xFF;
 
   bool carry_dummy;
-  result = ROR(rm, (imm << 1) & 0x18, carry_dummy) & mask;
+  result = ROR(rm, (imm << 1) & 0x18, carry_dummy);
 
   // Extend-to-word vs. extend-to-halfword
   if (w) {
@@ -4976,10 +5114,10 @@ unsigned core_armcortexa9_funclt::USXTAHB::behavior() {
 
     rd = result;
   } else {
-    int result2 = (result & 0x00FF0000) >> 16;
-    result &= 0x0000FFFF;
-
     // xXTxB16
+    int result2 = (result & 0x00FF0000) >> 16;
+    result &= mask;
+
     // Unsigned vs. signed
     if (!u) {
       result2 = sign_extend(result2, 8) & 0xFFFF;
@@ -4989,7 +5127,7 @@ unsigned core_armcortexa9_funclt::USXTAHB::behavior() {
     // Add vs. non-add
     if (rn_bit != 0xF) {
       result = ((((unsigned)rn & 0xFFFF) + result) & 0xFFFF)
-      | (((((unsigned)rn >> 16) & 0xFFFF) + result2) & 0xFFFF);
+      | ((((((unsigned)rn >> 16) & 0xFFFF) + result2) & 0xFFFF) << 16);
     }
     rd = result;
   }
@@ -5143,8 +5281,8 @@ unsigned core_armcortexa9_funclt::USHQASX::behavior() {
     diff = ((unsigned)rn & mask) - (((unsigned)rm >> 16) & mask);
   } else {
     // SxASX
-    sum = ((rn >> 16) & mask) + (rm & mask);
-    diff = (rn & mask) - ((rm >> 16) & mask);
+    sum = sign_extend((rn >> 16) & mask, 16) + sign_extend(rm & mask, 16);
+    diff = sign_extend(rn & mask, 16) - sign_extend((rm >> 16) & mask, 16);
   }
 
   // Halving vs. saturating vs. regular
@@ -5158,12 +5296,13 @@ unsigned core_armcortexa9_funclt::USHQASX::behavior() {
     diff = sat_q(diff, 16, !u, false);
   } else {
     // x_ASX
-    CPSR[CPSR_GE] = 0;
     if (diff >= 0) CPSR[CPSR_GE] = 0x3;
-    if (sum > 0xFFFF) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0xC;
+    else CPSR[CPSR_GE] = 0;
+    if (u && sum > 0xFFFF) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0xC;
+    else if (!u && sum >= 0) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0xC;
   }
 
-  rd = ((diff & mask) << 16) | (sum & mask);
+  rd = ((sum & mask) << 16) | (diff & mask);
   {
     unsigned num_cycles = 0;
 
@@ -5302,18 +5441,18 @@ unsigned core_armcortexa9_funclt::USHQSAX::behavior() {
 
   // Unsigned vs. signed
   if (u) {
-    // UxASX
+    // UxSAX
     sum = ((unsigned)rn & mask) + (((unsigned)rm >> 16) & mask);
     diff = (((unsigned)rn >> 16) & mask) - ((unsigned)rm & mask);
   } else {
-    // SxASX
-    sum = ((rn >> 16) & mask) + (rm & mask);
-    diff = (rn & mask) - ((rm >> 16) & mask);
+    // SxSAX
+    sum = sign_extend(rn & mask, 16) + sign_extend((rm >> 16) & mask, 16);
+    diff = sign_extend((rn >> 16) & mask, 16) - sign_extend(rm & mask, 16);
   }
 
   // Halving vs. saturating vs. regular
   if (h && nq) {
-    // xHASX
+    // xHSAX
     sum >>= 1;
     diff >>= 1;
   } else if (!nq) {
@@ -5321,13 +5460,14 @@ unsigned core_armcortexa9_funclt::USHQSAX::behavior() {
     sum = sat_q(sum, 16, !u, false);
     diff = sat_q(diff, 16, !u, false);
   } else {
-    // x_ASX
-    CPSR[CPSR_GE] = 0;
-    if (diff >= 0) CPSR[CPSR_GE] = 0x3;
-    if (sum > 0xFFFF) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0xC;
+    // x_SAX
+    if (diff >= 0) CPSR[CPSR_GE] = 0xC;
+    else CPSR[CPSR_GE] = 0;
+    if (u && sum > 0xFFFF) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x3;
+    else if (!u && sum >= 0) CPSR[CPSR_GE] = CPSR[CPSR_GE] | 0x3;
   }
 
-  rd = ((sum & mask) << 16) | (diff & mask);
+  rd = ((diff & mask) << 16) | (sum & mask);
   {
     unsigned num_cycles = 0;
 
@@ -5457,7 +5597,7 @@ unsigned core_armcortexa9_funclt::USSAT::behavior() {
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  rd = sat_q(operand, imm0, false, true);
+  rd = sat_q((int)operand, imm0 + !u, !u, true);
   {
     unsigned num_cycles = 0;
 
@@ -5580,11 +5720,13 @@ unsigned core_armcortexa9_funclt::USSAT16::behavior() {
   if (imm != 15)
   THROW_WARNING("Invalid (U|S)SAT16 encoding: Bits: [11..8] != 0xF.");
 
-  //if(!u)
-  //  imm = imm + 1;
-  rd = (sat_q((long long)(rm & 0x0000FFFF), imm,  u? false:true, true) & 0xFFFF);
-  rd |= (sat_q((long long)(rm & 0xFFFF0000) >> 16, imm, u? false:true, true) &
-  0xFFFF) << 16;
+  long long operand = sign_extend(rm & 0x0000FFFF, 16);
+  unsigned result = sat_q(operand, imm+!u, !u, true) & 0xFFFF;
+  bool is_sat = CPSR[CPSR_Q];
+  operand = sign_extend((rm & 0xFFFF0000) >> 16, 16);
+  result = result | ((sat_q(operand, imm+!u, !u, true) & 0xFFFF) << 16);
+  if (is_sat) CPSR[CPSR_Q] = 1;
+  rd = result;
   {
     unsigned num_cycles = 0;
 
@@ -5714,18 +5856,17 @@ unsigned core_armcortexa9_funclt::QDADDSUB::behavior() {
   if (imm != 0)
   THROW_WARNING("Invalid (U|S|UH|SH|UQ|Q)ASX encoding: bit[11:8] != 0x0.");
 
-  long long operand = rn;
-  if (d) operand = sat_q(2*rn, 32, true, true);
+  long long operand = sign_extend(rn, 32);
+
+  // Double vs. regular
+  if (d) operand = sign_extend(sat_q(operand << 1, 32, true, true), 32);
 
   // Add vs. subtract
-  if (s) operand = -operand;
+  if (s) operand = sign_extend(rm, 32) - operand;
+  else operand = sign_extend(rm, 32) + operand;
 
-  // NOTE: CPSR[CPSR_Q] = sat1 || sat2; Would have liked to pass a bool by
-  // reference, but not sure how to in TRAP.
-  if (d && CPSR[CPSR_Q]){
-    rd = sat_q((long long)(rm + operand), 32, s? true:false, false);
-  }else
-  rd = sat_q((long long)(rm + operand), 32, s? true:false, true);
+  // NOTE: CPSR[CPSR_Q] = sat1 || sat2
+  rd = sat_q(operand, 32, 1, !(d && CPSR[CPSR_Q]));
   {
     unsigned num_cycles = 0;
 
@@ -5876,7 +6017,7 @@ unsigned core_armcortexa9_funclt::MUL::behavior() {
 
   unsigned latency = 0;
 
-  result = (long long)((long long)rm * (long long)rn);
+  result = sign_extend(rm, 32) * sign_extend(rn, 32);
 
   // Accumulate vs. non-accumulate
   if (a) {
@@ -5885,13 +6026,13 @@ unsigned core_armcortexa9_funclt::MUL::behavior() {
     // Add vs. subtract
     if (ss) {
       // MLS
-      result = (long long)(((long long)ra - result) & 0x00000000FFFFFFFFLL);
+      result = (sign_extend(ra, 32) - result) & 0x00000000FFFFFFFFLL;
     } else {
       // MLA
-      result = (long long)(((long long)ra + result) & 0x00000000FFFFFFFFLL);
+      result = (sign_extend(ra, 32) + result) & 0x00000000FFFFFFFFLL;
     }
   }
-  rd = (int)(result & 0x00000000FFFFFFFFLL);
+  rd = result & 0x00000000FFFFFFFFLL;
 
   // TODO: Compare stall cycles against Cortex A9 spec (rm: bits8-11).
   if ((rm & 0xFFFFFF00) == 0x0 || (rm & 0xFFFFFF00) == 0xFFFFFF00) {
@@ -6033,7 +6174,7 @@ unsigned core_armcortexa9_funclt::SMMUL::behavior() {
 
   unsigned latency = 0;
 
-  unsigned long long result = (long long)((long long)rm * (long long)rn);
+  long long result = sign_extend(rm, 32) * sign_extend(rn, 32);
 
   // Accumulate vs. non-accumulate
   if (ra_bit != 15) {
@@ -6042,15 +6183,15 @@ unsigned core_armcortexa9_funclt::SMMUL::behavior() {
     // Add vs. subtract
     if (op1a == 3) {
       // SMMLS
-      result = (long long)(((long long)ra << 32) - result);
+      result = (sign_extend(ra, 32) << 32) - result;
     } else if (!op1a) {
       // SMMLA
-      result = (long long)(((long long)ra << 32) + result);
+      result = (sign_extend(ra, 32) << 32) + result;
     }
   }
 
   if (op1b) result += 0x0000000080000000LL;
-  rd = (int)(((unsigned long)result >> 32) & 0x00000000FFFFFFFFLL);
+  rd = (result >> 32) & 0x00000000FFFFFFFFLL;
 
   // TODO: Compare stall cycles against Cortex A9 spec (rm: bits8-11).
   if (!(rm & 0xFFFFFF00) || (rm & 0xFFFFFF00) == 0xFFFFFF00) {
@@ -6692,18 +6833,20 @@ unsigned core_armcortexa9_funclt::SMMULD::behavior() {
 
   unsigned latency = 1;
 
-  unsigned long long result = (long long)((long long)(rn & 0xFFFF)
-  * (op1b? (long long)((rm >> 16) & 0xFFFF) : (long long)(rm & 0xFFFF)));
+  long long result = sign_extend(rn & 0xFFFF, 16)
+  * (op1b? sign_extend((rm >> 16) & 0xFFFF, 16) : sign_extend(rm & 0xFFFF, 16));
 
   // Add vs. subtract
   if (op1a) {
     // SMxSxD
-    result -= (long long)((long long)((rn >> 16) & 0xFFFF)
-    * (op1b? (long long)(rm & 0xFFFF) : (long long)((rm >> 16) & 0xFFFF)));
+    result -= sign_extend((rn >> 16) & 0xFFFF, 16)
+    * (op1b? sign_extend(rm & 0xFFFF, 16) : sign_extend((rm >> 16) & 0xFFFF,
+    16));
   } else {
     // SMxAxD
-    result += (long long)((long long)((rn >> 16) & 0xFFFF)
-    * (op1b? (long long)(rm & 0xFFFF) : (long long)((rm >> 16) & 0xFFFF)));
+    result += sign_extend((rn >> 16) & 0xFFFF, 16)
+    * (op1b? sign_extend(rm & 0xFFFF, 16) : sign_extend((rm >> 16) & 0xFFFF,
+    16));
   }
 
   // Accumulate vs. non-accumulate
@@ -6711,23 +6854,21 @@ unsigned core_armcortexa9_funclt::SMMULD::behavior() {
     // 32-bit vs. 64-bit
     if (l) {
       // SMLxLD
-      result += (long long)((((long long)rd << 32) & 0xFFFFFFFF00000000LL)
-      + ((long long)ra & 0x00000000FFFFFFFFLL));
-
-      rd = (int)(((unsigned long)result >> 32) & 0x00000000FFFFFFFFLL);
-      ra = (int)(result & 0x00000000FFFFFFFFLL);
+      result += ((rd & 0x00000000FFFFFFFFLL) << 32) | (ra & 0x00000000FFFFFFFFLL);
+      rd = (unsigned)((result >> 32) & 0x00000000FFFFFFFFLL);
+      ra = (unsigned)(result & 0x00000000FFFFFFFFLL);
     } else {
       // SMLxD
-      result += ((long long)ra);
-      rd = (int)(result & 0x00000000FFFFFFFFLL);
+      result += sign_extend(ra, 32);
+      rd = (unsigned)(result & 0x00000000FFFFFFFFLL);
     }
   } else
   // SMUxD
-  rd = (int)(result & 0x00000000FFFFFFFFLL);
+  rd = (unsigned)(result & 0x00000000FFFFFFFFLL);
 
   if ((!l && ra_bit != 15) || (!op1a && ra_bit == 15)) {
     // Update Q (cumulative saturation flag) if result saturates
-    CPSR[CPSR_Q] = (result != rd);
+    CPSR[CPSR_Q] = (result != sign_extend(rd, 32));
   }
 
   // TODO: Compare stall cycles against Cortex A9 spec (rm: bits8-11).
@@ -6899,9 +7040,9 @@ core_armcortexa9_funclt::AND_i::AND_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // AND_i()
@@ -6988,10 +7129,16 @@ unsigned core_armcortexa9_funclt::AND_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
-  rd = result = rn & operand;
+  result = rn & operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7019,9 +7166,9 @@ core_armcortexa9_funclt::AND_r::AND_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // AND_r()
@@ -7127,10 +7274,16 @@ unsigned core_armcortexa9_funclt::AND_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  rd = result = rn & operand;
+  result = rn & operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7274,7 +7427,7 @@ unsigned core_armcortexa9_funclt::AND_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  rd = result = rn & operand;
+  result = rn & operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7302,9 +7455,9 @@ core_armcortexa9_funclt::EOR_i::EOR_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // EOR_i()
@@ -7391,10 +7544,16 @@ unsigned core_armcortexa9_funclt::EOR_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
-  rd = result = rn ^ operand;
+  result = rn ^ operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7422,9 +7581,9 @@ core_armcortexa9_funclt::EOR_r::EOR_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // EOR_r()
@@ -7530,10 +7689,16 @@ unsigned core_armcortexa9_funclt::EOR_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  rd = result = rn ^ operand;
+  result = rn ^ operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7677,7 +7842,7 @@ unsigned core_armcortexa9_funclt::EOR_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  rd = result = rn ^ operand;
+  result = rn ^ operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7795,12 +7960,18 @@ unsigned core_armcortexa9_funclt::MVN_i::behavior() {
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
 
-  if (rn_bit)
+  if (rn_bit && !(s && rd_bit == 15))
   THROW_WARNING("Invalid MVN (immediate) encoding: rn != 0x0.");
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
-  rd = result = ~operand;
+  result = ~operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -7937,12 +8108,18 @@ unsigned core_armcortexa9_funclt::MVN_r::behavior() {
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
 
-  if (rn_bit)
+  if (rn_bit && !(s && rd_bit == 15))
   THROW_WARNING("Invalid MVN (register) encoding: rn != 0x0.");
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  rd = result = ~operand;
+  result = ~operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -8089,7 +8266,7 @@ unsigned core_armcortexa9_funclt::MVN_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  rd = result = ~operand;
+  result = ~operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -8117,9 +8294,9 @@ core_armcortexa9_funclt::ORR_i::ORR_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // ORR_i()
@@ -8206,10 +8383,16 @@ unsigned core_armcortexa9_funclt::ORR_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
-  rd = result = rn | operand;
+  result = rn | operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -8237,9 +8420,9 @@ core_armcortexa9_funclt::ORR_r::ORR_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // ORR_r()
@@ -8345,10 +8528,16 @@ unsigned core_armcortexa9_funclt::ORR_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  rd = result = rn | operand;
+  result = rn | operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -8492,7 +8681,7 @@ unsigned core_armcortexa9_funclt::ORR_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  rd = result = rn | operand;
+  result = rn | operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -9378,10 +9567,18 @@ unsigned core_armcortexa9_funclt::ASR_r::behavior() {
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
 
-  if (rn_bit)
+  if (rn_bit && !(s && rd_bit == 15))
   THROW_WARNING("Invalid ASR (register) encoding: rn != 0x0.");
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
+
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -9510,6 +9707,8 @@ unsigned core_armcortexa9_funclt::ASR_sr::behavior() {
   THROW_WARNING("Invalid ASR (shifted-register) encoding: rn != 0x0.");
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
+
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -9629,10 +9828,18 @@ unsigned core_armcortexa9_funclt::LSR_r::behavior() {
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
 
-  if (rn_bit)
+  if (rn_bit && !(s && rd_bit == 15))
   THROW_WARNING("Invalid LSR (register) encoding: rn != 0x0.");
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
+
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -9761,6 +9968,8 @@ unsigned core_armcortexa9_funclt::LSR_sr::behavior() {
   THROW_WARNING("Invalid LSR (shifted-register) encoding: rn != 0x0.");
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
+
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -9880,10 +10089,18 @@ unsigned core_armcortexa9_funclt::LSL_r::behavior() {
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
 
-  if (rn_bit)
+  if (rn_bit && !(s && rd_bit == 15))
   THROW_WARNING("Invalid LSL (register) encoding: rn != 0x0.");
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
+
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -10012,6 +10229,8 @@ unsigned core_armcortexa9_funclt::LSL_sr::behavior() {
   THROW_WARNING("Invalid LSL (shifted-register) encoding: rn != 0x0.");
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
+
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -10138,13 +10357,18 @@ unsigned core_armcortexa9_funclt::ROR_r::behavior() {
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
 
-  if (rn_bit)
+  if (rn_bit && !(s && rd_bit == 15))
   THROW_WARNING("Invalid ROR/RRX (register) encoding: rn != 0x0.");
-  carry = CPSR[CPSR_C];
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  rd = operand;
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -10274,7 +10498,7 @@ unsigned core_armcortexa9_funclt::ROR_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  rd = operand;
+  result = operand;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -10392,21 +10616,20 @@ unsigned core_armcortexa9_funclt::BFCI::behavior() {
   if (rd_bit == 15)
   THROW_EXCEPTION("Invalid BFC/BFI encoding: rd = 0xF.");
 
-  unsigned mask, result;
-  if ((imm0 <= 31) && (imm1 >= 0) && (imm0 >= imm1)) {
+  if ((imm0 <= 31) && (imm0 >= imm1)) {
+    unsigned long mask;
+    unsigned result;
+    mask = ((((unsigned long)0xFFFFFFFF << (32-imm0-1)) & 0xFFFFFFFF) >> (32-imm0+imm1-1)
+    << imm1);
     result = rd;
+    // BFC
     if (rm == 0xF) {
-      mask = (unsigned long)((unsigned long)0xFFFFFFFF << (32-imm0-1)) >>
-      (32-imm0-1+imm1);
-      result &= mask;
-    } else {
       // Clear bitfield.
-      //result = (unsigned long)(((unsigned long long)result << (32-imm0+imm1-1))
-      // >> (32-imm0+imm1-1));
-      mask = (unsigned long)((unsigned long)0xFFFFFFFF << (32-imm0+imm1-1)) >>
-      (32-imm0+imm1-1);
+      result &= ~mask;
+      // BFI
+    } else {
       // Set bitfield.
-      result = (result & !mask) | (rm & mask);
+      result = (result & ~mask) | (rm & mask);
     }
     rd = result;
   }
@@ -10435,9 +10658,9 @@ core_armcortexa9_funclt::BIC_i::BIC_i(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  ARMExpandImmOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // BIC_i()
@@ -10524,11 +10747,16 @@ unsigned core_armcortexa9_funclt::BIC_i::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
   result = rn & ~operand;
-  rd = result;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -10556,9 +10784,9 @@ core_armcortexa9_funclt::BIC_r::BIC_r(
     MemoryInterface& instr_memory,
     MemoryInterface& data_memory) :
   Instruction(R, instr_memory, data_memory),
+  DecodeImmShiftOp(R, instr_memory, data_memory),
   UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory) {
+  ConditionPassedOp(R, instr_memory, data_memory) {
 
 
 } // BIC_r()
@@ -10664,11 +10892,16 @@ unsigned core_armcortexa9_funclt::BIC_r::behavior() {
 
   this->num_instr_cycles = 0;
   this->num_instr_cycles += ConditionPassed(this->cond);
+
+  unsigned cur_mode = CPSR[CPSR_M];
+  if (s && rd_bit == 15 &&
+  ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+  || (cur_mode == (unsigned)EXECMODE::HYP)))
+  THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
   result = rn & ~operand;
-  rd = result;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -10813,7 +11046,6 @@ unsigned core_armcortexa9_funclt::BIC_sr::behavior() {
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
   result = rn & ~operand;
-  rd = result;
   this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
   this->result, this->carry);
   {
@@ -11076,13 +11308,15 @@ unsigned core_armcortexa9_funclt::PKH::behavior() {
   THROW_EXCEPTION("Invalid PKH encoding: rn|rd|rm = 0xF.");
 
   // Needed by DecodeImmShift().
-  shift_op = tb;
+  shift_op = tb << 1;
   shift_amm = imm;
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
+  // ASR
   if (shift_op) {
     rd = (rn & 0xFFFF0000) | (operand & 0x0000FFFF);
+    // LSL
   } else {
     rd = (operand & 0xFFFF0000) | (rn & 0x0000FFFF);
   }
@@ -11199,12 +11433,12 @@ unsigned core_armcortexa9_funclt::RBIT::behavior() {
   THROW_WARNING("Invalid RBIT encoding: rn|rs != 0xF.");
 
   unsigned result = rm;
-  result = (result << 16) | (result >> 16)
-  | ((result & 0x00FF00FF) << 8) | ((result & 0xFF00FF00) >> 8)
-  | ((result & 0x0F0F0F0F) << 4) | ((result & 0xF0F0F0F0) >> 4)
-  | ((result & 0x33333333) << 2) | ((result & 0xCCCCCCCC) >> 2)
-  | ((result & 0x55555555) << 1) | ((result & 0xAAAAAAAA) >> 1);
-  rd = result;
+  result = (result << 16) | (result >> 16);
+  result = ((result & 0x00FF00FF) << 8) | ((result & 0xFF00FF00) >> 8);
+  result = ((result & 0x0F0F0F0F) << 4) | ((result & 0xF0F0F0F0) >> 4);
+  result = ((result & 0x33333333) << 2) | ((result & 0xCCCCCCCC) >> 2);
+  result = ((result & 0x55555555) << 1) | ((result & 0xAAAAAAAA) >> 1);
+  rd = result & 0xFFFFFFFF;
   {
     unsigned num_cycles = 0;
 
@@ -11318,9 +11552,9 @@ unsigned core_armcortexa9_funclt::REV::behavior() {
   THROW_WARNING("Invalid REV encoding: rn|rs != 0xF.");
 
   unsigned result = rm;
-  result = (result << 16) | (result >> 16)
-  | ((result & 0x00FF00FF) << 8) | ((result & 0xFF00FF00) >> 8);
-  rd = result;
+  result = (result << 16) | (result >> 16);
+  result = ((result & 0x00FF00FF) << 8) | ((result & 0xFF00FF00) >> 8);
+  rd = result & 0xFFFFFFFF;
   {
     unsigned num_cycles = 0;
 
@@ -11435,7 +11669,7 @@ unsigned core_armcortexa9_funclt::REV16::behavior() {
 
   unsigned result = rm;
   result = ((result & 0x00FF00FF) << 8) | ((result & 0xFF00FF00) >> 8);
-  rd = result;
+  rd = result & 0xFFFFFFFF;
   {
     unsigned num_cycles = 0;
 
@@ -11673,13 +11907,15 @@ unsigned core_armcortexa9_funclt::USBFX::behavior() {
   if ((rd_bit == 15) || (rm_bit == 15))
   THROW_EXCEPTION("Invalid UBFX/SBFX encoding: rd|rm = 0xF.");
 
-  unsigned msb = imm1 + imm0;
+  unsigned msb = imm0 + imm1;
   if (msb <= 31) {
-    unsigned mask = ((unsigned)0xFFFFFFFF >> (32 - imm0 - 1)) << imm1;
-    int result = ((unsigned)rm & mask) >> imm1;
+    unsigned long mask;
+    mask = ((((unsigned long)0xFFFFFFFF << (32-msb-1)) & 0xFFFFFFFF) >> (32-imm0-1)
+    << imm1);
+    unsigned result = (unsigned)(rm & mask) >> imm1;
     // Unsigned vs. signed
-    if (u) rd = result;
-    else rd = sign_extend(result, imm0+1);
+    if (u) rd = result & 0xFFFFFFFF;
+    else rd = sign_extend(result, imm0+1) & 0xFFFFFFFF;
   }
   {
     unsigned num_cycles = 0;
@@ -11795,7 +12031,7 @@ unsigned core_armcortexa9_funclt::SEL::behavior() {
   if (rs_bit != 15)
   THROW_WARNING("Invalid SEL encoding: rs != 0xF.");
 
-  unsigned result;
+  unsigned result = 0;
   for (unsigned i = 0; i < 4; ++i) {
     if (CPSR[CPSR_GE] & (0x1 << i)) {
       result |= rn & (0x000000FF << (i << 3));
@@ -11914,7 +12150,6 @@ unsigned core_armcortexa9_funclt::CMN_i::behavior() {
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
-  //carry = 0
   AddWithCarry(rn, operand, 0);
   return this->num_instr_cycles;
 } // behavior()
@@ -12033,7 +12268,6 @@ unsigned core_armcortexa9_funclt::CMN_r::behavior() {
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  //carry = 0
   AddWithCarry(rn, operand, 0);
   return this->num_instr_cycles;
 } // behavior()
@@ -12157,7 +12391,6 @@ unsigned core_armcortexa9_funclt::CMN_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  //carry = 0
   AddWithCarry(rn, operand, 0);
   return this->num_instr_cycles;
 } // behavior()
@@ -12257,8 +12490,7 @@ unsigned core_armcortexa9_funclt::CMP_i::behavior() {
   this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
   this->carry);
 
-  carry = 0;
-  update_psr_sub(rn, operand, 0);
+  AddWithCarry(rn, ~operand & 0xFFFFFFFF, 1);
   return this->num_instr_cycles;
 } // behavior()
 
@@ -12376,8 +12608,7 @@ unsigned core_armcortexa9_funclt::CMP_r::behavior() {
   this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
   this->shift_op, this->operand, this->carry);
 
-  carry = 0;
-  update_psr_sub(rn, operand, 0);
+  AddWithCarry(rn, ~operand & 0xFFFFFFFF, 1);
   return this->num_instr_cycles;
 } // behavior()
 
@@ -12500,8 +12731,7 @@ unsigned core_armcortexa9_funclt::CMP_sr::behavior() {
   this->num_instr_cycles += DecodeRegShift(this->rm, this->rm_bit, this->rs,
   this->rs_bit, this->shift_op, this->operand, this->carry);
 
-  //carry = 0
-  update_psr_sub(rn, operand, 0);
+  AddWithCarry(rn, ~operand & 0xFFFFFFFF, 1);
   return this->num_instr_cycles;
 } // behavior()
 
@@ -12644,7 +12874,7 @@ unsigned core_armcortexa9_funclt::LDR_i::behavior() {
   if (rd_bit == 15) {
     // Load word-aligned memory in PC.
     PC = data_memory.read_word(address) & 0xFFFFFFFC;
-    stall(4);
+    stall(2);
     flush();
   } else {
     rd = data_memory.read_word(address);
@@ -12798,7 +13028,7 @@ unsigned core_armcortexa9_funclt::LDR_r::behavior() {
   if (rd_bit == 15) {
     // Load word-aligned memory in PC.
     PC = data_memory.read_word(address) & 0xFFFFFFFC;
-    stall(4);
+    stall(2);
     flush();
   } else {
     rd = data_memory.read_word(address);
@@ -14415,6 +14645,11 @@ unsigned core_armcortexa9_funclt::LDRD_i::behavior() {
   THROW_WARNING("Invalid LDRD (literal) encoding: p != 1 or w != 0.");
 
   operand = (imm << 4) | rm_bit;
+
+#ifdef ACC_MODEL
+  REGS[rd_bit+1].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
+  ahead */);
+#endif
   this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
   this->w, this->operand, this->address);
 
@@ -14566,6 +14801,11 @@ unsigned core_armcortexa9_funclt::LDRD_r::behavior() {
   if (imm)
   THROW_WARNING("Invalid LDRD (register) encoding: rs != 0x0.");
 
+#ifdef ACC_MODEL
+  REGS[rd_bit+1].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
+  ahead */);
+#endif
+
   operand = rm;
   this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
   this->w, this->operand, this->address);
@@ -14679,8 +14919,18 @@ unsigned core_armcortexa9_funclt::LDREXD::behavior() {
   if ((rs_bit != 15) || (rm_bit != 15))
   THROW_WARNING("Invalid LDREXD encoding: rs|rm != 0xF.");
 
-  rd = data_memory.read_word(rn);
-  REGS[rd_bit+1] = data_memory.read_word(rn+4);
+#ifdef ACC_MODEL
+  REGS[rd_bit+1].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
+  ahead */);
+#endif
+
+  if (CPSR[CPSR_E] /* TODO: BigEndian() */) {
+    REGS[rd_bit+1] = data_memory.read_word(rn);
+    rd = data_memory.read_word(rn+4);
+  } else {
+    rd = data_memory.read_word(rn);
+    REGS[rd_bit+1] = data_memory.read_word(rn+4);
+  }
   stall(2);
   return this->num_instr_cycles;
 } // behavior()
@@ -15061,8109 +15311,8279 @@ unsigned core_armcortexa9_funclt::STREX::behavior() {
   if (rs_bit != 15)
   THROW_WARNING("Invalid STREX encoding: rs != 0xF.");
 
-  data_memory.write_word(rn, rd);
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STRB_i::STRB_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSOffsetOp(R, instr_memory, data_memory) {
-
-
-} // STRB_i()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRB_i::get_id() const throw() {
-
-  return 97;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRB_i::get_name() const throw() {
-
-  return "STRB_i";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRB_i::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STRB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  switch(this->p) {
-    case 0: {
-      oss << "]";
-    break;}
-  }
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->imm;
-  switch(this->p) {
-    case 1: {
-      oss << "]";
-    break;}
-  }
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STRB_i::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm = (bitstring & 0xfff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STRB_i::replicate(Instruction* instr)
-const throw() {
-
-  STRB_i* new_instr = new STRB_i(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STRB_i* old_instr = dynamic_cast<STRB_i*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRB_i::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
-  THROW_EXCEPTION("Invalid STRB/STRBT (immediate) encoding: (rn = 0xF or rn = rd) and writeback.");
-
-  if (rd_bit == 15)
-  THROW_EXCEPTION("Invalid STRB/STRBT (immediate) encoding: rd = 0xF.");
-
-  operand = imm;
-  this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
-  this->w, this->operand, this->address);
-
-  data_memory.write_byte(address, (unsigned char)(rd & 0x000000FF));
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STRB_r::STRB_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  DecodeImmShiftOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSOffsetOp(R, instr_memory, data_memory) {
-
-
-} // STRB_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRB_r::get_id() const throw() {
-
-  return 98;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRB_r::get_name() const throw() {
-
-  return "STRB_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRB_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STRB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  switch(this->p) {
-    case 0: {
-      oss << "]";
-    break;}
-  }
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rm_bit;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->shift_amm;
-  switch(this->p) {
-    case 1: {
-      oss << "]";
-    break;}
-  }
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STRB_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->shift_amm = (bitstring & 0xf80) >> 7;
-  this->shift_op = (bitstring & 0x60) >> 5;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STRB_r::replicate(Instruction* instr)
-const throw() {
-
-  STRB_r* new_instr = new STRB_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STRB_r* old_instr = dynamic_cast<STRB_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->shift_amm = old_instr->shift_amm;
-      new_instr->shift_op = old_instr->shift_op;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRB_r::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
-  THROW_EXCEPTION("Invalid STRB/STRBT (register) encoding: (rn = 0xF or rn = rd) and writeback.");
-
-  if ((rd_bit == 15) || (rm_bit == 15))
-  THROW_EXCEPTION("Invalid STRB/STRBT (register) encoding: rd|rm = 0xF.");
-  this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
-  this->shift_op, this->operand, this->carry);
-  this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
-  this->w, this->operand, this->address);
-
-  data_memory.write_byte(address, (unsigned char)(rd & 0x000000FF));
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STREXB::STREXB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // STREXB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STREXB::get_id() const throw() {
-
-  return 99;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STREXB::get_name() const throw() {
-
-  return "STREXB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STREXB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STREXB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", R";
-  oss << std::dec << this->rm_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STREXB::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STREXB::replicate(Instruction* instr)
-const throw() {
-
-  STREXB* new_instr = new STREXB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STREXB* old_instr = dynamic_cast<STREXB*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STREXB::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 15))
-  THROW_EXCEPTION("Invalid STREXB encoding: rn|rd|rm = 0xF.");
-
-  if ((rn_bit == rd_bit) || (rd_bit == rm_bit))
-  THROW_EXCEPTION("Invalid STREXB encoding: rn|rm = rd.");
-
-  if (rs_bit != 15)
-  THROW_WARNING("Invalid STREXB encoding: rs != 0xF.");
-
-  data_memory.write_byte(rn, (unsigned char)(rd & 0x000000FF));
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STRH_i::STRH_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSOffsetOp(R, instr_memory, data_memory) {
-
-
-} // STRH_i()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRH_i::get_id() const throw() {
-
-  return 100;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRH_i::get_name() const throw() {
-
-  return "STRH_i";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRH_i::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STRH";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  switch(this->p) {
-    case 0: {
-      oss << "]";
-    break;}
-  }
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->imm;
-  oss << std::dec << this->rm_bit;
-  switch(this->p) {
-    case 1: {
-      oss << "]";
-    break;}
-  }
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STRH_i::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm = (bitstring & 0xf00) >> 8;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STRH_i::replicate(Instruction* instr)
-const throw() {
-
-  STRH_i* new_instr = new STRH_i(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STRH_i* old_instr = dynamic_cast<STRH_i*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRH_i::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
-  THROW_EXCEPTION("Invalid STRH/STRHT (immediate) encoding: (rn = 15 or rn = rd) and writeback.");
-
-  if (rd_bit == 15)
-  THROW_EXCEPTION("Invalid STRH/STRHT (immediate) encoding: rd = 0xF.");
-
-  operand = (imm << 4) | rm_bit;
-  this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
-  this->w, this->operand, this->address);
-
-  data_memory.write_half(address, (unsigned short)(rd & 0x0000FFFF));
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STRH_r::STRH_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSOffsetOp(R, instr_memory, data_memory) {
-
-
-} // STRH_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRH_r::get_id() const throw() {
-
-  return 101;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRH_r::get_name() const throw() {
-
-  return "STRH_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRH_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STRH";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  switch(this->p) {
-    case 0: {
-      oss << "]";
-    break;}
-  }
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rm_bit;
-  switch(this->p) {
-    case 1: {
-      oss << "]";
-    break;}
-  }
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STRH_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm = (bitstring & 0xf00) >> 8;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STRH_r::replicate(Instruction* instr)
-const throw() {
-
-  STRH_r* new_instr = new STRH_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STRH_r* old_instr = dynamic_cast<STRH_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRH_r::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
-  THROW_EXCEPTION("Invalid STRH/STRHT (register) encoding: (rn = 0xF or rn = rd) and writeback.");
-
-  if ((rd_bit == 15) || (rm_bit == 15))
-  THROW_EXCEPTION("Invalid STRH/STRHT (register) encoding: rd|rm = 0xF.");
-
-  if (imm)
-  THROW_WARNING("Invalid STRH/STRHT (register) encoding: rs != 0x0.");
-
-  operand = rm;
-  this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
-  this->w, this->operand, this->address);
-
-  data_memory.write_half(address, (unsigned short)(rd & 0x0000FFFF));
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STREXH::STREXH(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // STREXH()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STREXH::get_id() const throw() {
-
-  return 102;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STREXH::get_name() const throw() {
-
-  return "STREXH";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STREXH::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STREXH";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", R";
-  oss << std::dec << this->rm_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STREXH::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STREXH::replicate(Instruction* instr)
-const throw() {
-
-  STREXH* new_instr = new STREXH(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STREXH* old_instr = dynamic_cast<STREXH*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STREXH::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 15))
-  THROW_EXCEPTION("Invalid STREXH encoding: rn|rd|rm = 0xF.");
-
-  if ((rn_bit == rd_bit) || (rd_bit == rm_bit))
-  THROW_EXCEPTION("Invalid STREXH encoding: rn|rm = rd.");
-
-  if (rs_bit != 15)
-  THROW_WARNING("Invalid STREXH encoding: rs != 0xF.");
-
-  data_memory.write_half(rn, (unsigned char)(rd & 0x0000FFFF));
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STRD::STRD(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSOffsetOp(R, instr_memory, data_memory) {
-
-
-} // STRD()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRD::get_id() const throw() {
-
-  return 103;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRD::get_name() const throw() {
-
-  return "STRD";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRD::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STRD";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  switch(this->p) {
-    case 0: {
-      oss << "]";
-    break;}
-  }
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->imm;
-  oss << std::dec << this->rm_bit;
-  switch(this->p) {
-    case 1: {
-      oss << "]";
-    break;}
-  }
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STRD::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm = (bitstring & 0xf00) >> 8;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STRD::replicate(Instruction* instr) const
-throw() {
-
-  STRD* new_instr = new STRD(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STRD* old_instr = dynamic_cast<STRD*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRD::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit) || (rn_bit == rd_bit+1)))
-  THROW_EXCEPTION("Invalid LDRD (immediate) encoding: rn = rd|rd+1 and writeback.");
-
-  if (!p && w)
-  THROW_EXCEPTION("Invalid STRD (immediate) encoding: p = 0 and w = 1. There is no STRDT instruction.");
-
-  if (rd_bit == 14)
-  THROW_EXCEPTION("Invalid STRD (immediate) encoding: rd = 0xE.");
-
-  if (rd_bit & 0x1)
-  THROW_EXCEPTION("Invalid STRD (immediate) encoding: rd[0] = 1.");
-
-  operand = (imm << 4) | rm_bit;
-  this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
-  this->w, this->operand, this->address);
-
-  data_memory.write_word(address, rd);
-  data_memory.write_word(address+4, REGS[rd_bit+1]);
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STRD_r::STRD_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSOffsetOp(R, instr_memory, data_memory) {
-
-
-} // STRD_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRD_r::get_id() const throw() {
-
-  return 104;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRD_r::get_name() const throw() {
-
-  return "STRD_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STRD_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STRD";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  switch(this->p) {
-    case 0: {
-      oss << "]";
-    break;}
-  }
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rm_bit;
-  switch(this->p) {
-    case 1: {
-      oss << "]";
-    break;}
-  }
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STRD_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm = (bitstring & 0xf00) >> 8;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STRD_r::replicate(Instruction* instr)
-const throw() {
-
-  STRD_r* new_instr = new STRD_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STRD_r* old_instr = dynamic_cast<STRD_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STRD_r::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit) || (rn_bit == rd_bit+1)))
-  THROW_EXCEPTION("Invalid STRD (register) encoding: (rn = 0xF or rn = rd|rd+1) and writeback.");
-
-  if (!p && w)
-  THROW_EXCEPTION("Invalid STRD (register) encoding: p = 0 and w = 1. There is no STRDT instruction.");
-
-  if ((rd_bit == 14) || (rm_bit == 15))
-  THROW_EXCEPTION("Invalid STRD (register) encoding: rd = 0xE or rm = 0xF or rm = rd|rd+1.");
-
-  if (rd_bit & 0x1)
-  THROW_EXCEPTION("Invalid STRD (register) encoding: rd[0] = 1.");
-
-  if (imm)
-  THROW_WARNING("Invalid STRD (register) encoding: rs != 0x0.");
-
-  operand = rm;
-  this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
-  this->w, this->operand, this->address);
-
-  data_memory.write_word(address, rd);
-  data_memory.write_word(address+4, REGS[rd_bit+1]);
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STREXD::STREXD(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // STREXD()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STREXD::get_id() const throw() {
-
-  return 105;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STREXD::get_name() const throw() {
-
-  return "STREXD";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STREXD::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STREXD";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", R";
-  oss << std::dec << this->rm_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STREXD::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STREXD::replicate(Instruction* instr)
-const throw() {
-
-  STREXD* new_instr = new STREXD(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STREXD* old_instr = dynamic_cast<STREXD*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STREXD::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 14))
-  THROW_EXCEPTION("Invalid STREXD encoding: rn|rd = 0xF or rm = 0xE.");
-
-  if (rm_bit & 0x1)
-  THROW_EXCEPTION("Invalid STREXD encoding: rm[0] = 1.");
-
-  if ((rn_bit == rd_bit) || (rd_bit == rm_bit) || (rd_bit == rm_bit+1))
-  THROW_EXCEPTION("Invalid STREXD encoding: rn|rm|rm+1 = rd.");
-
-  if (rs_bit != 15)
-  THROW_WARNING("Invalid STREXD encoding: rs != 0xF.");
-
-  data_memory.write_word(rn, rd);
-  data_memory.write_word(rn+4, REGS[rd_bit+1]);
-  stall(1);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::LDM::LDM(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // LDM()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDM::get_id() const throw() {
-
-  return 106;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDM::get_name() const throw() {
-
-  return "LDM";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDM::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "LDM";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::LDM::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::LDM::replicate(Instruction* instr) const
-throw() {
-
-  LDM* new_instr = new LDM(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    LDM* old_instr = dynamic_cast<LDM*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDM::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
-  : 1 /* user registers */)
-  : 0 /* user mode*/);
-
-  //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // POP is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
-
-  if ((!mode || (mode == 1)) && !reg_list)
-  THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
-
-  if (w && (reg_list & (0x1 << rn_bit)))
-  THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
-
-  if ((mode == 1) && w)
-  THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
-      ahead */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_load = 0;
-  unsigned load_latency = 0;
-
-  if (!s || (reg_list & 0x00008000)) {
-    // LDMxx or LDMxx (exception return)
-    // Load memory in register i.
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-
-    // Load memory in PC.
-    // If the PC is among reg_list, this is like performing a branch.
-    if (reg_list & 0x00008000) {
-      if (s) {
-        // LDMxx (exception return)
-        unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
-        int spsr_idx = get_spsr_idx(mode);
-        if (spsr_idx >= 0) {
-          value = SPSR[spsr_idx];
-          mask = psr_mask(value, 0xF, mode, false, true);
-          // If the mode is going to change, update the aliases.
-          if ((mask & 0x1F) && (mode != (value & 0x1F))) {
-            update_alias(mode, value & 0x1F);
-          }
-          if (mask) {
-            CPSR = (CPSR & !mask) | (value & mask);
-          }
-        }
-      }
-      if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
-      BranchWritePC(data_memory.read_word(start_address));
-      num_regs_to_load++;
-      load_latency += 2;
-      flush();
-    }
-
-    // Optionally write back to base register.
-    if (w && !(reg_list & (0x00000001 << rn_bit))) {
-      // The writeback address is written back to the base register.
-      rn = wb_address;
-    }
-  } else {
-    // LDMxx (user registers)
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Load user mode registers.
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-  }
-  stall(load_latency);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::LDMIB::LDMIB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // LDMIB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDMIB::get_id() const throw() {
-
-  return 107;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDMIB::get_name() const throw() {
-
-  return "LDMIB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDMIB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "LDMIB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::LDMIB::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::LDMIB::replicate(Instruction* instr) const
-throw() {
-
-  LDMIB* new_instr = new LDMIB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    LDMIB* old_instr = dynamic_cast<LDMIB*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDMIB::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
-  : 1 /* user registers */)
-  : 0 /* user mode*/);
-
-  //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // POP is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
-
-  if ((!mode || (mode == 1)) && !reg_list)
-  THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
-
-  if (w && (reg_list & (0x1 << rn_bit)))
-  THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
-
-  if ((mode == 1) && w)
-  THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
-      ahead */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_load = 0;
-  unsigned load_latency = 0;
-
-  if (!s || (reg_list & 0x00008000)) {
-    // LDMxx or LDMxx (exception return)
-    // Load memory in register i.
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-
-    // Load memory in PC.
-    // If the PC is among reg_list, this is like performing a branch.
-    if (reg_list & 0x00008000) {
-      if (s) {
-        // LDMxx (exception return)
-        unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
-        int spsr_idx = get_spsr_idx(mode);
-        if (spsr_idx >= 0) {
-          value = SPSR[spsr_idx];
-          mask = psr_mask(value, 0xF, mode, false, true);
-          // If the mode is going to change, update the aliases.
-          if ((mask & 0x1F) && (mode != (value & 0x1F))) {
-            update_alias(mode, value & 0x1F);
-          }
-          if (mask) {
-            CPSR = (CPSR & !mask) | (value & mask);
-          }
-        }
-      }
-      if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
-      BranchWritePC(data_memory.read_word(start_address));
-      num_regs_to_load++;
-      load_latency += 2;
-      flush();
-    }
-
-    // Optionally write back to base register.
-    if (w && !(reg_list & (0x00000001 << rn_bit))) {
-      // The writeback address is written back to the base register.
-      rn = wb_address;
-    }
-  } else {
-    // LDMxx (user registers)
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Load user mode registers.
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-  }
-  stall(load_latency);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::LDMDA::LDMDA(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // LDMDA()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDMDA::get_id() const throw() {
-
-  return 108;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDMDA::get_name() const throw() {
-
-  return "LDMDA";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDMDA::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "LDMDA";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::LDMDA::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::LDMDA::replicate(Instruction* instr) const
-throw() {
-
-  LDMDA* new_instr = new LDMDA(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    LDMDA* old_instr = dynamic_cast<LDMDA*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDMDA::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
-  : 1 /* user registers */)
-  : 0 /* user mode*/);
-
-  //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // POP is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
-
-  if ((!mode || (mode == 1)) && !reg_list)
-  THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
-
-  if (w && (reg_list & (0x1 << rn_bit)))
-  THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
-
-  if ((mode == 1) && w)
-  THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
-      ahead */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_load = 0;
-  unsigned load_latency = 0;
-
-  if (!s || (reg_list & 0x00008000)) {
-    // LDMxx or LDMxx (exception return)
-    // Load memory in register i.
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-
-    // Load memory in PC.
-    // If the PC is among reg_list, this is like performing a branch.
-    if (reg_list & 0x00008000) {
-      if (s) {
-        // LDMxx (exception return)
-        unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
-        int spsr_idx = get_spsr_idx(mode);
-        if (spsr_idx >= 0) {
-          value = SPSR[spsr_idx];
-          mask = psr_mask(value, 0xF, mode, false, true);
-          // If the mode is going to change, update the aliases.
-          if ((mask & 0x1F) && (mode != (value & 0x1F))) {
-            update_alias(mode, value & 0x1F);
-          }
-          if (mask) {
-            CPSR = (CPSR & !mask) | (value & mask);
-          }
-        }
-      }
-      if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
-      BranchWritePC(data_memory.read_word(start_address));
-      num_regs_to_load++;
-      load_latency += 2;
-      flush();
-    }
-
-    // Optionally write back to base register.
-    if (w && !(reg_list & (0x00000001 << rn_bit))) {
-      // The writeback address is written back to the base register.
-      rn = wb_address;
-    }
-  } else {
-    // LDMxx (user registers)
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Load user mode registers.
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-  }
-  stall(load_latency);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::LDMDB::LDMDB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // LDMDB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDMDB::get_id() const throw() {
-
-  return 109;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDMDB::get_name() const throw() {
-
-  return "LDMDB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDMDB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "LDMDB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::LDMDB::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::LDMDB::replicate(Instruction* instr) const
-throw() {
-
-  LDMDB* new_instr = new LDMDB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    LDMDB* old_instr = dynamic_cast<LDMDB*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDMDB::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
-  : 1 /* user registers */)
-  : 0 /* user mode*/);
-
-  //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // POP is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
-
-  if ((!mode || (mode == 1)) && !reg_list)
-  THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
-
-  if (w && (reg_list & (0x1 << rn_bit)))
-  THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
-
-  if ((mode == 1) && w)
-  THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
-      ahead */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_load = 0;
-  unsigned load_latency = 0;
-
-  if (!s || (reg_list & 0x00008000)) {
-    // LDMxx or LDMxx (exception return)
-    // Load memory in register i.
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-
-    // Load memory in PC.
-    // If the PC is among reg_list, this is like performing a branch.
-    if (reg_list & 0x00008000) {
-      if (s) {
-        // LDMxx (exception return)
-        unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
-        int spsr_idx = get_spsr_idx(mode);
-        if (spsr_idx >= 0) {
-          value = SPSR[spsr_idx];
-          mask = psr_mask(value, 0xF, mode, false, true);
-          // If the mode is going to change, update the aliases.
-          if ((mask & 0x1F) && (mode != (value & 0x1F))) {
-            update_alias(mode, value & 0x1F);
-          }
-          if (mask) {
-            CPSR = (CPSR & !mask) | (value & mask);
-          }
-        }
-      }
-      if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
-      BranchWritePC(data_memory.read_word(start_address));
-      num_regs_to_load++;
-      load_latency += 2;
-      flush();
-    }
-
-    // Optionally write back to base register.
-    if (w && !(reg_list & (0x00000001 << rn_bit))) {
-      // The writeback address is written back to the base register.
-      rn = wb_address;
-    }
-  } else {
-    // LDMxx (user registers)
-    for (int i = 0; i < 15; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Load user mode registers.
-        REGS[i] = data_memory.read_word(start_address);
-        start_address += 4;
-        num_regs_to_load++;
-      }
-    }
-    load_latency = num_regs_to_load + 1;
-  }
-  stall(load_latency);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::POP_single::POP_single(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // POP_single()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::POP_single::get_id() const throw() {
-
-  return 110;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::POP_single::get_name() const throw() {
-
-  return "POP_single";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::POP_single::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "POP";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " {";
-  oss << std::showbase << std::hex << this->imm0;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::POP_single::set_params(const unsigned& bitstring)
-throw() {
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0 = (bitstring & 0xf000) >> 12;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::POP_single::replicate(Instruction* instr)
-const throw() {
-
-  POP_single* new_instr = new POP_single(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    POP_single* old_instr = dynamic_cast<POP_single*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0 = old_instr->imm0;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::POP_single::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (imm0 == 13)
-  THROW_EXCEPTION("Invalid POP (single) encoding: rd = 0xD.");
-
-#ifdef ACC_MODEL
-  REGS[imm0].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles ahead
-  */);
-#endif
-  reg_list = (0x1 << imm0);
-
-  unsigned start_address = SP;
-  unsigned num_regs_to_load = 0;
-  unsigned load_latency = 0;
-
-  for (int i = 0; i < 15; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      // Load user mode registers.
-      REGS[i] = data_memory.read_word(start_address);
-      start_address += 4;
-      num_regs_to_load++;
-    }
-  }
-
-  // Load memory in PC.
-  // If the PC is among reg_list, this is like performing a branch.
-  if (reg_list & 0x00008000) {
-    BranchWritePC(data_memory.read_word(start_address));
-    num_regs_to_load++;
-    load_latency += 2;
-    flush();
-  }
-
-  // Update SP.
-  SP += 4 * num_regs_to_load;
-
-  load_latency = num_regs_to_load + 1;
-  stall(load_latency);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::POP_block::POP_block(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // POP_block()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::POP_block::get_id() const throw() {
-
-  return 111;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::POP_block::get_name() const throw() {
-
-  return "POP_block";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::POP_block::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "POP";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " {";
-  oss << std::showbase << std::hex << (((this->imm0 << 12) & (unsigned)0xF000) |
-  (this->imm1 & ((unsigned)0xFFF)));
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::POP_block::set_params(const unsigned& bitstring)
-throw() {
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0 = (bitstring & 0xf000) >> 12;
-  this->imm1 = (bitstring & 0xfff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::POP_block::replicate(Instruction* instr)
-const throw() {
-
-  POP_block* new_instr = new POP_block(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    POP_block* old_instr = dynamic_cast<POP_block*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0 = old_instr->imm0;
-      new_instr->imm1 = old_instr->imm1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::POP_block::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  reg_list = (imm0 << 12) | imm1;
-
-  if (reg_list & (0x1 << 13))
-  THROW_EXCEPTION("Invalid POP (block) encoding: reg_list[13] = 1.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3 cycles
-      ahead */);
-    }
-  }
-#endif
-
-  unsigned start_address = SP;
-  unsigned num_regs_to_load = 0;
-  unsigned load_latency = 0;
-
-  for (int i = 0; i < 15; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      // Load user mode registers.
-      REGS[i] = data_memory.read_word(start_address);
-      start_address += 4;
-      num_regs_to_load++;
-    }
-  }
-
-  // Load memory in PC.
-  // If the PC is among reg_list, this is like performing a branch.
-  if (reg_list & 0x00008000) {
-    BranchWritePC(data_memory.read_word(start_address));
-    num_regs_to_load++;
-    load_latency += 2;
-    flush();
-  }
-
-  // Update SP.
-  SP += 4 * num_regs_to_load;
-
-  load_latency = num_regs_to_load + 1;
-  stall(load_latency);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STM::STM(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // STM()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STM::get_id() const throw() {
-
-  return 112;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STM::get_name() const throw() {
-
-  return "STM";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STM::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STM";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STM::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STM::replicate(Instruction* instr) const
-throw() {
-
-  STM* new_instr = new STM(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STM* old_instr = dynamic_cast<STM*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STM::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // PUSH is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
-
-  if (!reg_list)
-  THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
-
-  if (s && w)
-  THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles ahead
-      */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_store = 0;
-  start_address &= 0xFFFFFFFC;
-
-  if (!s) {
-    // STMxx common registers
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-    // Update base register if necessary.
-    // NOTE: Using the writeback strategy and putting the base register in the
-    // list of registers to be saved is defined by the ARM as an undefined
-    // operation, unless it is first in the register list. This implies that the
-    // write back happens in parallel to the storing of the first register.
-    if (w)
-    rn = wb_address;
-  } else {
-    // STMxx (user registers)
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Store user mode registers.
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-  }
-  stall(num_regs_to_store);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STMIB::STMIB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // STMIB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STMIB::get_id() const throw() {
-
-  return 113;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STMIB::get_name() const throw() {
-
-  return "STMIB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STMIB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STMIB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STMIB::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STMIB::replicate(Instruction* instr) const
-throw() {
-
-  STMIB* new_instr = new STMIB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STMIB* old_instr = dynamic_cast<STMIB*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STMIB::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // PUSH is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
-
-  if (!reg_list)
-  THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
-
-  if (s && w)
-  THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles ahead
-      */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_store = 0;
-  start_address &= 0xFFFFFFFC;
-
-  if (!s) {
-    // STMxx common registers
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-    // Update base register if necessary.
-    // NOTE: Using the writeback strategy and putting the base register in the
-    // list of registers to be saved is defined by the ARM as an undefined
-    // operation, unless it is first in the register list. This implies that the
-    // write back happens in parallel to the storing of the first register.
-    if (w)
-    rn = wb_address;
-  } else {
-    // STMxx (user registers)
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Store user mode registers.
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-  }
-  stall(num_regs_to_store);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STMDA::STMDA(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // STMDA()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STMDA::get_id() const throw() {
-
-  return 114;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STMDA::get_name() const throw() {
-
-  return "STMDA";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STMDA::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STMDA";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STMDA::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STMDA::replicate(Instruction* instr) const
-throw() {
-
-  STMDA* new_instr = new STMDA(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STMDA* old_instr = dynamic_cast<STMDA*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STMDA::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // PUSH is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
-
-  if (!reg_list)
-  THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
-
-  if (s && w)
-  THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles ahead
-      */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_store = 0;
-  start_address &= 0xFFFFFFFC;
-
-  if (!s) {
-    // STMxx common registers
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-    // Update base register if necessary.
-    // NOTE: Using the writeback strategy and putting the base register in the
-    // list of registers to be saved is defined by the ARM as an undefined
-    // operation, unless it is first in the register list. This implies that the
-    // write back happens in parallel to the storing of the first register.
-    if (w)
-    rn = wb_address;
-  } else {
-    // STMxx (user registers)
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Store user mode registers.
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-  }
-  stall(num_regs_to_store);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STMDB::STMDB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  LSMReglistOp(R, instr_memory, data_memory) {
-
-
-} // STMDB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STMDB::get_id() const throw() {
-
-  return 115;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STMDB::get_name() const throw() {
-
-  return "STMDB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STMDB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STMDB";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << ", {";
-  oss << std::showbase << std::hex << this->reg_list;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STMDB::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->s = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->reg_list = (bitstring & 0xffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STMDB::replicate(Instruction* instr) const
-throw() {
-
-  STMDB* new_instr = new STMDB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STMDB* old_instr = dynamic_cast<STMDB*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->s = old_instr->s;
-      new_instr->w = old_instr->w;
-      new_instr->reg_list = old_instr->reg_list;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STMDB::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
-  // PUSH is caught by the decoder as a subinstruction and never redirects here.
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
-
-  if (!reg_list)
-  THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
-
-  if (s && w)
-  THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles ahead
-      */);
-    }
-  }
-#endif
-  this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p, this->u,
-  this->reg_list, this->start_address, this->wb_address);
-
-  unsigned num_regs_to_store = 0;
-  start_address &= 0xFFFFFFFC;
-
-  if (!s) {
-    // STMxx common registers
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-    // Update base register if necessary.
-    // NOTE: Using the writeback strategy and putting the base register in the
-    // list of registers to be saved is defined by the ARM as an undefined
-    // operation, unless it is first in the register list. This implies that the
-    // write back happens in parallel to the storing of the first register.
-    if (w)
-    rn = wb_address;
-  } else {
-    // STMxx (user registers)
-    for (int i = 0; i < 16; i++) {
-      if ((reg_list & (0x00000001 << i)) != 0) {
-        // Store user mode registers.
-        data_memory.write_word(start_address, REGS[i]);
-        start_address += 4;
-        num_regs_to_store++;
-      }
-    }
-  }
-  stall(num_regs_to_store);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::PUSH_single::PUSH_single(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // PUSH_single()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PUSH_single::get_id() const throw() {
-
-  return 116;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PUSH_single::get_name() const throw() {
-
-  return "PUSH_single";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PUSH_single::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "PUSH";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " {";
-  oss << std::showbase << std::hex << this->imm0;
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::PUSH_single::set_params(const unsigned& bitstring)
-throw() {
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0 = (bitstring & 0xf000) >> 12;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::PUSH_single::replicate(Instruction* instr)
-const throw() {
-
-  PUSH_single* new_instr = new PUSH_single(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    PUSH_single* old_instr = dynamic_cast<PUSH_single*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0 = old_instr->imm0;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PUSH_single::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (imm0 == 13)
-  THROW_EXCEPTION("Invalid PUSH (single) encoding: rd = 0xD.");
-
-#ifdef ACC_MODEL
-  REGS[imm0].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles ahead
-  */);
-#endif
-  reg_list = (0x1 << imm0);
-
-  unsigned input = reg_list;
-  unsigned num_regs_to_store = 0;
-  for (; input; num_regs_to_store++) {
-    // Clear least significant bit set.
-    input &= input - 1;
-  }
-  unsigned start_address = SP - 4 * num_regs_to_store;
-
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      // Store user mode registers.
-      data_memory.write_word(start_address, REGS[i]);
-      start_address += 4;
-    }
-  }
-
-  // Update SP.
-  SP -= 4 * num_regs_to_store;
-
-  stall(num_regs_to_store);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::PUSH_block::PUSH_block(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // PUSH_block()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PUSH_block::get_id() const throw() {
-
-  return 117;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PUSH_block::get_name() const throw() {
-
-  return "PUSH_block";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PUSH_block::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "PUSH";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " {";
-  oss << std::showbase << std::hex << (((this->imm0 << 12) & (unsigned)0xF000) |
-  (this->imm1 & ((unsigned)0xFFF)));
-  oss << "}";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::PUSH_block::set_params(const unsigned& bitstring)
-throw() {
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0 = (bitstring & 0xf000) >> 12;
-  this->imm1 = (bitstring & 0xfff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::PUSH_block::replicate(Instruction* instr)
-const throw() {
-
-  PUSH_block* new_instr = new PUSH_block(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    PUSH_block* old_instr = dynamic_cast<PUSH_block*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0 = old_instr->imm0;
-      new_instr->imm1 = old_instr->imm1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PUSH_block::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  reg_list = (imm0 << 12) | imm1;
-
-#ifdef ACC_MODEL
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles ahead
-      */);
-    }
-  }
-#endif
-
-  unsigned input = reg_list;
-  unsigned num_regs_to_store = 0;
-  for (; input; num_regs_to_store++) {
-    // Clear least significant bit set.
-    input &= input - 1;
-  }
-  unsigned start_address = SP - 4 * num_regs_to_store;
-
-  for (int i = 0; i < 16; i++) {
-    if ((reg_list & (0x00000001 << i)) != 0) {
-      // Store user mode registers.
-      data_memory.write_word(start_address, REGS[i]);
-      start_address += 4;
-    }
-  }
-
-  // Update SP.
-  SP -= 4 * num_regs_to_store;
-
-  stall(num_regs_to_store);
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MOV_i::MOV_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory) {
-
-
-} // MOV_i()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOV_i::get_id() const throw() {
-
-  return 118;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOV_i::get_name() const throw() {
-
-  return "MOV_i";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOV_i::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MOV";
-  switch(this->s) {
-    case 1: {
-      oss << "S";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::showbase << std::hex << (((this->imm >> (2 * this->rotate)) &
-  (((unsigned)0xFFFFFFFF) >> (2 * this->rotate))) | ((this->imm << (32 - 2 *
-  this->rotate)) & (((unsigned)0xFFFFFFFF) << (32 - 2 * this->rotate))));
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MOV_i::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->s = (bitstring & 0x100000) >> 20;
-  this->rotate = (bitstring & 0xf00) >> 8;
-  this->imm = (bitstring & 0xff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MOV_i::replicate(Instruction* instr) const
-throw() {
-
-  MOV_i* new_instr = new MOV_i(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MOV_i* old_instr = dynamic_cast<MOV_i*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->s = old_instr->s;
-      new_instr->rotate = old_instr->rotate;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOV_i::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-  this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
-  this->carry);
-
-  rd = operand;
-  result = operand;
-  this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
-  this->result, this->carry);
-  {
-    unsigned num_cycles = 0;
-
-
-    /// In case the program counter is the updated register the latency of the
-    /// operation is incremented by two clock cycles.
-    if (rd_bit == 15) {
-      num_cycles += 2;
-      flush();
-    }
-    this->num_instr_cycles += num_cycles;
-  }
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MOV_r::MOV_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  UpdatePSRBitOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MOV_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOV_r::get_id() const throw() {
-
-  return 119;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOV_r::get_name() const throw() {
-
-  return "MOV_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOV_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MOV";
-  switch(this->s) {
-    case 1: {
-      oss << "S";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", R";
-  oss << std::dec << this->rm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MOV_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->s = (bitstring & 0x100000) >> 20;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MOV_r::replicate(Instruction* instr) const
-throw() {
-
-  MOV_r* new_instr = new MOV_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MOV_r* old_instr = dynamic_cast<MOV_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->s = old_instr->s;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOV_r::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rn_bit)
-  THROW_WARNING("Invalid MOV (register) encoding: rn != 0x0.");
-
-  rd = rm;
-  result = rm;
-  carry = CPSR[CPSR_C];
-  this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
-  this->result, this->carry);
-  {
-    unsigned num_cycles = 0;
-
-
-    /// In case the program counter is the updated register the latency of the
-    /// operation is incremented by two clock cycles.
-    if (rd_bit == 15) {
-      num_cycles += 2;
-      flush();
-    }
-    this->num_instr_cycles += num_cycles;
-  }
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MOVW::MOVW(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MOVW()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOVW::get_id() const throw() {
-
-  return 120;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOVW::get_name() const throw() {
-
-  return "MOVW";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOVW::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MOVW";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->imm0a;
-  oss << std::showbase << std::hex << this->imm0b;
-  oss << std::showbase << std::hex << this->imm1a;
-  oss << std::showbase << std::hex << this->b;
-  oss << std::showbase << std::hex << this->imm1b;
-  oss << std::showbase << std::hex << this->op1;
-  oss << std::showbase << std::hex << this->imm2;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MOVW::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0a = (bitstring & 0xc0000) >> 18;
-  this->imm0b = (bitstring & 0x30000) >> 16;
-  this->imm1a = (bitstring & 0xc00) >> 10;
-  this->b = (bitstring & 0x200) >> 9;
-  this->imm1b = (bitstring & 0x100) >> 8;
-  this->op1 = (bitstring & 0xf0) >> 4;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MOVW::replicate(Instruction* instr) const
-throw() {
-
-  MOVW* new_instr = new MOVW(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MOVW* old_instr = dynamic_cast<MOVW*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0a = old_instr->imm0a;
-      new_instr->imm0b = old_instr->imm0b;
-      new_instr->imm1a = old_instr->imm1a;
-      new_instr->b = old_instr->b;
-      new_instr->imm1b = old_instr->imm1b;
-      new_instr->op1 = old_instr->op1;
-      new_instr->imm2 = old_instr->imm2;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOVW::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit == 15)
-  THROW_EXCEPTION("Invalid MOVW encoding: rd = 0xF.");
-
-  unsigned imm0 = (imm0a << 2) | imm0b;
-  unsigned imm1 = (imm1a << 2) | (b << 1) | imm1b;
-  rd = (imm0 << 12) | (imm1 << 8) | (op1 << 4) | imm2;
-  {
-    unsigned num_cycles = 0;
-
-
-    /// In case the program counter is the updated register the latency of the
-    /// operation is incremented by two clock cycles.
-    if (rd_bit == 15) {
-      num_cycles += 2;
-      flush();
-    }
-    this->num_instr_cycles += num_cycles;
-  }
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MOVT::MOVT(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MOVT()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOVT::get_id() const throw() {
-
-  return 121;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOVT::get_name() const throw() {
-
-  return "MOVT";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MOVT::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MOVT";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->imm0a;
-  oss << std::showbase << std::hex << this->imm0b;
-  oss << std::showbase << std::hex << this->imm1a;
-  oss << std::showbase << std::hex << this->b;
-  oss << std::showbase << std::hex << this->imm1b;
-  oss << std::showbase << std::hex << this->op1;
-  oss << std::showbase << std::hex << this->imm2;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MOVT::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0a = (bitstring & 0xc0000) >> 18;
-  this->imm0b = (bitstring & 0x30000) >> 16;
-  this->imm1a = (bitstring & 0xc00) >> 10;
-  this->b = (bitstring & 0x200) >> 9;
-  this->imm1b = (bitstring & 0x100) >> 8;
-  this->op1 = (bitstring & 0xf0) >> 4;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MOVT::replicate(Instruction* instr) const
-throw() {
-
-  MOVT* new_instr = new MOVT(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MOVT* old_instr = dynamic_cast<MOVT*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0a = old_instr->imm0a;
-      new_instr->imm0b = old_instr->imm0b;
-      new_instr->imm1a = old_instr->imm1a;
-      new_instr->b = old_instr->b;
-      new_instr->imm1b = old_instr->imm1b;
-      new_instr->op1 = old_instr->op1;
-      new_instr->imm2 = old_instr->imm2;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MOVT::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit == 15)
-  THROW_EXCEPTION("Invalid MOVT encoding: rd = 0xF.");
-
-  unsigned imm0 = (imm0a << 2) | imm0b;
-  unsigned imm1 = (imm1a << 2) | (b << 1) | imm1b;
-  rd = (rd & 0x0000FFFF) | (imm0 << 28) | (imm1 << 24) | (op1 << 20) | (imm2 <<
-  16);
-  {
-    unsigned num_cycles = 0;
-
-
-    /// In case the program counter is the updated register the latency of the
-    /// operation is incremented by two clock cycles.
-    if (rd_bit == 15) {
-      num_cycles += 2;
-      flush();
-    }
-    this->num_instr_cycles += num_cycles;
-  }
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::SWP::SWP(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // SWP()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SWP::get_id() const throw() {
-
-  return 122;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SWP::get_name() const throw() {
-
-  return "SWP";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SWP::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "SWP";
-  switch(this->b) {
-    case 1: {
-      oss << "B";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", R";
-  oss << std::dec << this->rm_bit;
-  oss << ", [R";
-  oss << std::dec << this->rn_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::SWP::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->b = (bitstring & 0x400000) >> 22;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::SWP::replicate(Instruction* instr) const
-throw() {
-
-  SWP* new_instr = new SWP(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    SWP* old_instr = dynamic_cast<SWP*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->b = old_instr->b;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SWP::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 15))
-  THROW_EXCEPTION("Invalid SWP/SWPB encoding: rn|rd|rm = 0xF.");
-
-  if ((rn_bit == rd_bit) || (rn_bit == rm_bit))
-  THROW_EXCEPTION("Invalid SWP/SWPB encoding: rn = rd|rm.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid SWP/SWPB encoding: rs != 0x0.");
-
-  // Needed in case rd == rm.
-  unsigned temp;
-  if (b) {
-    temp = data_memory.read_byte(rn);
-    data_memory.write_byte(rn, rm & 0x000000FF);
-    rd = temp & 0x000000FF;
-  }
-  else {
-    temp = data_memory.read_word(rn);
-    if ((rn & 0x00000003) != 0x0) {
-      bool carry_dummy;
-      temp = ROR(temp, (rn & 0x00000003) << 3, carry_dummy);
-    }
+  // TODO: if (ExclusiveMonitorsPass(rn, 4)) {
     data_memory.write_word(rn, rm);
-    rd = temp;
-  }
-  stall(3);
-  return this->num_instr_cycles;
-} // behavior()
+    rd = 0;
+    //} else rd = 1;
+    stall(1);
+    return this->num_instr_cycles;
+  } // behavior()
 
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MRS::MRS(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
+  // ---------------------------------------------------------------------------
 
 
-} // MRS()
+  // ***************************************************************************
 
-// -----------------------------------------------------------------------------
+  core_armcortexa9_funclt::STRB_i::STRB_i(
+      Registers& R,
+      MemoryInterface& instr_memory,
+      MemoryInterface& data_memory) :
+    Instruction(R, instr_memory, data_memory),
+    ConditionPassedOp(R, instr_memory, data_memory),
+    LSOffsetOp(R, instr_memory, data_memory) {
 
-unsigned core_armcortexa9_funclt::MRS::get_id() const throw() {
 
-  return 123;
-} // get_id()
+  } // STRB_i()
 
-// -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::MRS::get_name() const throw() {
+  unsigned core_armcortexa9_funclt::STRB_i::get_id() const throw() {
 
-  return "MRS";
-} // get_name()
+    return 97;
+  } // get_id()
 
-// -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::MRS::get_mnemonic() const throw() {
+  std::string core_armcortexa9_funclt::STRB_i::get_name() const throw() {
 
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MRS";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  switch(this->r) {
-    case 0: {
-      oss << "CPSR";
-    break;}
-    case 1: {
-      oss << "SPSR";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
+    return "STRB_i";
+  } // get_name()
 
-// -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-void core_armcortexa9_funclt::MRS::set_params(const unsigned& bitstring) throw()
-{
+  std::string core_armcortexa9_funclt::STRB_i::get_mnemonic() const throw() {
 
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->r = (bitstring & 0x400000) >> 22;
-  this->imm0a = (bitstring & 0xc0000) >> 18;
-  this->imm0b = (bitstring & 0x30000) >> 16;
-  this->imm1a = (bitstring & 0xc00) >> 10;
-  this->b = (bitstring & 0x200) >> 9;
-  this->imm1b = (bitstring & 0x100) >> 8;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MRS::replicate(Instruction* instr) const
-throw() {
-
-  MRS* new_instr = new MRS(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MRS* old_instr = dynamic_cast<MRS*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->r = old_instr->r;
-      new_instr->imm0a = old_instr->imm0a;
-      new_instr->imm0b = old_instr->imm0b;
-      new_instr->imm1a = old_instr->imm1a;
-      new_instr->b = old_instr->b;
-      new_instr->imm1b = old_instr->imm1b;
-      new_instr->imm2 = old_instr->imm2;
+    std::ostringstream oss (std::ostringstream::out);
+    oss << "STRB";
+    oss << std::showbase << std::hex << this->cond;
+    oss << " R";
+    oss << std::dec << this->rd_bit;
+    oss << ", [R";
+    oss << std::dec << this->rn_bit;
+    switch(this->p) {
+      case 0: {
+        oss << "]";
+      break;}
     }
-  }
-  return new_instr;
-} // replicate()
+    oss << ", ";
+    switch(this->u) {
+      case 0: {
+        oss << "-";
+      break;}
+      case 1: {
+        oss << "+";
+      break;}
+    }
+    oss << std::showbase << std::hex << this->imm;
+    switch(this->p) {
+      case 1: {
+        oss << "]";
+      break;}
+    }
+    switch(this->w) {
+      case 1: {
+        oss << "!";
+      break;}
+    }
+    return oss.str();
+  } // get_mnemonic()
 
-// -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-unsigned core_armcortexa9_funclt::MRS::behavior() {
+  void core_armcortexa9_funclt::STRB_i::set_params(const unsigned& bitstring)
+  throw() {
 
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
+    this->rd_bit = (bitstring & 0xf000) >> 12;
+    this->rd.set_alias(REGS[this->rd_bit]);
+    this->rn_bit = (bitstring & 0xf0000) >> 16;
+    this->rn.set_alias(REGS[this->rn_bit]);
+    this->cond = (bitstring & 0xf0000000) >> 28;
+    this->p = (bitstring & 0x1000000) >> 24;
+    this->u = (bitstring & 0x800000) >> 23;
+    this->w = (bitstring & 0x200000) >> 21;
+    this->imm = (bitstring & 0xfff);
+  } // set_params()
 
-  imm0 = (imm0a << 2) | imm0b;
+  // ---------------------------------------------------------------------------
 
-  if (rd_bit == 15)
-  THROW_EXCEPTION("Invalid MRS (reg/banked) encoding: rd = 0xF.");
+  Instruction* core_armcortexa9_funclt::STRB_i::replicate(Instruction* instr)
+  const throw() {
 
-  if (!b && (imm0 != 0xF))
-  THROW_WARNING("Invalid MRS (reg) encoding: imm0 != 0xF.");
+    STRB_i* new_instr = new STRB_i(R, instr_memory, data_memory);
 
-  if (imm1a)
-  THROW_WARNING("Invalid MRS (reg/banked) encoding: imm1[3:2] != 0x0.");
-
-  if (!b && imm1b)
-  THROW_WARNING("Invalid MRS (reg) encoding: imm1[0] != 0x0.");
-
-  if (imm2)
-  THROW_WARNING("Invalid MRS (reg/banked) encoding: imm2 != 0x0.");
-
-  // Move from Special Register
-  if (!b) {
-    // Read CPSR/SPSR
-    if (!r) {
-      if (CPSR[CPSR_M] & 0xF) {
-        // Read CPSR for execution mode != USR
-        rd = CPSR & 0xF8FF03DF;
-      } else {
-        // Read CPSR for execution mode = USR
-        rd = CPSR & 0xF8FF0000;
-      }
-      // Read SPSR for execution modes != USR || SYS
-    } else {
-      int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
-      if (spsr_idx >= 0) {
-        rd = SPSR[spsr_idx];
-      } else {
-        THROW_EXCEPTION("MRS cannot read the SPSR in USR or SYS mode.");
+    // Set instruction fields.
+    if (instr) {
+      STRB_i* old_instr = dynamic_cast<STRB_i*>(instr);
+      if (old_instr) {
+        new_instr->rd_bit = old_instr->rd_bit;
+        new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+        new_instr->rn_bit = old_instr->rn_bit;
+        new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+        new_instr->cond = old_instr->cond;
+        new_instr->p = old_instr->p;
+        new_instr->u = old_instr->u;
+        new_instr->w = old_instr->w;
+        new_instr->imm = old_instr->imm;
       }
     }
-    // Move from Banked Register
-  } else {
-    unsigned sys_mode = (imm1b << 4) | imm0;
-    // Read banked registers for execution modes != USR
-    if (!r) {
-      if ((CPSR[CPSR_M] & 0xF) && valid_banked_reg_access(sys_mode)) {
-        switch((sys_mode >> 3) & 0x3) {
-          case 0x0:
-          // Banked USR registers (R8_usr)
-          rd = RB[8 + (sys_mode & 0x7)];
-          break;
-          case 0x1:
-          // Banked FIQ registers (R8_fiq)
-          rd = RB[18 + (sys_mode & 0x7)];
-          break;
-          case 0x2:
-          // Banked IRQ/SVC/ABT/UND registers
-          switch (sys_mode & 0x7) {
-            case 0x0:
-            case 0x1:
-            // Banked IRQ registers (LR_irq)
-            rd = RB[17 - (sys_mode & 0x1)];
-            break;
-            case 0x2:
-            case 0x3:
-            // Banked SVC registers (LR_svc)
-            rd = RB[30 - (sys_mode & 0x1)];
-            break;
-            case 0x4:
-            case 0x5:
-            // Banked ABT registers (LR_abt)
-            rd = RB[28 - (sys_mode & 0x1)];
-            break;
-            case 0x6:
-            case 0x7:
-            // Banked UND registers (LR_und)
-            rd = RB[26 - (sys_mode & 0x1)];
-            break;
-          } break;
-          case 0x3:
-          // Banked MON/HYP registers
-          if (!(sys_mode & 0x2)) {
-            // Banked LR_MON / SP_MON registers (LR_mon)
-            rd = RB[34 - (sys_mode & 0x1)];
-          } else {
-            // Banked ELR_HYP / SP_HYP registers (ELR_hyp)
-            rd = RB[32 - (sys_mode & 0x1)];
-          }
+    return new_instr;
+  } // replicate()
+
+  // ---------------------------------------------------------------------------
+
+  unsigned core_armcortexa9_funclt::STRB_i::behavior() {
+
+    this->num_instr_cycles = 0;
+    this->num_instr_cycles += ConditionPassed(this->cond);
+
+    if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
+    THROW_EXCEPTION("Invalid STRB/STRBT (immediate) encoding: (rn = 0xF or rn = rd) and writeback.");
+
+    if (rd_bit == 15)
+    THROW_EXCEPTION("Invalid STRB/STRBT (immediate) encoding: rd = 0xF.");
+
+    operand = imm;
+    this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
+    this->w, this->operand, this->address);
+
+    data_memory.write_byte(address, (unsigned char)(rd & 0x000000FF));
+    stall(1);
+    return this->num_instr_cycles;
+  } // behavior()
+
+  // ---------------------------------------------------------------------------
+
+
+  // ***************************************************************************
+
+  core_armcortexa9_funclt::STRB_r::STRB_r(
+      Registers& R,
+      MemoryInterface& instr_memory,
+      MemoryInterface& data_memory) :
+    Instruction(R, instr_memory, data_memory),
+    DecodeImmShiftOp(R, instr_memory, data_memory),
+    ConditionPassedOp(R, instr_memory, data_memory),
+    LSOffsetOp(R, instr_memory, data_memory) {
+
+
+  } // STRB_r()
+
+  // ---------------------------------------------------------------------------
+
+  unsigned core_armcortexa9_funclt::STRB_r::get_id() const throw() {
+
+    return 98;
+  } // get_id()
+
+  // ---------------------------------------------------------------------------
+
+  std::string core_armcortexa9_funclt::STRB_r::get_name() const throw() {
+
+    return "STRB_r";
+  } // get_name()
+
+  // ---------------------------------------------------------------------------
+
+  std::string core_armcortexa9_funclt::STRB_r::get_mnemonic() const throw() {
+
+    std::ostringstream oss (std::ostringstream::out);
+    oss << "STRB";
+    oss << std::showbase << std::hex << this->cond;
+    oss << " R";
+    oss << std::dec << this->rd_bit;
+    oss << ", [R";
+    oss << std::dec << this->rn_bit;
+    switch(this->p) {
+      case 0: {
+        oss << "]";
+      break;}
+    }
+    oss << ", ";
+    switch(this->u) {
+      case 0: {
+        oss << "-";
+      break;}
+      case 1: {
+        oss << "+";
+      break;}
+    }
+    oss << std::dec << this->rm_bit;
+    oss << ", ";
+    oss << std::showbase << std::hex << this->shift_amm;
+    switch(this->p) {
+      case 1: {
+        oss << "]";
+      break;}
+    }
+    switch(this->w) {
+      case 1: {
+        oss << "!";
+      break;}
+    }
+    return oss.str();
+  } // get_mnemonic()
+
+  // ---------------------------------------------------------------------------
+
+  void core_armcortexa9_funclt::STRB_r::set_params(const unsigned& bitstring)
+  throw() {
+
+    this->rd_bit = (bitstring & 0xf000) >> 12;
+    this->rd.set_alias(REGS[this->rd_bit]);
+    this->rm_bit = (bitstring & 0xf);
+    this->rm.set_alias(REGS[this->rm_bit]);
+    this->rn_bit = (bitstring & 0xf0000) >> 16;
+    this->rn.set_alias(REGS[this->rn_bit]);
+    this->cond = (bitstring & 0xf0000000) >> 28;
+    this->p = (bitstring & 0x1000000) >> 24;
+    this->u = (bitstring & 0x800000) >> 23;
+    this->w = (bitstring & 0x200000) >> 21;
+    this->shift_amm = (bitstring & 0xf80) >> 7;
+    this->shift_op = (bitstring & 0x60) >> 5;
+  } // set_params()
+
+  // ---------------------------------------------------------------------------
+
+  Instruction* core_armcortexa9_funclt::STRB_r::replicate(Instruction* instr)
+  const throw() {
+
+    STRB_r* new_instr = new STRB_r(R, instr_memory, data_memory);
+
+    // Set instruction fields.
+    if (instr) {
+      STRB_r* old_instr = dynamic_cast<STRB_r*>(instr);
+      if (old_instr) {
+        new_instr->rd_bit = old_instr->rd_bit;
+        new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+        new_instr->rm_bit = old_instr->rm_bit;
+        new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+        new_instr->rn_bit = old_instr->rn_bit;
+        new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+        new_instr->cond = old_instr->cond;
+        new_instr->p = old_instr->p;
+        new_instr->u = old_instr->u;
+        new_instr->w = old_instr->w;
+        new_instr->shift_amm = old_instr->shift_amm;
+        new_instr->shift_op = old_instr->shift_op;
+      }
+    }
+    return new_instr;
+  } // replicate()
+
+  // ---------------------------------------------------------------------------
+
+  unsigned core_armcortexa9_funclt::STRB_r::behavior() {
+
+    this->num_instr_cycles = 0;
+    this->num_instr_cycles += ConditionPassed(this->cond);
+
+    if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
+    THROW_EXCEPTION("Invalid STRB/STRBT (register) encoding: (rn = 0xF or rn = rd) and writeback.");
+
+    if ((rd_bit == 15) || (rm_bit == 15))
+    THROW_EXCEPTION("Invalid STRB/STRBT (register) encoding: rd|rm = 0xF.");
+    this->num_instr_cycles += DecodeImmShift(this->rm, this->rm_bit, this->shift_amm,
+    this->shift_op, this->operand, this->carry);
+    this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p, this->u,
+    this->w, this->operand, this->address);
+
+    data_memory.write_byte(address, (unsigned char)(rd & 0x000000FF));
+    stall(1);
+    return this->num_instr_cycles;
+  } // behavior()
+
+  // ---------------------------------------------------------------------------
+
+
+  // ***************************************************************************
+
+  core_armcortexa9_funclt::STREXB::STREXB(
+      Registers& R,
+      MemoryInterface& instr_memory,
+      MemoryInterface& data_memory) :
+    Instruction(R, instr_memory, data_memory),
+    ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+  } // STREXB()
+
+  // ---------------------------------------------------------------------------
+
+  unsigned core_armcortexa9_funclt::STREXB::get_id() const throw() {
+
+    return 99;
+  } // get_id()
+
+  // ---------------------------------------------------------------------------
+
+  std::string core_armcortexa9_funclt::STREXB::get_name() const throw() {
+
+    return "STREXB";
+  } // get_name()
+
+  // ---------------------------------------------------------------------------
+
+  std::string core_armcortexa9_funclt::STREXB::get_mnemonic() const throw() {
+
+    std::ostringstream oss (std::ostringstream::out);
+    oss << "STREXB";
+    oss << std::showbase << std::hex << this->cond;
+    oss << " R";
+    oss << std::dec << this->rd_bit;
+    oss << ", R";
+    oss << std::dec << this->rm_bit;
+    oss << ", [R";
+    oss << std::dec << this->rn_bit;
+    oss << "]";
+    return oss.str();
+  } // get_mnemonic()
+
+  // ---------------------------------------------------------------------------
+
+  void core_armcortexa9_funclt::STREXB::set_params(const unsigned& bitstring)
+  throw() {
+
+    this->rd_bit = (bitstring & 0xf000) >> 12;
+    this->rd.set_alias(REGS[this->rd_bit]);
+    this->rm_bit = (bitstring & 0xf);
+    this->rm.set_alias(REGS[this->rm_bit]);
+    this->rn_bit = (bitstring & 0xf0000) >> 16;
+    this->rn.set_alias(REGS[this->rn_bit]);
+    this->rs_bit = (bitstring & 0xf00) >> 8;
+    this->rs.set_alias(REGS[this->rs_bit]);
+    this->cond = (bitstring & 0xf0000000) >> 28;
+  } // set_params()
+
+  // ---------------------------------------------------------------------------
+
+  Instruction* core_armcortexa9_funclt::STREXB::replicate(Instruction* instr)
+  const throw() {
+
+    STREXB* new_instr = new STREXB(R, instr_memory, data_memory);
+
+    // Set instruction fields.
+    if (instr) {
+      STREXB* old_instr = dynamic_cast<STREXB*>(instr);
+      if (old_instr) {
+        new_instr->rd_bit = old_instr->rd_bit;
+        new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+        new_instr->rm_bit = old_instr->rm_bit;
+        new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+        new_instr->rn_bit = old_instr->rn_bit;
+        new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+        new_instr->rs_bit = old_instr->rs_bit;
+        new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+        new_instr->cond = old_instr->cond;
+      }
+    }
+    return new_instr;
+  } // replicate()
+
+  // ---------------------------------------------------------------------------
+
+  unsigned core_armcortexa9_funclt::STREXB::behavior() {
+
+    this->num_instr_cycles = 0;
+    this->num_instr_cycles += ConditionPassed(this->cond);
+
+    if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 15))
+    THROW_EXCEPTION("Invalid STREXB encoding: rn|rd|rm = 0xF.");
+
+    if ((rn_bit == rd_bit) || (rd_bit == rm_bit))
+    THROW_EXCEPTION("Invalid STREXB encoding: rn|rm = rd.");
+
+    if (rs_bit != 15)
+    THROW_WARNING("Invalid STREXB encoding: rs != 0xF.");
+
+    // TODO: if (ExclusiveMonitorsPass(rn, 1)) {
+      data_memory.write_byte(rn, (unsigned char)(rd & 0x000000FF));
+      rd = 0;
+      //} else rd = 1;
+      stall(1);
+      return this->num_instr_cycles;
+    } // behavior()
+
+    // -------------------------------------------------------------------------
+
+
+    // *************************************************************************
+
+    core_armcortexa9_funclt::STRH_i::STRH_i(
+        Registers& R,
+        MemoryInterface& instr_memory,
+        MemoryInterface& data_memory) :
+      Instruction(R, instr_memory, data_memory),
+      ConditionPassedOp(R, instr_memory, data_memory),
+      LSOffsetOp(R, instr_memory, data_memory) {
+
+
+    } // STRH_i()
+
+    // -------------------------------------------------------------------------
+
+    unsigned core_armcortexa9_funclt::STRH_i::get_id() const throw() {
+
+      return 100;
+    } // get_id()
+
+    // -------------------------------------------------------------------------
+
+    std::string core_armcortexa9_funclt::STRH_i::get_name() const throw() {
+
+      return "STRH_i";
+    } // get_name()
+
+    // -------------------------------------------------------------------------
+
+    std::string core_armcortexa9_funclt::STRH_i::get_mnemonic() const throw() {
+
+      std::ostringstream oss (std::ostringstream::out);
+      oss << "STRH";
+      oss << std::showbase << std::hex << this->cond;
+      oss << " R";
+      oss << std::dec << this->rd_bit;
+      oss << ", [R";
+      oss << std::dec << this->rn_bit;
+      switch(this->p) {
+        case 0: {
+          oss << "]";
+        break;}
+      }
+      oss << ", ";
+      switch(this->u) {
+        case 0: {
+          oss << "-";
+        break;}
+        case 1: {
+          oss << "+";
+        break;}
+      }
+      oss << std::showbase << std::hex << this->imm;
+      oss << std::dec << this->rm_bit;
+      switch(this->p) {
+        case 1: {
+          oss << "]";
+        break;}
+      }
+      switch(this->w) {
+        case 1: {
+          oss << "!";
+        break;}
+      }
+      return oss.str();
+    } // get_mnemonic()
+
+    // -------------------------------------------------------------------------
+
+    void core_armcortexa9_funclt::STRH_i::set_params(const unsigned& bitstring)
+    throw() {
+
+      this->rd_bit = (bitstring & 0xf000) >> 12;
+      this->rd.set_alias(REGS[this->rd_bit]);
+      this->rm_bit = (bitstring & 0xf);
+      this->rm.set_alias(REGS[this->rm_bit]);
+      this->rn_bit = (bitstring & 0xf0000) >> 16;
+      this->rn.set_alias(REGS[this->rn_bit]);
+      this->cond = (bitstring & 0xf0000000) >> 28;
+      this->p = (bitstring & 0x1000000) >> 24;
+      this->u = (bitstring & 0x800000) >> 23;
+      this->w = (bitstring & 0x200000) >> 21;
+      this->imm = (bitstring & 0xf00) >> 8;
+    } // set_params()
+
+    // -------------------------------------------------------------------------
+
+    Instruction* core_armcortexa9_funclt::STRH_i::replicate(Instruction* instr)
+    const throw() {
+
+      STRH_i* new_instr = new STRH_i(R, instr_memory, data_memory);
+
+      // Set instruction fields.
+      if (instr) {
+        STRH_i* old_instr = dynamic_cast<STRH_i*>(instr);
+        if (old_instr) {
+          new_instr->rd_bit = old_instr->rd_bit;
+          new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+          new_instr->rm_bit = old_instr->rm_bit;
+          new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+          new_instr->rn_bit = old_instr->rn_bit;
+          new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+          new_instr->cond = old_instr->cond;
+          new_instr->p = old_instr->p;
+          new_instr->u = old_instr->u;
+          new_instr->w = old_instr->w;
+          new_instr->imm = old_instr->imm;
         }
-      } else {
-        THROW_EXCEPTION("MRS cannot read banked registers in USR mode.");
       }
-      // Read SPSR for execution modes != USR
-    } else {
-      unsigned cur_mode = CPSR[CPSR_M];
-      if (cur_mode & 0xF) {
-        switch(sys_mode) {
-          case 0x0E:
-          // Banked LR_IRQ / SP_IRQ registers: Inaccessible from IRQ mode
-          if (cur_mode != (unsigned)EXECMODE::FIQ) rd = SPSR_FIQ;
-          break;
-          case 0x10:
-          if (cur_mode != (unsigned)EXECMODE::IRQ) rd = SPSR_IRQ;
-          break;
-          case 0x12:
-          if (cur_mode != (unsigned)EXECMODE::SVC) rd = SPSR_SVC;
-          break;
-          case 0x14:
-          if (cur_mode != (unsigned)EXECMODE::ABT) rd = SPSR_ABT;
-          break;
-          case 0x16:
-          if (cur_mode != (unsigned)EXECMODE::UND) rd = SPSR_UND;
-          break;
-          case 0x1C:
-          if (cur_mode != (unsigned)EXECMODE::MON) rd = SPSR_MON;
-          break;
-          case 0x1E:
-          if (cur_mode != (unsigned)EXECMODE::MON) rd = SPSR_HYP;
-          break;
+      return new_instr;
+    } // replicate()
+
+    // -------------------------------------------------------------------------
+
+    unsigned core_armcortexa9_funclt::STRH_i::behavior() {
+
+      this->num_instr_cycles = 0;
+      this->num_instr_cycles += ConditionPassed(this->cond);
+
+      if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
+      THROW_EXCEPTION("Invalid STRH/STRHT (immediate) encoding: (rn = 15 or rn = rd) and writeback.");
+
+      if (rd_bit == 15)
+      THROW_EXCEPTION("Invalid STRH/STRHT (immediate) encoding: rd = 0xF.");
+
+      operand = (imm << 4) | rm_bit;
+      this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p,
+      this->u, this->w, this->operand, this->address);
+
+      data_memory.write_half(address, (unsigned short)(rd & 0x0000FFFF));
+      stall(1);
+      return this->num_instr_cycles;
+    } // behavior()
+
+    // -------------------------------------------------------------------------
+
+
+    // *************************************************************************
+
+    core_armcortexa9_funclt::STRH_r::STRH_r(
+        Registers& R,
+        MemoryInterface& instr_memory,
+        MemoryInterface& data_memory) :
+      Instruction(R, instr_memory, data_memory),
+      ConditionPassedOp(R, instr_memory, data_memory),
+      LSOffsetOp(R, instr_memory, data_memory) {
+
+
+    } // STRH_r()
+
+    // -------------------------------------------------------------------------
+
+    unsigned core_armcortexa9_funclt::STRH_r::get_id() const throw() {
+
+      return 101;
+    } // get_id()
+
+    // -------------------------------------------------------------------------
+
+    std::string core_armcortexa9_funclt::STRH_r::get_name() const throw() {
+
+      return "STRH_r";
+    } // get_name()
+
+    // -------------------------------------------------------------------------
+
+    std::string core_armcortexa9_funclt::STRH_r::get_mnemonic() const throw() {
+
+      std::ostringstream oss (std::ostringstream::out);
+      oss << "STRH";
+      oss << std::showbase << std::hex << this->cond;
+      oss << " R";
+      oss << std::dec << this->rd_bit;
+      oss << ", [R";
+      oss << std::dec << this->rn_bit;
+      switch(this->p) {
+        case 0: {
+          oss << "]";
+        break;}
+      }
+      oss << ", ";
+      switch(this->u) {
+        case 0: {
+          oss << "-";
+        break;}
+        case 1: {
+          oss << "+";
+        break;}
+      }
+      oss << std::dec << this->rm_bit;
+      switch(this->p) {
+        case 1: {
+          oss << "]";
+        break;}
+      }
+      switch(this->w) {
+        case 1: {
+          oss << "!";
+        break;}
+      }
+      return oss.str();
+    } // get_mnemonic()
+
+    // -------------------------------------------------------------------------
+
+    void core_armcortexa9_funclt::STRH_r::set_params(const unsigned& bitstring)
+    throw() {
+
+      this->rd_bit = (bitstring & 0xf000) >> 12;
+      this->rd.set_alias(REGS[this->rd_bit]);
+      this->rm_bit = (bitstring & 0xf);
+      this->rm.set_alias(REGS[this->rm_bit]);
+      this->rn_bit = (bitstring & 0xf0000) >> 16;
+      this->rn.set_alias(REGS[this->rn_bit]);
+      this->cond = (bitstring & 0xf0000000) >> 28;
+      this->p = (bitstring & 0x1000000) >> 24;
+      this->u = (bitstring & 0x800000) >> 23;
+      this->w = (bitstring & 0x200000) >> 21;
+      this->imm = (bitstring & 0xf00) >> 8;
+    } // set_params()
+
+    // -------------------------------------------------------------------------
+
+    Instruction* core_armcortexa9_funclt::STRH_r::replicate(Instruction* instr)
+    const throw() {
+
+      STRH_r* new_instr = new STRH_r(R, instr_memory, data_memory);
+
+      // Set instruction fields.
+      if (instr) {
+        STRH_r* old_instr = dynamic_cast<STRH_r*>(instr);
+        if (old_instr) {
+          new_instr->rd_bit = old_instr->rd_bit;
+          new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+          new_instr->rm_bit = old_instr->rm_bit;
+          new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+          new_instr->rn_bit = old_instr->rn_bit;
+          new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+          new_instr->cond = old_instr->cond;
+          new_instr->p = old_instr->p;
+          new_instr->u = old_instr->u;
+          new_instr->w = old_instr->w;
+          new_instr->imm = old_instr->imm;
         }
-      } else {
-        THROW_EXCEPTION("MRS cannot read the SPSR in USR mode.");
       }
-    }
-  }
-  return this->num_instr_cycles;
-} // behavior()
+      return new_instr;
+    } // replicate()
 
-// -----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+
+    unsigned core_armcortexa9_funclt::STRH_r::behavior() {
+
+      this->num_instr_cycles = 0;
+      this->num_instr_cycles += ConditionPassed(this->cond);
+
+      if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit)))
+      THROW_EXCEPTION("Invalid STRH/STRHT (register) encoding: (rn = 0xF or rn = rd) and writeback.");
+
+      if ((rd_bit == 15) || (rm_bit == 15))
+      THROW_EXCEPTION("Invalid STRH/STRHT (register) encoding: rd|rm = 0xF.");
+
+      if (imm)
+      THROW_WARNING("Invalid STRH/STRHT (register) encoding: rs != 0x0.");
+
+      operand = rm;
+      this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p,
+      this->u, this->w, this->operand, this->address);
+
+      data_memory.write_half(address, (unsigned short)(rd & 0x0000FFFF));
+      stall(1);
+      return this->num_instr_cycles;
+    } // behavior()
+
+    // -------------------------------------------------------------------------
 
 
-// *****************************************************************************
+    // *************************************************************************
 
-core_armcortexa9_funclt::MSR_i::MSR_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ARMExpandImmOp(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
+    core_armcortexa9_funclt::STREXH::STREXH(
+        Registers& R,
+        MemoryInterface& instr_memory,
+        MemoryInterface& data_memory) :
+      Instruction(R, instr_memory, data_memory),
+      ConditionPassedOp(R, instr_memory, data_memory) {
 
 
-} // MSR_i()
+    } // STREXH()
 
-// -----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-unsigned core_armcortexa9_funclt::MSR_i::get_id() const throw() {
+    unsigned core_armcortexa9_funclt::STREXH::get_id() const throw() {
 
-  return 124;
-} // get_id()
+      return 102;
+    } // get_id()
 
-// -----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::MSR_i::get_name() const throw() {
+    std::string core_armcortexa9_funclt::STREXH::get_name() const throw() {
 
-  return "MSR_i";
-} // get_name()
+      return "STREXH";
+    } // get_name()
 
-// -----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::MSR_i::get_mnemonic() const throw() {
+    std::string core_armcortexa9_funclt::STREXH::get_mnemonic() const throw() {
 
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MSR";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  switch(this->r) {
-    case 0: {
-      oss << "CPSR";
-    break;}
-    case 1: {
-      oss << "SPSR";
-    break;}
-  }
-  oss << ", ";
-  oss << std::showbase << std::hex << this->imm1a;
-  oss << std::showbase << std::hex << this->b;
-  oss << std::showbase << std::hex << this->imm1b;
-  oss << std::showbase << std::hex << this->op1;
-  oss << std::showbase << std::hex << this->imm2;
-  return oss.str();
-} // get_mnemonic()
+      std::ostringstream oss (std::ostringstream::out);
+      oss << "STREXH";
+      oss << std::showbase << std::hex << this->cond;
+      oss << " R";
+      oss << std::dec << this->rd_bit;
+      oss << ", R";
+      oss << std::dec << this->rm_bit;
+      oss << ", [R";
+      oss << std::dec << this->rn_bit;
+      oss << "]";
+      return oss.str();
+    } // get_mnemonic()
 
-// -----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-void core_armcortexa9_funclt::MSR_i::set_params(const unsigned& bitstring)
-throw() {
+    void core_armcortexa9_funclt::STREXH::set_params(const unsigned& bitstring)
+    throw() {
 
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->r = (bitstring & 0x400000) >> 22;
-  this->imm0a = (bitstring & 0xc0000) >> 18;
-  this->imm0b = (bitstring & 0x30000) >> 16;
-  this->imm1a = (bitstring & 0xc00) >> 10;
-  this->b = (bitstring & 0x200) >> 9;
-  this->imm1b = (bitstring & 0x100) >> 8;
-  this->op1 = (bitstring & 0xf0) >> 4;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
+      this->rd_bit = (bitstring & 0xf000) >> 12;
+      this->rd.set_alias(REGS[this->rd_bit]);
+      this->rm_bit = (bitstring & 0xf);
+      this->rm.set_alias(REGS[this->rm_bit]);
+      this->rn_bit = (bitstring & 0xf0000) >> 16;
+      this->rn.set_alias(REGS[this->rn_bit]);
+      this->rs_bit = (bitstring & 0xf00) >> 8;
+      this->rs.set_alias(REGS[this->rs_bit]);
+      this->cond = (bitstring & 0xf0000000) >> 28;
+    } // set_params()
 
-// -----------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-Instruction* core_armcortexa9_funclt::MSR_i::replicate(Instruction* instr) const
-throw() {
+    Instruction* core_armcortexa9_funclt::STREXH::replicate(Instruction* instr)
+    const throw() {
 
-  MSR_i* new_instr = new MSR_i(R, instr_memory, data_memory);
+      STREXH* new_instr = new STREXH(R, instr_memory, data_memory);
 
-  // Set instruction fields.
-  if (instr) {
-    MSR_i* old_instr = dynamic_cast<MSR_i*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->r = old_instr->r;
-      new_instr->imm0a = old_instr->imm0a;
-      new_instr->imm0b = old_instr->imm0b;
-      new_instr->imm1a = old_instr->imm1a;
-      new_instr->b = old_instr->b;
-      new_instr->imm1b = old_instr->imm1b;
-      new_instr->op1 = old_instr->op1;
-      new_instr->imm2 = old_instr->imm2;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MSR_i::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  imm0 = (imm0a << 2) | imm0b;
-
-  if (r && !imm0)
-  THROW_EXCEPTION("Invalid MSR (imm, sys) encoding: imm0 = 0x0.");
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid MSR (imm) encoding: rd != 0xF.");
-
-  // Needed by ARMExpandImm().
-  rotate = (imm1a << 2) | (b << 1) | imm1b;
-  imm = (op1 << 4) | imm2;
-
-  // Needed by opCode shared with msr_reg_instr.
-  id = 1;
-  this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm, this->operand,
-  this->carry);
-
-  // Move to Special Register (immediate or register)
-  if (id || (!id && !b)) {
-    // Write CPSR/SPSR
-    if (!r) {
-      unsigned mode = CPSR[CPSR_M];
-      unsigned mask = psr_mask(operand, imm0, mode, false, false);
-      // If the mode is going to change, update the aliases.
-      if ((mask & 0x1F) && (mode != (operand & 0x1F))) {
-        update_alias(mode, operand & 0x1F);
+      // Set instruction fields.
+      if (instr) {
+        STREXH* old_instr = dynamic_cast<STREXH*>(instr);
+        if (old_instr) {
+          new_instr->rd_bit = old_instr->rd_bit;
+          new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+          new_instr->rm_bit = old_instr->rm_bit;
+          new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+          new_instr->rn_bit = old_instr->rn_bit;
+          new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+          new_instr->rs_bit = old_instr->rs_bit;
+          new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+          new_instr->cond = old_instr->cond;
+        }
       }
-      if (mask) {
-        CPSR = (CPSR & !mask) | (operand & mask);
-      }
-      if ((CPSR[CPSR_M] == (unsigned)EXECMODE::HYP) && CPSR[CPSR_J] && CPSR[CPSR_T])
+      return new_instr;
+    } // replicate()
+
+    // -------------------------------------------------------------------------
+
+    unsigned core_armcortexa9_funclt::STREXH::behavior() {
+
+      this->num_instr_cycles = 0;
+      this->num_instr_cycles += ConditionPassed(this->cond);
+
+      if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 15))
+      THROW_EXCEPTION("Invalid STREXH encoding: rn|rd|rm = 0xF.");
+
+      if ((rn_bit == rd_bit) || (rd_bit == rm_bit))
+      THROW_EXCEPTION("Invalid STREXH encoding: rn|rm = rd.");
+
+      if (rs_bit != 15)
+      THROW_WARNING("Invalid STREXH encoding: rs != 0xF.");
+
+      // TODO: if (ExclusiveMonitorsPass(rn, 2)) {
+        data_memory.write_half(rn, (unsigned char)(rd & 0x0000FFFF));
+        rd = 0;
+        //} else rd = 1;
+        stall(1);
+        return this->num_instr_cycles;
+      } // behavior()
+
+      // -----------------------------------------------------------------------
+
+
+      // ***********************************************************************
+
+      core_armcortexa9_funclt::STRD_i::STRD_i(
+          Registers& R,
+          MemoryInterface& instr_memory,
+          MemoryInterface& data_memory) :
+        Instruction(R, instr_memory, data_memory),
+        ConditionPassedOp(R, instr_memory, data_memory),
+        LSOffsetOp(R, instr_memory, data_memory) {
+
+
+      } // STRD_i()
+
+      // -----------------------------------------------------------------------
+
+      unsigned core_armcortexa9_funclt::STRD_i::get_id() const throw() {
+
+        return 103;
+      } // get_id()
+
+      // -----------------------------------------------------------------------
+
+      std::string core_armcortexa9_funclt::STRD_i::get_name() const throw() {
+
+        return "STRD_i";
+      } // get_name()
+
+      // -----------------------------------------------------------------------
+
+      std::string core_armcortexa9_funclt::STRD_i::get_mnemonic() const throw()
       {
-        THROW_EXCEPTION("MSR cannot set CPSR Jazelle and Thumb flags in HYP mode.");
-      }
-      // Write SPSR for execution modes != USR || SYS
-    } else {
-      unsigned mask;
-      int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
-      if (spsr_idx >= 0) {
-        mask = psr_mask(operand, imm0, CPSR[CPSR_M], true, false);
-        if (mask) SPSR[spsr_idx] = (SPSR[spsr_idx] & !mask) | (operand & mask);
-      } else {
-        THROW_EXCEPTION("MSR cannot write the SPSR in USR or SYS mode.");
-      }
-    }
-    // Move to Banked Register
-  } else {
-    unsigned sys_mode = (imm1b << 4) | imm0;
-    // Write banked registers for execution modes != USR
-    if (!r) {
-      if ((CPSR[CPSR_M] & 0xF) && valid_banked_reg_access(sys_mode)) {
-        switch((sys_mode >> 3) & 0x3) {
-          case 0x0:
-          // Banked USR registers (R8_usr)
-          RB[8 + (sys_mode & 0x7)] = operand;
-          break;
-          case 0x1:
-          // Banked FIQ registers (R8_fiq)
-          RB[18 + (sys_mode & 0x7)] = operand;
-          break;
-          case 0x2:
-          // Banked IRQ/SVC/ABT/UND registers
-          switch (sys_mode & 0x7) {
-            case 0x0:
-            case 0x1:
-            // Banked IRQ registers (LR_irq)
-            RB[17 - (sys_mode & 0x1)] = operand;
-            break;
-            case 0x2:
-            case 0x3:
-            // Banked SVC registers (LR_svc)
-            RB[30 - (sys_mode & 0x1)] = operand;
-            break;
-            case 0x4:
-            case 0x5:
-            // Banked ABT registers (LR_abt)
-            RB[28 - (sys_mode & 0x1)] = operand;
-            break;
-            case 0x6:
-            case 0x7:
-            // Banked UND registers (LR_und)
-            RB[26 - (sys_mode & 0x1)] = operand;
-            break;
-          } break;
-          case 0x3:
-          // Banked MON/HYP registers
-          if (!(sys_mode & 0x2)) {
-            // Banked LR_MON / SP_MON registers (LR_mon)
-            RB[34 - (sys_mode & 0x1)] = operand;
-          } else {
-            // Banked ELR_HYP / SP_HYP registers (ELR_hyp)
-            RB[32 - (sys_mode & 0x1)] = operand;
+
+        std::ostringstream oss (std::ostringstream::out);
+        oss << "STRD";
+        oss << std::showbase << std::hex << this->cond;
+        oss << " R";
+        oss << std::dec << this->rd_bit;
+        oss << ", [R";
+        oss << std::dec << this->rn_bit;
+        switch(this->p) {
+          case 0: {
+            oss << "]";
+          break;}
+        }
+        oss << ", ";
+        switch(this->u) {
+          case 0: {
+            oss << "-";
+          break;}
+          case 1: {
+            oss << "+";
+          break;}
+        }
+        oss << std::showbase << std::hex << this->imm;
+        oss << std::dec << this->rm_bit;
+        switch(this->p) {
+          case 1: {
+            oss << "]";
+          break;}
+        }
+        switch(this->w) {
+          case 1: {
+            oss << "!";
+          break;}
+        }
+        return oss.str();
+      } // get_mnemonic()
+
+      // -----------------------------------------------------------------------
+
+      void core_armcortexa9_funclt::STRD_i::set_params(const unsigned& bitstring)
+      throw() {
+
+        this->rd_bit = (bitstring & 0xf000) >> 12;
+        this->rd.set_alias(REGS[this->rd_bit]);
+        this->rm_bit = (bitstring & 0xf);
+        this->rm.set_alias(REGS[this->rm_bit]);
+        this->rn_bit = (bitstring & 0xf0000) >> 16;
+        this->rn.set_alias(REGS[this->rn_bit]);
+        this->cond = (bitstring & 0xf0000000) >> 28;
+        this->p = (bitstring & 0x1000000) >> 24;
+        this->u = (bitstring & 0x800000) >> 23;
+        this->w = (bitstring & 0x200000) >> 21;
+        this->imm = (bitstring & 0xf00) >> 8;
+      } // set_params()
+
+      // -----------------------------------------------------------------------
+
+      Instruction* core_armcortexa9_funclt::STRD_i::replicate(Instruction*
+      instr) const throw() {
+
+        STRD_i* new_instr = new STRD_i(R, instr_memory, data_memory);
+
+        // Set instruction fields.
+        if (instr) {
+          STRD_i* old_instr = dynamic_cast<STRD_i*>(instr);
+          if (old_instr) {
+            new_instr->rd_bit = old_instr->rd_bit;
+            new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+            new_instr->rm_bit = old_instr->rm_bit;
+            new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+            new_instr->rn_bit = old_instr->rn_bit;
+            new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+            new_instr->cond = old_instr->cond;
+            new_instr->p = old_instr->p;
+            new_instr->u = old_instr->u;
+            new_instr->w = old_instr->w;
+            new_instr->imm = old_instr->imm;
           }
         }
-      } else {
-        THROW_EXCEPTION("MSR cannot write banked registers in USR mode.");
-      }
-      // Write SPSR for execution modes != USR
-    } else {
-      unsigned cur_mode = CPSR[CPSR_M];
-      if (cur_mode & 0xF) {
-        switch(sys_mode) {
-          case 0x0E:
-          if (cur_mode != (unsigned)EXECMODE::FIQ) SPSR_FIQ = operand;
-          break;
-          case 0x10:
-          if (cur_mode != (unsigned)EXECMODE::IRQ) SPSR_IRQ = operand;
-          break;
-          case 0x12:
-          if (cur_mode != (unsigned)EXECMODE::SVC) SPSR_SVC = operand;
-          break;
-          case 0x14:
-          if (cur_mode != (unsigned)EXECMODE::ABT) SPSR_ABT = operand;
-          break;
-          case 0x16:
-          if (cur_mode != (unsigned)EXECMODE::UND) SPSR_UND = operand;
-          break;
-          case 0x1C:
-          if (cur_mode != (unsigned)EXECMODE::MON) SPSR_MON = operand;
-          break;
-          case 0x1E:
-          if (cur_mode != (unsigned)EXECMODE::MON) SPSR_HYP = operand;
-          break;
-        }
-      } else {
-        THROW_EXCEPTION("MSR cannot write the SPSR in USR mode.");
-      }
-    }
-  }
-  return this->num_instr_cycles;
-} // behavior()
+        return new_instr;
+      } // replicate()
 
-// -----------------------------------------------------------------------------
+      // -----------------------------------------------------------------------
 
+      unsigned core_armcortexa9_funclt::STRD_i::behavior() {
 
-// *****************************************************************************
+        this->num_instr_cycles = 0;
+        this->num_instr_cycles += ConditionPassed(this->cond);
 
-core_armcortexa9_funclt::MSR_r::MSR_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
+        if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit) || (rn_bit ==
+        rd_bit+1)))
+        THROW_EXCEPTION("Invalid LDRD (immediate) encoding: rn = rd|rd+1 and writeback.");
+
+        if (!p && w)
+        THROW_EXCEPTION("Invalid STRD (immediate) encoding: p = 0 and w = 1. There is no STRDT instruction.");
+
+        if (rd_bit == 14)
+        THROW_EXCEPTION("Invalid STRD (immediate) encoding: rd = 0xE.");
+
+        if (rd_bit & 0x1)
+        THROW_EXCEPTION("Invalid STRD (immediate) encoding: rd[0] = 1.");
+
+        operand = (imm << 4) | rm_bit;
+
+#ifdef ACC_MODEL
+        REGS[rd_bit+1].is_locked(this, 3 /* in decode */, 3 /* read in execute,
+        3 cycles ahead */);
+#endif
+        this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p,
+        this->u, this->w, this->operand, this->address);
+
+        data_memory.write_word(address, rd);
+        data_memory.write_word(address+4, REGS[rd_bit+1]);
+        stall(1);
+        return this->num_instr_cycles;
+      } // behavior()
+
+      // -----------------------------------------------------------------------
 
 
-} // MSR_r()
+      // ***********************************************************************
 
-// -----------------------------------------------------------------------------
+      core_armcortexa9_funclt::STRD_r::STRD_r(
+          Registers& R,
+          MemoryInterface& instr_memory,
+          MemoryInterface& data_memory) :
+        Instruction(R, instr_memory, data_memory),
+        ConditionPassedOp(R, instr_memory, data_memory),
+        LSOffsetOp(R, instr_memory, data_memory) {
 
-unsigned core_armcortexa9_funclt::MSR_r::get_id() const throw() {
 
-  return 125;
-} // get_id()
+      } // STRD_r()
 
-// -----------------------------------------------------------------------------
+      // -----------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::MSR_r::get_name() const throw() {
+      unsigned core_armcortexa9_funclt::STRD_r::get_id() const throw() {
 
-  return "MSR_r";
-} // get_name()
+        return 104;
+      } // get_id()
 
-// -----------------------------------------------------------------------------
+      // -----------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::MSR_r::get_mnemonic() const throw() {
+      std::string core_armcortexa9_funclt::STRD_r::get_name() const throw() {
 
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MSR";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  switch(this->r) {
-    case 0: {
-      oss << "CPSR";
-    break;}
-    case 1: {
-      oss << "SPSR";
-    break;}
-  }
-  oss << ", ";
-  oss << std::showbase << std::hex << this->imm2;
-  return oss.str();
-} // get_mnemonic()
+        return "STRD_r";
+      } // get_name()
 
-// -----------------------------------------------------------------------------
+      // -----------------------------------------------------------------------
 
-void core_armcortexa9_funclt::MSR_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->r = (bitstring & 0x400000) >> 22;
-  this->imm0a = (bitstring & 0xc0000) >> 18;
-  this->imm0b = (bitstring & 0x30000) >> 16;
-  this->imm1a = (bitstring & 0xc00) >> 10;
-  this->b = (bitstring & 0x200) >> 9;
-  this->imm1b = (bitstring & 0x100) >> 8;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MSR_r::replicate(Instruction* instr) const
-throw() {
-
-  MSR_r* new_instr = new MSR_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MSR_r* old_instr = dynamic_cast<MSR_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->r = old_instr->r;
-      new_instr->imm0a = old_instr->imm0a;
-      new_instr->imm0b = old_instr->imm0b;
-      new_instr->imm1a = old_instr->imm1a;
-      new_instr->b = old_instr->b;
-      new_instr->imm1b = old_instr->imm1b;
-      new_instr->imm2 = old_instr->imm2;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MSR_r::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  unsigned imm0 = (imm0a << 2) | imm0b;
-
-  if (!b && !imm0)
-  THROW_EXCEPTION("Invalid MSR (reg) encoding: imm0 = 0x0.");
-
-  if (imm2 == 15)
-  THROW_EXCEPTION("Invalid MSR (reg/banked) encoding: rn = 0xF.");
-
-  if (b && rd_bit != 0xF)
-  THROW_WARNING("Invalid MSR (reg/banked) encoding: rd != 0xF.");
-
-  if (imm1a)
-  THROW_WARNING("Invalid MSR (reg/banked) encoding: b[10:11] != 0x0.");
-
-  if (!b && imm1b)
-  THROW_WARNING("Invalid MSR (reg) encoding: b[8] != 0x0.");
-
-  // Needed by opCode shared with msr_imm_instr.
-  id = 0;
-  operand = REGS[imm2];
-
-  // Move to Special Register (immediate or register)
-  if (id || (!id && !b)) {
-    // Write CPSR/SPSR
-    if (!r) {
-      unsigned mode = CPSR[CPSR_M];
-      unsigned mask = psr_mask(operand, imm0, mode, false, false);
-      // If the mode is going to change, update the aliases.
-      if ((mask & 0x1F) && (mode != (operand & 0x1F))) {
-        update_alias(mode, operand & 0x1F);
-      }
-      if (mask) {
-        CPSR = (CPSR & !mask) | (operand & mask);
-      }
-      if ((CPSR[CPSR_M] == (unsigned)EXECMODE::HYP) && CPSR[CPSR_J] && CPSR[CPSR_T])
+      std::string core_armcortexa9_funclt::STRD_r::get_mnemonic() const throw()
       {
-        THROW_EXCEPTION("MSR cannot set CPSR Jazelle and Thumb flags in HYP mode.");
-      }
-      // Write SPSR for execution modes != USR || SYS
-    } else {
-      unsigned mask;
-      int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
-      if (spsr_idx >= 0) {
-        mask = psr_mask(operand, imm0, CPSR[CPSR_M], true, false);
-        if (mask) SPSR[spsr_idx] = (SPSR[spsr_idx] & !mask) | (operand & mask);
-      } else {
-        THROW_EXCEPTION("MSR cannot write the SPSR in USR or SYS mode.");
-      }
-    }
-    // Move to Banked Register
-  } else {
-    unsigned sys_mode = (imm1b << 4) | imm0;
-    // Write banked registers for execution modes != USR
-    if (!r) {
-      if ((CPSR[CPSR_M] & 0xF) && valid_banked_reg_access(sys_mode)) {
-        switch((sys_mode >> 3) & 0x3) {
-          case 0x0:
-          // Banked USR registers (R8_usr)
-          RB[8 + (sys_mode & 0x7)] = operand;
-          break;
-          case 0x1:
-          // Banked FIQ registers (R8_fiq)
-          RB[18 + (sys_mode & 0x7)] = operand;
-          break;
-          case 0x2:
-          // Banked IRQ/SVC/ABT/UND registers
-          switch (sys_mode & 0x7) {
-            case 0x0:
-            case 0x1:
-            // Banked IRQ registers (LR_irq)
-            RB[17 - (sys_mode & 0x1)] = operand;
-            break;
-            case 0x2:
-            case 0x3:
-            // Banked SVC registers (LR_svc)
-            RB[30 - (sys_mode & 0x1)] = operand;
-            break;
-            case 0x4:
-            case 0x5:
-            // Banked ABT registers (LR_abt)
-            RB[28 - (sys_mode & 0x1)] = operand;
-            break;
-            case 0x6:
-            case 0x7:
-            // Banked UND registers (LR_und)
-            RB[26 - (sys_mode & 0x1)] = operand;
-            break;
-          } break;
-          case 0x3:
-          // Banked MON/HYP registers
-          if (!(sys_mode & 0x2)) {
-            // Banked LR_MON / SP_MON registers (LR_mon)
-            RB[34 - (sys_mode & 0x1)] = operand;
-          } else {
-            // Banked ELR_HYP / SP_HYP registers (ELR_hyp)
-            RB[32 - (sys_mode & 0x1)] = operand;
+
+        std::ostringstream oss (std::ostringstream::out);
+        oss << "STRD";
+        oss << std::showbase << std::hex << this->cond;
+        oss << " R";
+        oss << std::dec << this->rd_bit;
+        oss << ", [R";
+        oss << std::dec << this->rn_bit;
+        switch(this->p) {
+          case 0: {
+            oss << "]";
+          break;}
+        }
+        oss << ", ";
+        switch(this->u) {
+          case 0: {
+            oss << "-";
+          break;}
+          case 1: {
+            oss << "+";
+          break;}
+        }
+        oss << std::dec << this->rm_bit;
+        switch(this->p) {
+          case 1: {
+            oss << "]";
+          break;}
+        }
+        switch(this->w) {
+          case 1: {
+            oss << "!";
+          break;}
+        }
+        return oss.str();
+      } // get_mnemonic()
+
+      // -----------------------------------------------------------------------
+
+      void core_armcortexa9_funclt::STRD_r::set_params(const unsigned& bitstring)
+      throw() {
+
+        this->rd_bit = (bitstring & 0xf000) >> 12;
+        this->rd.set_alias(REGS[this->rd_bit]);
+        this->rm_bit = (bitstring & 0xf);
+        this->rm.set_alias(REGS[this->rm_bit]);
+        this->rn_bit = (bitstring & 0xf0000) >> 16;
+        this->rn.set_alias(REGS[this->rn_bit]);
+        this->cond = (bitstring & 0xf0000000) >> 28;
+        this->p = (bitstring & 0x1000000) >> 24;
+        this->u = (bitstring & 0x800000) >> 23;
+        this->w = (bitstring & 0x200000) >> 21;
+        this->imm = (bitstring & 0xf00) >> 8;
+      } // set_params()
+
+      // -----------------------------------------------------------------------
+
+      Instruction* core_armcortexa9_funclt::STRD_r::replicate(Instruction*
+      instr) const throw() {
+
+        STRD_r* new_instr = new STRD_r(R, instr_memory, data_memory);
+
+        // Set instruction fields.
+        if (instr) {
+          STRD_r* old_instr = dynamic_cast<STRD_r*>(instr);
+          if (old_instr) {
+            new_instr->rd_bit = old_instr->rd_bit;
+            new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+            new_instr->rm_bit = old_instr->rm_bit;
+            new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+            new_instr->rn_bit = old_instr->rn_bit;
+            new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+            new_instr->cond = old_instr->cond;
+            new_instr->p = old_instr->p;
+            new_instr->u = old_instr->u;
+            new_instr->w = old_instr->w;
+            new_instr->imm = old_instr->imm;
           }
         }
-      } else {
-        THROW_EXCEPTION("MSR cannot write banked registers in USR mode.");
-      }
-      // Write SPSR for execution modes != USR
-    } else {
-      unsigned cur_mode = CPSR[CPSR_M];
-      if (cur_mode & 0xF) {
-        switch(sys_mode) {
-          case 0x0E:
-          if (cur_mode != (unsigned)EXECMODE::FIQ) SPSR_FIQ = operand;
-          break;
-          case 0x10:
-          if (cur_mode != (unsigned)EXECMODE::IRQ) SPSR_IRQ = operand;
-          break;
-          case 0x12:
-          if (cur_mode != (unsigned)EXECMODE::SVC) SPSR_SVC = operand;
-          break;
-          case 0x14:
-          if (cur_mode != (unsigned)EXECMODE::ABT) SPSR_ABT = operand;
-          break;
-          case 0x16:
-          if (cur_mode != (unsigned)EXECMODE::UND) SPSR_UND = operand;
-          break;
-          case 0x1C:
-          if (cur_mode != (unsigned)EXECMODE::MON) SPSR_MON = operand;
-          break;
-          case 0x1E:
-          if (cur_mode != (unsigned)EXECMODE::MON) SPSR_HYP = operand;
-          break;
+        return new_instr;
+      } // replicate()
+
+      // -----------------------------------------------------------------------
+
+      unsigned core_armcortexa9_funclt::STRD_r::behavior() {
+
+        this->num_instr_cycles = 0;
+        this->num_instr_cycles += ConditionPassed(this->cond);
+
+        if ((!p || w) && ((rn_bit == 15) || (rn_bit == rd_bit) || (rn_bit ==
+        rd_bit+1)))
+        THROW_EXCEPTION("Invalid STRD (register) encoding: (rn = 0xF or rn = rd|rd+1) and writeback.");
+
+        if (!p && w)
+        THROW_EXCEPTION("Invalid STRD (register) encoding: p = 0 and w = 1. There is no STRDT instruction.");
+
+        if ((rd_bit == 14) || (rm_bit == 15))
+        THROW_EXCEPTION("Invalid STRD (register) encoding: rd = 0xE or rm = 0xF or rm = rd|rd+1.");
+
+        if (rd_bit & 0x1)
+        THROW_EXCEPTION("Invalid STRD (register) encoding: rd[0] = 1.");
+
+        if (imm)
+        THROW_WARNING("Invalid STRD (register) encoding: rs != 0x0.");
+
+#ifdef ACC_MODEL
+        REGS[rd_bit+1].is_locked(this, 3 /* in decode */, 3 /* read in execute,
+        3 cycles ahead */);
+#endif
+
+        operand = rm;
+        this->num_instr_cycles += LSOffset(this->rn, this->rn_bit, this->p,
+        this->u, this->w, this->operand, this->address);
+
+        data_memory.write_word(address, rd);
+        data_memory.write_word(address+4, REGS[rd_bit+1]);
+        stall(1);
+        return this->num_instr_cycles;
+      } // behavior()
+
+      // -----------------------------------------------------------------------
+
+
+      // ***********************************************************************
+
+      core_armcortexa9_funclt::STREXD::STREXD(
+          Registers& R,
+          MemoryInterface& instr_memory,
+          MemoryInterface& data_memory) :
+        Instruction(R, instr_memory, data_memory),
+        ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+      } // STREXD()
+
+      // -----------------------------------------------------------------------
+
+      unsigned core_armcortexa9_funclt::STREXD::get_id() const throw() {
+
+        return 105;
+      } // get_id()
+
+      // -----------------------------------------------------------------------
+
+      std::string core_armcortexa9_funclt::STREXD::get_name() const throw() {
+
+        return "STREXD";
+      } // get_name()
+
+      // -----------------------------------------------------------------------
+
+      std::string core_armcortexa9_funclt::STREXD::get_mnemonic() const throw()
+      {
+
+        std::ostringstream oss (std::ostringstream::out);
+        oss << "STREXD";
+        oss << std::showbase << std::hex << this->cond;
+        oss << " R";
+        oss << std::dec << this->rd_bit;
+        oss << ", R";
+        oss << std::dec << this->rm_bit;
+        oss << ", [R";
+        oss << std::dec << this->rn_bit;
+        oss << "]";
+        return oss.str();
+      } // get_mnemonic()
+
+      // -----------------------------------------------------------------------
+
+      void core_armcortexa9_funclt::STREXD::set_params(const unsigned& bitstring)
+      throw() {
+
+        this->rd_bit = (bitstring & 0xf000) >> 12;
+        this->rd.set_alias(REGS[this->rd_bit]);
+        this->rm_bit = (bitstring & 0xf);
+        this->rm.set_alias(REGS[this->rm_bit]);
+        this->rn_bit = (bitstring & 0xf0000) >> 16;
+        this->rn.set_alias(REGS[this->rn_bit]);
+        this->rs_bit = (bitstring & 0xf00) >> 8;
+        this->rs.set_alias(REGS[this->rs_bit]);
+        this->cond = (bitstring & 0xf0000000) >> 28;
+      } // set_params()
+
+      // -----------------------------------------------------------------------
+
+      Instruction* core_armcortexa9_funclt::STREXD::replicate(Instruction*
+      instr) const throw() {
+
+        STREXD* new_instr = new STREXD(R, instr_memory, data_memory);
+
+        // Set instruction fields.
+        if (instr) {
+          STREXD* old_instr = dynamic_cast<STREXD*>(instr);
+          if (old_instr) {
+            new_instr->rd_bit = old_instr->rd_bit;
+            new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+            new_instr->rm_bit = old_instr->rm_bit;
+            new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+            new_instr->rn_bit = old_instr->rn_bit;
+            new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+            new_instr->rs_bit = old_instr->rs_bit;
+            new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+            new_instr->cond = old_instr->cond;
+          }
         }
-      } else {
-        THROW_EXCEPTION("MSR cannot write the SPSR in USR mode.");
-      }
-    }
-  }
-  return this->num_instr_cycles;
-} // behavior()
+        return new_instr;
+      } // replicate()
 
-// -----------------------------------------------------------------------------
+      // -----------------------------------------------------------------------
 
+      unsigned core_armcortexa9_funclt::STREXD::behavior() {
 
-// *****************************************************************************
+        this->num_instr_cycles = 0;
+        this->num_instr_cycles += ConditionPassed(this->cond);
 
-core_armcortexa9_funclt::B::B(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
+        if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 14))
+        THROW_EXCEPTION("Invalid STREXD encoding: rn|rd = 0xF or rm = 0xE.");
 
+        if (rm_bit & 0x1)
+        THROW_EXCEPTION("Invalid STREXD encoding: rm[0] = 1.");
 
-} // B()
+        if ((rn_bit == rd_bit) || (rd_bit == rm_bit) || (rd_bit == rm_bit+1))
+        THROW_EXCEPTION("Invalid STREXD encoding: rn|rm|rm+1 = rd.");
 
-// -----------------------------------------------------------------------------
+        if (rs_bit != 15)
+        THROW_WARNING("Invalid STREXD encoding: rs != 0xF.");
 
-unsigned core_armcortexa9_funclt::B::get_id() const throw() {
+#ifdef ACC_MODEL
+        REGS[rd_bit+1].is_locked(this, 3 /* in decode */, 3 /* read in execute,
+        3 cycles ahead */);
+#endif
+
+        // TODO: if (ExclusiveMonitorsPass(rn, 8)) {
+          if (CPSR[CPSR_E] /* TODO: BigEndian() */) {
+            data_memory.write_word(rn, REGS[rd_bit+1]);
+            data_memory.write_word(rn+4, rd);
+          } else {
+            data_memory.write_word(rn, rd);
+            data_memory.write_word(rn+4, REGS[rd_bit+1]);
+          }
+          //} else rd = 1;
+          stall(1);
+          return this->num_instr_cycles;
+        } // behavior()
 
-  return 126;
-} // get_id()
+        // ---------------------------------------------------------------------
 
-// -----------------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::B::get_name() const throw() {
+        // *********************************************************************
 
-  return "B";
-} // get_name()
+        core_armcortexa9_funclt::LDM::LDM(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
 
-// -----------------------------------------------------------------------------
 
-std::string core_armcortexa9_funclt::B::get_mnemonic() const throw() {
+        } // LDM()
 
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "B";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " PC + ";
-  oss << std::showbase << std::hex << ((((int)sign_extend(this->offset, 24)) <<
-  2));
-  return oss.str();
-} // get_mnemonic()
+        // ---------------------------------------------------------------------
 
-// -----------------------------------------------------------------------------
+        unsigned core_armcortexa9_funclt::LDM::get_id() const throw() {
 
-void core_armcortexa9_funclt::B::set_params(const unsigned& bitstring) throw() {
+          return 106;
+        } // get_id()
 
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->offset = (bitstring & 0xffffff);
-} // set_params()
+        // ---------------------------------------------------------------------
 
-// -----------------------------------------------------------------------------
+        std::string core_armcortexa9_funclt::LDM::get_name() const throw() {
+
+          return "LDM";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
 
-Instruction* core_armcortexa9_funclt::B::replicate(Instruction* instr) const
-throw() {
-
-  B* new_instr = new B(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    B* old_instr = dynamic_cast<B*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->offset = old_instr->offset;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::B::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  RB[15] = PC + (((int)sign_extend(offset, 24)) << 2);
-  stall(2);
-  flush();
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::BL::BL(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // BL()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BL::get_id() const throw() {
-
-  return 127;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BL::get_name() const throw() {
-
-  return "BL";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BL::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "BL";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " PC + ";
-  oss << std::showbase << std::hex << ((((int)sign_extend(this->offset, 24)) <<
-  2));
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::BL::set_params(const unsigned& bitstring) throw()
-{
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->offset = (bitstring & 0xffffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::BL::replicate(Instruction* instr) const
-throw() {
-
-  BL* new_instr = new BL(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    BL* old_instr = dynamic_cast<BL*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->offset = old_instr->offset;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BL::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  // Find out the address of the next instruction.
-  unsigned increment = 4;
-  // Check instruction set mode.
-  // JT=00: ARM (32-bit); JT=01: Thumb (16-bit); JT=10: Jazelle (8-bit); JT=11:
-  // ThumbEE (16-bit)
-  if (CPSR[CPSR_T]) {
-    increment = 2;
-  } else if (CPSR[CPSR_J]) {
-    increment = 1;
-  }
-  LR = RB[15] + increment;
-  RB[15] = PC + (((int)sign_extend(offset, 24)) << 2);
-  stall(2);
-  flush();
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::BX::BX(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // BX()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BX::get_id() const throw() {
-
-  return 128;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BX::get_name() const throw() {
-
-  return "BX";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BX::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "BX";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::BX::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::BX::replicate(Instruction* instr) const
-throw() {
-
-  BX* new_instr = new BX(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    BX* old_instr = dynamic_cast<BX*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BX::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit != 15) || (rd_bit != 15) || (rs_bit != 15))
-  THROW_WARNING("Invalid BX encoding: rn|rd|rs != 0xF.");
-
-  BranchWritePC(rm);
-  stall(2);
-  flush();
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::BLX_i::BLX_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // BLX_i()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BLX_i::get_id() const throw() {
-
-  return 129;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BLX_i::get_name() const throw() {
-
-  return "BLX_i";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BLX_i::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "BLX PC + ";
-  oss << std::showbase << std::hex << ((((int)sign_extend(this->offset, 24)) <<
-  2));
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::BLX_i::set_params(const unsigned& bitstring)
-throw() {
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->l = (bitstring & 0x1000000) >> 24;
-  this->offset = (bitstring & 0xffffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::BLX_i::replicate(Instruction* instr) const
-throw() {
-
-  BLX_i* new_instr = new BLX_i(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    BLX_i* old_instr = dynamic_cast<BLX_i*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->l = old_instr->l;
-      new_instr->offset = old_instr->offset;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BLX_i::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  // Find out the address of the next instruction.
-  unsigned increment = 4;
-  // Check instruction set mode.
-  // JT=00: ARM (32-bit); JT=01: Thumb (16-bit); JT=10: Jazelle (8-bit); JT=11:
-  // ThumbEE (16-bit)
-  if (CPSR[CPSR_T]) {
-    increment = 2;
-  } else if (CPSR[CPSR_J]) {
-    increment = 1;
-  }
-  LR = RB[15] + increment;
-  BranchWritePC((((int)sign_extend(offset, 24)) << 2) | (l << 1));
-  // TODO: We need only one stall cycle since the PC value is fed back from
-  // execute/wb to prefetch/fetch directly.
-  // @see ARMArch.py RB.setWbStageOrder(15, {...})
-  stall(1);
-  flush();
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::BLX_r::BLX_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // BLX_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BLX_r::get_id() const throw() {
-
-  return 130;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BLX_r::get_name() const throw() {
-
-  return "BLX_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BLX_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "BLX";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::BLX_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::BLX_r::replicate(Instruction* instr) const
-throw() {
-
-  BLX_r* new_instr = new BLX_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    BLX_r* old_instr = dynamic_cast<BLX_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BLX_r::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rm_bit == 15)
-  THROW_EXCEPTION("Invalid BLX encoding: rm = 0xF.");
-
-  if ((rn_bit != 15) || (rd_bit != 15) || (rs_bit != 15))
-  THROW_WARNING("Invalid BLX encoding: rn|rd|rs != 0xF.");
-
-  // RB[15] has been incremented and holds the address of the next instruction.
-  LR = RB[15];
-  BranchWritePC(rm);
-  // TODO: We need only one stall cycle since the PC value is fed back from
-  // execute/wb to prefetch/fetch directly.
-  // @see ARMArch.py RB.setWbStageOrder(15, {...})
-  stall(1);
-  flush();
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::BXJ::BXJ(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // BXJ()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BXJ::get_id() const throw() {
-
-  return 131;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BXJ::get_name() const throw() {
-
-  return "BXJ";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BXJ::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "BXJ";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::BXJ::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::BXJ::replicate(Instruction* instr) const
-throw() {
-
-  BXJ* new_instr = new BXJ(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    BXJ* old_instr = dynamic_cast<BXJ*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BXJ::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rm_bit == 15)
-  THROW_EXCEPTION("Invalid BXJ encoding: rm = 0xF.");
-
-  if ((rn_bit != 15) || (rd_bit != 15) || (rs_bit != 15))
-  THROW_WARNING("Invalid BXJ encoding: rn|rd|rs != 0xF.");
-
-  BranchWritePC(rm);
-  stall(2);
-  flush();
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::BKPT::BKPT(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // BKPT()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BKPT::get_id() const throw() {
-
-  return 132;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BKPT::get_name() const throw() {
-
-  return "BKPT";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::BKPT::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "BKPT R";
-  oss << std::dec << this->rn_bit;
-  oss << std::dec << this->rd_bit;
-  oss << std::dec << this->rs_bit;
-  oss << std::dec << this->rm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::BKPT::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::BKPT::replicate(Instruction* instr) const
-throw() {
-
-  BKPT* new_instr = new BKPT(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    BKPT* old_instr = dynamic_cast<BKPT*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::BKPT::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (cond != 0xE)
-  THROW_EXCEPTION("Invalid BKPT encoding: cond != 0xE.");
-
-  // R14_abt = address of BKPT instr + 4.
-  LR_ABT = PC + 4;
-  SPSR_ABT = CPSR;
-
-  CPSR &= 0xFFFFFFF0;
-  CPSR |= 0x00000007;   // Enter abort mode.
-
-  CPSR &= 0xFFFFFFEF;   // CPSR[5]= 0: Execute in ARM state.
-  CPSR |= 0x00000080;   // CPSR[7]= 1: Disable normal interrupts.
-
-  //if high vectors configured then
-  //PC = 0xFFFF000C;
-  //else
-  PC = 0x0000000C;
-
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::CLREX::CLREX(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // CLREX()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::CLREX::get_id() const throw() {
-
-  return 133;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::CLREX::get_name() const throw() {
-
-  return "CLREX";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::CLREX::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "C";
-  oss << "L";
-  oss << "R";
-  oss << "E";
-  oss << "X";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::CLREX::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::CLREX::replicate(Instruction* instr) const
-throw() {
-
-  CLREX* new_instr = new CLREX(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    CLREX* old_instr = dynamic_cast<CLREX*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::CLREX::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if ((rn_bit != 15) || (rd_bit != 15) || (rm_bit != 15))
-  THROW_WARNING("Invalid CLREX encoding: rn|rd|rm != 0xF.");
-
-  if (rs_bit != 0)
-  THROW_WARNING("Invalid CLREX encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction CLREX.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::CPS::CPS(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // CPS()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::CPS::get_id() const throw() {
-
-  return 134;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::CPS::get_name() const throw() {
-
-  return "CPS";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::CPS::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "CPS ";
-  oss << std::showbase << std::hex << this->mode0;
-  oss << std::showbase << std::hex << this->mode1;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::CPS::set_params(const unsigned& bitstring) throw()
-{
-
-  this->op2 = (bitstring & 0xc0000) >> 18;
-  this->M = (bitstring & 0x20000) >> 17;
-  this->b15to10 = (bitstring & 0xfc00) >> 10;
-  this->E = (bitstring & 0x200) >> 9;
-  this->A = (bitstring & 0x100) >> 8;
-  this->I = (bitstring & 0x80) >> 7;
-  this->F = (bitstring & 0x40) >> 6;
-  this->mode0 = (bitstring & 0x10) >> 4;
-  this->mode1 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::CPS::replicate(Instruction* instr) const
-throw() {
-
-  CPS* new_instr = new CPS(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    CPS* old_instr = dynamic_cast<CPS*>(instr);
-    if (old_instr) {
-      new_instr->op2 = old_instr->op2;
-      new_instr->M = old_instr->M;
-      new_instr->b15to10 = old_instr->b15to10;
-      new_instr->E = old_instr->E;
-      new_instr->A = old_instr->A;
-      new_instr->I = old_instr->I;
-      new_instr->F = old_instr->F;
-      new_instr->mode0 = old_instr->mode0;
-      new_instr->mode1 = old_instr->mode1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::CPS::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  mode = (mode0 << 4) | mode1;
-
-  if (mode && !M)
-  THROW_EXCEPTION("Invalid CPS encoding: M = 0 and mode != 0x0.");
-
-  if ((op2 & 0x2) && !A && !I && !F)
-  THROW_EXCEPTION("Invalid CPS encoding: imod[1] = 1 and A:I:F = 0x0.");
-
-  if (!(op2 & 0x2) && (A || I || F))
-  THROW_EXCEPTION("Invalid CPS encoding: imod[1] = 0 and A:I:F != 0x0.");
-
-  if (!op2 && !M)
-  THROW_EXCEPTION("Invalid CPS encoding: imod = 0x0 and M = 0.");
-
-  if (op2 == 1)
-  THROW_EXCEPTION("Invalid CPS encoding: imod = 0x1.");
-
-  if (b15to10)
-  THROW_WARNING("Invalid CPS encoding: bit[15:10] != 0x0.");
-
-  if (E)
-  THROW_WARNING("Invalid CPS encoding: bit[9] != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction CPS.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::DBG::DBG(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // DBG()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::DBG::get_id() const throw() {
-
-  return 135;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::DBG::get_name() const throw() {
-
-  return "DBG";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::DBG::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "DBG R";
-  oss << std::showbase << std::hex << this->rm;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::DBG::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->rm = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::DBG::replicate(Instruction* instr) const
-throw() {
-
-  DBG* new_instr = new DBG(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    DBG* old_instr = dynamic_cast<DBG*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->rm = old_instr->rm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::DBG::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid DBG encoding: rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid DBG encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction DBG.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::DMB::DMB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // DMB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::DMB::get_id() const throw() {
-
-  return 136;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::DMB::get_name() const throw() {
-
-  return "DMB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::DMB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "DMB ";
-  switch(this->rm_bit) {
-    case 2: {
-      oss << "OSHST";
-    break;}
-    case 3: {
-      oss << "OSH";
-    break;}
-    case 6: {
-      oss << "NSHST";
-    break;}
-    case 7: {
-      oss << "NSH";
-    break;}
-    case 10: {
-      oss << "ISHST";
-    break;}
-    case 11: {
-      oss << "ISH";
-    break;}
-    case 14: {
-      oss << "ST";
-    break;}
-    case 15: {
-      oss << "SY";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::DMB::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::DMB::replicate(Instruction* instr) const
-throw() {
-
-  DMB* new_instr = new DMB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    DMB* old_instr = dynamic_cast<DMB*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::DMB::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if ((rn_bit != 15) || (rd_bit != 15))
-  THROW_WARNING("Invalid DMB encoding: rn|rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid DMB encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction DMB.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::DSB::DSB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // DSB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::DSB::get_id() const throw() {
-
-  return 137;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::DSB::get_name() const throw() {
-
-  return "DSB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::DSB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "DSB ";
-  switch(this->rm_bit) {
-    case 2: {
-      oss << "OSHST";
-    break;}
-    case 3: {
-      oss << "OSH";
-    break;}
-    case 6: {
-      oss << "NSHST";
-    break;}
-    case 7: {
-      oss << "NSH";
-    break;}
-    case 10: {
-      oss << "ISHST";
-    break;}
-    case 11: {
-      oss << "ISH";
-    break;}
-    case 14: {
-      oss << "ST";
-    break;}
-    case 15: {
-      oss << "SY";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::DSB::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::DSB::replicate(Instruction* instr) const
-throw() {
-
-  DSB* new_instr = new DSB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    DSB* old_instr = dynamic_cast<DSB*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::DSB::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if ((rn_bit != 15) || (rd_bit != 15))
-  THROW_WARNING("Invalid DSB encoding: rn|rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid DSB encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction DSB.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::ISB::ISB(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // ISB()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::ISB::get_id() const throw() {
-
-  return 138;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::ISB::get_name() const throw() {
-
-  return "ISB";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::ISB::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "ISB ";
-  switch(this->rm_bit) {
-    case 15: {
-      oss << "SY";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::ISB::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::ISB::replicate(Instruction* instr) const
-throw() {
-
-  ISB* new_instr = new ISB(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    ISB* old_instr = dynamic_cast<ISB*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::ISB::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if ((rn_bit != 15) || (rd_bit != 15))
-  THROW_WARNING("Invalid ISB encoding: rn|rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid ISB encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction ISB.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::NOP::NOP(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // NOP()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::NOP::get_id() const throw() {
-
-  return 139;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::NOP::get_name() const throw() {
-
-  return "NOP";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::NOP::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "NOP";
-  oss << std::showbase << std::hex << this->cond;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::NOP::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::NOP::replicate(Instruction* instr) const
-throw() {
-
-  NOP* new_instr = new NOP(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    NOP* old_instr = dynamic_cast<NOP*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::NOP::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid NOP encoding: rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid NOP encoding: rs != 0x0.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::PLI_i::PLI_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // PLI_i()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLI_i::get_id() const throw() {
-
-  return 140;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLI_i::get_name() const throw() {
-
-  return "PLI_i";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLI_i::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "PLI [";
-  oss << "rn";
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rs_bit;
-  oss << std::showbase << std::hex << this->op1a;
-  oss << std::showbase << std::hex << this->op1b;
-  oss << std::dec << this->rm_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::PLI_i::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->u = (bitstring & 0x800000) >> 23;
-  this->op1a = (bitstring & 0xe0) >> 5;
-  this->op1b = (bitstring & 0x10) >> 4;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::PLI_i::replicate(Instruction* instr) const
-throw() {
-
-  PLI_i* new_instr = new PLI_i(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    PLI_i* old_instr = dynamic_cast<PLI_i*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->u = old_instr->u;
-      new_instr->op1a = old_instr->op1a;
-      new_instr->op1b = old_instr->op1b;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLI_i::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid PLI (immediate/literal) encoding: rd != 0xF.");
-
-  THROW_WARNING("Unimplemented instruction PLI.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::PLI_r::PLI_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // PLI_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLI_r::get_id() const throw() {
-
-  return 141;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLI_r::get_name() const throw() {
-
-  return "PLI_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLI_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "PLI [";
-  oss << "rn";
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rm_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::PLI_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->u = (bitstring & 0x800000) >> 23;
-  this->op1a = (bitstring & 0xe0) >> 5;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::PLI_r::replicate(Instruction* instr) const
-throw() {
-
-  PLI_r* new_instr = new PLI_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    PLI_r* old_instr = dynamic_cast<PLI_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->u = old_instr->u;
-      new_instr->op1a = old_instr->op1a;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLI_r::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if (rm_bit == 15)
-  THROW_EXCEPTION("Invalid PLI (register) encoding: rm = 0xF.");
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid PLI (register) encoding: rd != 0xF.");
-
-  THROW_WARNING("Unimplemented instruction PLI.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::PLD_i::PLD_i(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // PLD_i()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLD_i::get_id() const throw() {
-
-  return 142;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLD_i::get_name() const throw() {
-
-  return "PLD_i";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLD_i::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "PLD";
-  switch(this->r) {
-    case 0: {
-      oss << "W";
-    break;}
-  }
-  oss << " [";
-  oss << "rn";
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rs_bit;
-  oss << std::showbase << std::hex << this->op1a;
-  oss << std::showbase << std::hex << this->op1b;
-  oss << std::dec << this->rm_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::PLD_i::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->u = (bitstring & 0x800000) >> 23;
-  this->r = (bitstring & 0x400000) >> 22;
-  this->op1a = (bitstring & 0xe0) >> 5;
-  this->op1b = (bitstring & 0x10) >> 4;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::PLD_i::replicate(Instruction* instr) const
-throw() {
-
-  PLD_i* new_instr = new PLD_i(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    PLD_i* old_instr = dynamic_cast<PLD_i*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->u = old_instr->u;
-      new_instr->r = old_instr->r;
-      new_instr->op1a = old_instr->op1a;
-      new_instr->op1b = old_instr->op1b;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLD_i::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  THROW_WARNING("Unimplemented instruction PLD.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::PLD_r::PLD_r(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // PLD_r()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLD_r::get_id() const throw() {
-
-  return 143;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLD_r::get_name() const throw() {
-
-  return "PLD_r";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::PLD_r::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "PLD";
-  switch(this->r) {
-    case 0: {
-      oss << "W";
-    break;}
-  }
-  oss << " [";
-  oss << "rn";
-  oss << ", ";
-  switch(this->u) {
-    case 0: {
-      oss << "-";
-    break;}
-    case 1: {
-      oss << "+";
-    break;}
-  }
-  oss << std::dec << this->rm_bit;
-  oss << "]";
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::PLD_r::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->u = (bitstring & 0x800000) >> 23;
-  this->r = (bitstring & 0x400000) >> 22;
-  this->op1a = (bitstring & 0xe0) >> 5;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::PLD_r::replicate(Instruction* instr) const
-throw() {
-
-  PLD_r* new_instr = new PLD_r(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    PLD_r* old_instr = dynamic_cast<PLD_r*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->u = old_instr->u;
-      new_instr->r = old_instr->r;
-      new_instr->op1a = old_instr->op1a;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::PLD_r::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if (!r && (rn_bit == 15))
-  THROW_EXCEPTION("Invalid PLD (register) encoding: r =0 and rn = 0xF.");
-
-  if (rm_bit == 15)
-  THROW_EXCEPTION("Invalid PLD (register) encoding: rm = 0xF.");
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid PLD (register) encoding: rd != 0xF.");
-
-  THROW_WARNING("Unimplemented instruction PLD.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::RFE::RFE(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // RFE()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::RFE::get_id() const throw() {
-
-  return 144;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::RFE::get_name() const throw() {
-
-  return "RFE";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::RFE::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "RFE";
-  switch(this->u) {
-    case 0: {
-      oss << "D";
-    break;}
-    case 1: {
-      oss << "I";
-    break;}
-  }
-  switch(this->p) {
-    case 0: {
-      oss << "A";
-    break;}
-    case 1: {
-      oss << "B";
-    break;}
-  }
-  oss << " R";
-  oss << std::dec << this->rn_bit;
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::RFE::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm0 = (bitstring & 0xf000) >> 12;
-  this->imm1 = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xf0) >> 4;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::RFE::replicate(Instruction* instr) const
-throw() {
-
-  RFE* new_instr = new RFE(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    RFE* old_instr = dynamic_cast<RFE*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm0 = old_instr->imm0;
-      new_instr->imm1 = old_instr->imm1;
-      new_instr->op1 = old_instr->op1;
-      new_instr->imm2 = old_instr->imm2;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::RFE::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if (rn_bit == 15)
-  THROW_EXCEPTION("Invalid RFE encoding: rn = 0xF.");
-
-  if (imm0)
-  THROW_WARNING("Invalid RFE encoding: rd != 0x0.");
-
-  if (imm1 != 0xA)
-  THROW_WARNING("Invalid RFE encoding: rs != 0xA.");
-
-  if (imm1)
-  THROW_WARNING("Invalid RFE encoding: op1 != 0x0.");
-
-  if (imm2)
-  THROW_WARNING("Invalid RFE encoding: rm != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction RFE.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::SETEND::SETEND(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // SETEND()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SETEND::get_id() const throw() {
-
-  return 145;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SETEND::get_name() const throw() {
-
-  return "SETEND";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SETEND::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "SETEND ";
-  switch(this->E) {
-    case 0: {
-      oss << "LE";
-    break;}
-    case 1: {
-      oss << "BE";
-    break;}
-  }
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::SETEND::set_params(const unsigned& bitstring)
-throw() {
-
-  this->op2 = (bitstring & 0xc0000) >> 18;
-  this->M = (bitstring & 0x20000) >> 17;
-  this->b15to10 = (bitstring & 0xfc00) >> 10;
-  this->E = (bitstring & 0x200) >> 9;
-  this->A = (bitstring & 0x100) >> 8;
-  this->mode1 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::SETEND::replicate(Instruction* instr)
-const throw() {
-
-  SETEND* new_instr = new SETEND(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    SETEND* old_instr = dynamic_cast<SETEND*>(instr);
-    if (old_instr) {
-      new_instr->op2 = old_instr->op2;
-      new_instr->M = old_instr->M;
-      new_instr->b15to10 = old_instr->b15to10;
-      new_instr->E = old_instr->E;
-      new_instr->A = old_instr->A;
-      new_instr->mode1 = old_instr->mode1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SETEND::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if (op2)
-  THROW_WARNING("Invalid SETEND encoding: bit[19:18] != 0x0.");
-
-  if (M)
-  THROW_WARNING("Invalid SETEND encoding: bit[17] != 0.");
-
-  if (b15to10)
-  THROW_WARNING("Invalid SETEND encoding: bit[15:9] != 0x0.");
-
-  if (A)
-  THROW_WARNING("Invalid SETEND encoding: bit[8] != 0.");
-
-  if (mode1)
-  THROW_WARNING("Invalid SETEND encoding: bit[3:0] != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction SETEND.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::SEV::SEV(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // SEV()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SEV::get_id() const throw() {
-
-  return 146;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SEV::get_name() const throw() {
-
-  return "SEV";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SEV::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "SEV";
-  oss << std::showbase << std::hex << this->cond;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::SEV::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::SEV::replicate(Instruction* instr) const
-throw() {
-
-  SEV* new_instr = new SEV(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    SEV* old_instr = dynamic_cast<SEV*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SEV::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid SEV encoding: rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid SEV encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction SEV.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::SRS::SRS(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory) {
-
-
-} // SRS()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SRS::get_id() const throw() {
-
-  return 147;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SRS::get_name() const throw() {
-
-  return "SRS";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SRS::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "SRS";
-  switch(this->u) {
-    case 0: {
-      oss << "D";
-    break;}
-    case 1: {
-      oss << "I";
-    break;}
-  }
-  switch(this->p) {
-    case 0: {
-      oss << "A";
-    break;}
-    case 1: {
-      oss << "B";
-    break;}
-  }
-  oss << " ";
-  oss << "SP";
-  switch(this->w) {
-    case 1: {
-      oss << "!";
-    break;}
-  }
-  oss << " ";
-  oss << std::showbase << std::hex << this->imm2;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::SRS::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->imm0 = (bitstring & 0xf000) >> 12;
-  this->imm1 = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xf0) >> 4;
-  this->imm2 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::SRS::replicate(Instruction* instr) const
-throw() {
-
-  SRS* new_instr = new SRS(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    SRS* old_instr = dynamic_cast<SRS*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->w = old_instr->w;
-      new_instr->imm0 = old_instr->imm0;
-      new_instr->imm1 = old_instr->imm1;
-      new_instr->op1 = old_instr->op1;
-      new_instr->imm2 = old_instr->imm2;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SRS::behavior() {
-
-  this->num_instr_cycles = 0;
-
-  if (rn_bit != 0xD)
-  THROW_WARNING("Invalid SRS encoding: rn != 0xD.");
-
-  if (imm0)
-  THROW_WARNING("Invalid SRS encoding: rd != 0x0.");
-
-  if (imm1 != 0x5)
-  THROW_WARNING("Invalid SRS encoding: rs != 0x5.");
-
-  if (imm1 & 0xE)
-  THROW_WARNING("Invalid SRS encoding: op1[3:1] != 0x0.");
-
-  mode = ((imm1 << 4) & 0x10) | imm2;
-
-  THROW_WARNING("Unimplemented instruction SRS.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::SVC::SVC(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // SVC()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SVC::get_id() const throw() {
-
-  return 148;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SVC::get_name() const throw() {
-
-  return "SVC";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SVC::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "SVC";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->swi_number;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::SVC::set_params(const unsigned& bitstring) throw()
-{
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->swi_number = (bitstring & 0xffffff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::SVC::replicate(Instruction* instr) const
-throw() {
-
-  SVC* new_instr = new SVC(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    SVC* old_instr = dynamic_cast<SVC*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->swi_number = old_instr->swi_number;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SVC::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  // CallSupervisor(swi_number);
-  // Calls the Supervisor, with appropriate trapping etc.
-  /*// Will be taken to Hyp mode so must set HSR.
-  if ((CPSR[CPSR_M] == (unsigned)EXECMODE::HYP)
-  || (HaveVirtExt() && !IsSecure() && (CPSR[CPSR_M] == (unsigned)EXECMODE::USR)
-  && HCR[HCR_TGE] == 1)) {
-    unsigned HSR_value = 0;
-    if (CurrentCond(this->bitstring) cond == 0xE) {
-      HSR_value |= (swi_number & 0xFFFF);
-    }
-    WriteHSR(0x11, HSR_value);
-  }*/
-
-  // TakeSVCException();
-  // Determine return information. SPSR is to be the current CPSR, after changing
-  // the IT[] bits to give them the correct values for the following instruction,
-  // and LR is to be the current PC minus 2 for Thumb or 4 for ARM, to change
-  // the PC offsets of 4 or 8 respectively from the address of the current
-  // instruction into the required address of the next instruction, the SVC
-  // instruction having size 2 bytes for Thumb or 4 bytes for ARM.
-
-  ITAdvance();
-  unsigned LR_value = ((CPSR[CPSR_T] == 1)? PC-2 : PC-4);
-  unsigned SPSR_value = CPSR;
-  unsigned vect_offset = 8;
-
-  /* TODO
-  bool take_to_hyp = false, route_to_hyp = false;
-  // Check whether to take exception to Hyp mode: If in Hyp mode, stay in Hyp
-  // mode.
-  take_to_hyp = (HaveVirtExt() && HaveSecurityExt() && SCR[SCR_NS] == 1 &&
-  CPSR[CPSR_M] == (unsigned)EXECMODE::HYP);
-
-  // If HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector.
-  route_to_hyp = (HaveVirtExt() && HaveSecurityExt() && !IsSecure() && HCR[HCR_TGE]
-  == 1 && CPSR[CPSR_M] == (unsigned)EXECMODE::USR);
-
-  // if HCR.TGE == '1' and in a Non-secure PL1 mode, the effect is UNPREDICTABLE
-
-  if (take_to_hyp) {
-    EnterHypMode(SPSR_value, LR_value, vect_offset);
-  } else if (route_to_hyp) {
-    EnterHypMode(SPSR_value, LR_value, 20);
-  } else {
-    // Enter Supervisor mode, and ensure Secure state if initially in Monitor
-    // mode. This affects the Banked versions of various registers accessed
-    // later in the code.
-    if (CPSR[CPSR_M] == (unsigned)EXECMODE::MON) SCR[SCR_NS] = 0;*/
-
-    // Make further CPSR changes: IRQs disabled, IT state reset, instruction set
-    // and endianness set to SCTLR-configured values.
-    //CPSR &= 0xF9FF03FF;
-    CPSR[CPSR_IT72] = CPSR[CPSR_IT10] = 0;
-
-    //CPSR &= 0xFEFFFFFF;
-    CPSR[CPSR_J] = 0;
-
-    //CPSR[CPSR_E] = SCTLR[SCTLR_EE]; // EE=0: little-endian; EE=1: big-endian
-
-    // Disable normal interrupts.
-    //CPSR |= 0x00000080;
-    CPSR[CPSR_I] = 1;
-
-    // Execute in ARM state.
-    //CPSR &= 0xFFFFFFDF
-    CPSR[CPSR_T] = 0;//SCTLR[SCTLR_TE]; // TE=0: ARM; TE=1: Thumb
-
-    // Enter supervisor mode.
-    //CPSR &= 0xFFFFFFF0; CPSR |= 0x00000003;
-    CPSR[CPSR_M] = (unsigned)EXECMODE::SVC;
-
-    // Write return information to registers.
-    SPSR[get_spsr_idx(CPSR[CPSR_M])] = SPSR_value;
-    Rmode(14, CPSR[CPSR_M], true, LR_value);
-
-    // Branch to SVC vector.
-    PC = ExcVectorBase() + vect_offset;
-  //}
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::UDF::UDF(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // UDF()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::UDF::get_id() const throw() {
-
-  return 149;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::UDF::get_name() const throw() {
-
-  return "UDF";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::UDF::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "UDF";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->imm0;
-  oss << std::showbase << std::hex << this->imm1;
-  oss << std::showbase << std::hex << this->imm2;
-  oss << std::showbase << std::hex << this->imm3;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::UDF::set_params(const unsigned& bitstring) throw()
-{
-
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->imm0 = (bitstring & 0xf0000) >> 16;
-  this->imm1 = (bitstring & 0xf000) >> 12;
-  this->imm2 = (bitstring & 0xf00) >> 8;
-  this->imm3 = (bitstring & 0xf);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::UDF::replicate(Instruction* instr) const
-throw() {
-
-  UDF* new_instr = new UDF(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    UDF* old_instr = dynamic_cast<UDF*>(instr);
-    if (old_instr) {
-      new_instr->cond = old_instr->cond;
-      new_instr->imm0 = old_instr->imm0;
-      new_instr->imm1 = old_instr->imm1;
-      new_instr->imm2 = old_instr->imm2;
-      new_instr->imm3 = old_instr->imm3;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::UDF::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  THROW_WARNING("Unimplemented instruction UDF.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::WFE::WFE(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // WFE()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::WFE::get_id() const throw() {
-
-  return 150;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::WFE::get_name() const throw() {
-
-  return "WFE";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::WFE::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "WFE";
-  oss << std::showbase << std::hex << this->cond;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::WFE::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::WFE::replicate(Instruction* instr) const
-throw() {
-
-  WFE* new_instr = new WFE(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    WFE* old_instr = dynamic_cast<WFE*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::WFE::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid WFE encoding: rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid WFE encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction WFE.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::WFI::WFI(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // WFI()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::WFI::get_id() const throw() {
-
-  return 151;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::WFI::get_name() const throw() {
-
-  return "WFI";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::WFI::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "WFI";
-  oss << std::showbase << std::hex << this->cond;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::WFI::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::WFI::replicate(Instruction* instr) const
-throw() {
-
-  WFI* new_instr = new WFI(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    WFI* old_instr = dynamic_cast<WFI*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::WFI::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid WFI encoding: rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid WFI encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction WFI.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::YIELD::YIELD(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // YIELD()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::YIELD::get_id() const throw() {
-
-  return 152;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::YIELD::get_name() const throw() {
-
-  return "YIELD";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::YIELD::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "YIELD";
-  oss << std::showbase << std::hex << this->cond;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::YIELD::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::YIELD::replicate(Instruction* instr) const
-throw() {
-
-  YIELD* new_instr = new YIELD(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    YIELD* old_instr = dynamic_cast<YIELD*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::YIELD::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit != 15)
-  THROW_WARNING("Invalid YIELD encoding: rd != 0xF.");
-
-  if (rs_bit)
-  THROW_WARNING("Invalid YIELD encoding: rs != 0x0.");
-
-  THROW_WARNING("Unimplemented instruction YIELD.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::SMC::SMC(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // SMC()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SMC::get_id() const throw() {
-
-  return 153;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SMC::get_name() const throw() {
-
-  return "SMC";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::SMC::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "SMC";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " R";
-  oss << std::dec << this->rm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::SMC::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rm_bit = (bitstring & 0xf);
-  this->rm.set_alias(REGS[this->rm_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->rs_bit = (bitstring & 0xf00) >> 8;
-  this->rs.set_alias(REGS[this->rs_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::SMC::replicate(Instruction* instr) const
-throw() {
-
-  SMC* new_instr = new SMC(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    SMC* old_instr = dynamic_cast<SMC*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rm_bit = old_instr->rm_bit;
-      new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->rs_bit = old_instr->rs_bit;
-      new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
-      new_instr->cond = old_instr->cond;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::SMC::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  THROW_WARNING("Unimplemented instruction SMC.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::CDP::CDP(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // CDP()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::CDP::get_id() const throw() {
-
-  return 154;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::CDP::get_name() const throw() {
-
-  return "CDP";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::CDP::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "CDP";
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->op0;
-  oss << ", ";
-  oss << std::dec << this->cprd_bit;
-  oss << ", ";
-  oss << std::dec << this->cprn_bit;
-  oss << ", ";
-  oss << std::dec << this->cprm_bit;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->op1;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::CDP::set_params(const unsigned& bitstring) throw()
-{
-
-  this->cprn_bit = (bitstring & 0xf0000) >> 16;
-  this->cprn.set_alias(CPREGS[this->cprn_bit]);
-  this->cprm_bit = (bitstring & 0xf);
-  this->cprm.set_alias(CPREGS[this->cprm_bit]);
-  this->cprd_bit = (bitstring & 0xf000) >> 12;
-  this->cprd.set_alias(CPREGS[this->cprd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->op0 = (bitstring & 0xf00000) >> 20;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xe0) >> 5;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::CDP::replicate(Instruction* instr) const
-throw() {
-
-  CDP* new_instr = new CDP(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    CDP* old_instr = dynamic_cast<CDP*>(instr);
-    if (old_instr) {
-      new_instr->cprn_bit = old_instr->cprn_bit;
-      new_instr->cprn.set_alias(CPREGS[new_instr->cprn_bit]);
-      new_instr->cprm_bit = old_instr->cprm_bit;
-      new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
-      new_instr->cprd_bit = old_instr->cprd_bit;
-      new_instr->cprd.set_alias(CPREGS[new_instr->cprd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->op0 = old_instr->op0;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->op1 = old_instr->op1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::CDP::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  THROW_WARNING("Unimplemented instruction CDP.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::LDC::LDC(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // LDC()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDC::get_id() const throw() {
-
-  return 155;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDC::get_name() const throw() {
-
-  return "LDC";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::LDC::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "LDC";
-  switch(this->cond) {
-    case 15: {
-      oss << "2";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::dec << this->cprd_bit;
-  oss << ", R";
-  oss << std::dec << this->rn_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::LDC::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cprd_bit = (bitstring & 0xf000) >> 12;
-  this->cprd.set_alias(CPREGS[this->cprd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->d = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->imm = (bitstring & 0xff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::LDC::replicate(Instruction* instr) const
-throw() {
-
-  LDC* new_instr = new LDC(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    LDC* old_instr = dynamic_cast<LDC*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cprd_bit = old_instr->cprd_bit;
-      new_instr->cprd.set_alias(CPREGS[new_instr->cprd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->d = old_instr->d;
-      new_instr->w = old_instr->w;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::LDC::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) && (w || (!p && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))))
-  THROW_EXCEPTION("Invalid LDC/LDC2 (literal) encoding: w = 1 or (p = 0 and current instruction set != ARM).");
-
-  THROW_WARNING("Unimplemented instruction LDC.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::STC::STC(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // STC()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STC::get_id() const throw() {
-
-  return 156;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STC::get_name() const throw() {
-
-  return "STC";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::STC::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "STC";
-  switch(this->cond) {
-    case 15: {
-      oss << "2";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::dec << this->cprd_bit;
-  oss << ", R";
-  oss << std::dec << this->rn_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::STC::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cprd_bit = (bitstring & 0xf000) >> 12;
-  this->cprd.set_alias(CPREGS[this->cprd_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->p = (bitstring & 0x1000000) >> 24;
-  this->u = (bitstring & 0x800000) >> 23;
-  this->d = (bitstring & 0x400000) >> 22;
-  this->w = (bitstring & 0x200000) >> 21;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->imm = (bitstring & 0xff);
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::STC::replicate(Instruction* instr) const
-throw() {
-
-  STC* new_instr = new STC(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    STC* old_instr = dynamic_cast<STC*>(instr);
-    if (old_instr) {
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cprd_bit = old_instr->cprd_bit;
-      new_instr->cprd.set_alias(CPREGS[new_instr->cprd_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->p = old_instr->p;
-      new_instr->u = old_instr->u;
-      new_instr->d = old_instr->d;
-      new_instr->w = old_instr->w;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->imm = old_instr->imm;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::STC::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) && (w || (CurrentInstrSet() != (unsigned)(ISMODE::ARM))))
-  THROW_EXCEPTION("Invalid STC/STC2 encoding: rn = 0xF and (w = 1 or current instruction set != ARM).");
-
-  THROW_WARNING("Unimplemented instruction STC.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MCR::MCR(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MCR()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MCR::get_id() const throw() {
-
-  return 157;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MCR::get_name() const throw() {
-
-  return "MCR";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MCR::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MCR";
-  switch(this->cond) {
-    case 15: {
-      oss << "2";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->op1;
-  oss << ", ";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::dec << this->rn_bit;
-  oss << ", ";
-  oss << std::dec << this->cprm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MCR::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(CPREGS[this->rn_bit]);
-  this->cprm_bit = (bitstring & 0xf);
-  this->cprm.set_alias(CPREGS[this->cprm_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->op0 = (bitstring & 0xe00000) >> 21;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xe0) >> 5;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MCR::replicate(Instruction* instr) const
-throw() {
-
-  MCR* new_instr = new MCR(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MCR* old_instr = dynamic_cast<MCR*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(CPREGS[new_instr->rn_bit]);
-      new_instr->cprm_bit = old_instr->cprm_bit;
-      new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->op0 = old_instr->op0;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->op1 = old_instr->op1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MCR::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if (rd_bit == 15)
-  THROW_EXCEPTION("Invalid MCR/MCR2 encoding: rd = 0xF.");
-
-  if ((rd_bit == 13) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
-  THROW_EXCEPTION("Invalid MCR/MCR2 encoding: rd = 0xD and current instruction set != ARM.");
-
-  THROW_WARNING("Unimplemented instruction MCR.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MCRR::MCRR(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MCRR()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MCRR::get_id() const throw() {
-
-  return 158;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MCRR::get_name() const throw() {
-
-  return "MCRR";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MCRR::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MCRR";
-  switch(this->cond) {
-    case 15: {
-      oss << "2";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->op1;
-  oss << ", ";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::dec << this->rn_bit;
-  oss << ", ";
-  oss << std::dec << this->cprm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MCRR::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cprm_bit = (bitstring & 0xf);
-  this->cprm.set_alias(CPREGS[this->cprm_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xe0) >> 5;
-  this->e = (bitstring & 0x10) >> 4;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MCRR::replicate(Instruction* instr) const
-throw() {
-
-  MCRR* new_instr = new MCRR(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MCRR* old_instr = dynamic_cast<MCRR*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cprm_bit = old_instr->cprm_bit;
-      new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->op1 = old_instr->op1;
-      new_instr->e = old_instr->e;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MCRR::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) || (rd_bit == 15))
-  THROW_EXCEPTION("Invalid MCRR/MCRR2 encoding: rn|rd = 0xF.");
-
-  if (((rn_bit == 13) || (rd_bit == 13)) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
-  THROW_EXCEPTION("Invalid MCRR/MCRR2 encoding: rn|rd = 0xD and current instruction set != ARM.");
-
-  THROW_WARNING("Unimplemented instruction MCRR.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MRC::MRC(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MRC()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MRC::get_id() const throw() {
-
-  return 159;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MRC::get_name() const throw() {
-
-  return "MRC";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MRC::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MRC";
-  switch(this->cond) {
-    case 15: {
-      oss << "2";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->op1;
-  oss << ", ";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::dec << this->rn_bit;
-  oss << ", ";
-  oss << std::dec << this->cprm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MRC::set_params(const unsigned& bitstring) throw()
-{
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(CPREGS[this->rn_bit]);
-  this->cprm_bit = (bitstring & 0xf);
-  this->cprm.set_alias(CPREGS[this->cprm_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->op0 = (bitstring & 0xe00000) >> 21;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xe0) >> 5;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MRC::replicate(Instruction* instr) const
-throw() {
-
-  MRC* new_instr = new MRC(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MRC* old_instr = dynamic_cast<MRC*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(CPREGS[new_instr->rn_bit]);
-      new_instr->cprm_bit = old_instr->cprm_bit;
-      new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->op0 = old_instr->op0;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->op1 = old_instr->op1;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MRC::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rd_bit == 13) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
-  THROW_EXCEPTION("Invalid MRC/MRC2 encoding: rd = 0xD and current instruction set != ARM.");
-
-  THROW_WARNING("Unimplemented instruction MRC.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::MRRC::MRRC(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory) :
-  Instruction(R, instr_memory, data_memory),
-  ConditionPassedOp(R, instr_memory, data_memory) {
-
-
-} // MRRC()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MRRC::get_id() const throw() {
-
-  return 160;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MRRC::get_name() const throw() {
-
-  return "MRRC";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::MRRC::get_mnemonic() const throw() {
-
-  std::ostringstream oss (std::ostringstream::out);
-  oss << "MRRC";
-  switch(this->cond) {
-    case 15: {
-      oss << "2";
-    break;}
-  }
-  oss << std::showbase << std::hex << this->cond;
-  oss << " ";
-  oss << std::showbase << std::hex << this->cpnum;
-  oss << ", ";
-  oss << std::showbase << std::hex << this->op1;
-  oss << ", ";
-  oss << std::dec << this->rd_bit;
-  oss << ", ";
-  oss << std::dec << this->rn_bit;
-  oss << ", ";
-  oss << std::dec << this->cprm_bit;
-  return oss.str();
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-void core_armcortexa9_funclt::MRRC::set_params(const unsigned& bitstring)
-throw() {
-
-  this->rd_bit = (bitstring & 0xf000) >> 12;
-  this->rd.set_alias(REGS[this->rd_bit]);
-  this->rn_bit = (bitstring & 0xf0000) >> 16;
-  this->rn.set_alias(REGS[this->rn_bit]);
-  this->cprm_bit = (bitstring & 0xf);
-  this->cprm.set_alias(CPREGS[this->cprm_bit]);
-  this->cond = (bitstring & 0xf0000000) >> 28;
-  this->cpnum = (bitstring & 0xf00) >> 8;
-  this->op1 = (bitstring & 0xe0) >> 5;
-  this->e = (bitstring & 0x10) >> 4;
-} // set_params()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::MRRC::replicate(Instruction* instr) const
-throw() {
-
-  MRRC* new_instr = new MRRC(R, instr_memory, data_memory);
-
-  // Set instruction fields.
-  if (instr) {
-    MRRC* old_instr = dynamic_cast<MRRC*>(instr);
-    if (old_instr) {
-      new_instr->rd_bit = old_instr->rd_bit;
-      new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
-      new_instr->rn_bit = old_instr->rn_bit;
-      new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
-      new_instr->cprm_bit = old_instr->cprm_bit;
-      new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
-      new_instr->cond = old_instr->cond;
-      new_instr->cpnum = old_instr->cpnum;
-      new_instr->op1 = old_instr->op1;
-      new_instr->e = old_instr->e;
-    }
-  }
-  return new_instr;
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::MRRC::behavior() {
-
-  this->num_instr_cycles = 0;
-  this->num_instr_cycles += ConditionPassed(this->cond);
-
-  if ((rn_bit == 15) || (rd_bit == 15))
-  THROW_EXCEPTION("Invalid MRRC/MRRC2 encoding: rn|rd = 0xF.");
-
-  if (rn_bit == rd_bit)
-  THROW_EXCEPTION("Invalid MRRC/MRRC2 encoding: rn = rd.");
-
-  if (((rn_bit == 13) || (rd_bit == 13)) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
-  THROW_EXCEPTION("Invalid MRRC/MRRC2 encoding: rn|rd = 0xD and current instruction set != ARM.");
-
-  THROW_WARNING("Unimplemented instruction MRRC.");
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::IRQIntrInstruction::IRQIntrInstruction(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory,
-    bool& IRQ) :
-  Instruction(R, instr_memory, data_memory),
-  IRQ(IRQ) {
-
-
-} // IRQIntrInstruction()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::IRQIntrInstruction::get_id() const throw() {
-
-  return (unsigned)-1;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::IRQIntrInstruction::get_name() const
-throw() {
-
-  return "IRQIntrInstruction";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::IRQIntrInstruction::get_mnemonic() const
-throw() {
-
-  return "IRQ";
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::IRQIntrInstruction::replicate(Instruction*
-instr) const throw() {
-
-  return new IRQIntrInstruction(R, instr_memory, data_memory, this->IRQ);
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::IRQIntrInstruction::behavior() {
-
-  this->num_instr_cycles = 0;
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
-
-core_armcortexa9_funclt::FIQIntrInstruction::FIQIntrInstruction(
-    Registers& R,
-    MemoryInterface& instr_memory,
-    MemoryInterface& data_memory,
-    bool& FIQ) :
-  Instruction(R, instr_memory, data_memory),
-  FIQ(FIQ) {
-
-
-} // FIQIntrInstruction()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::FIQIntrInstruction::get_id() const throw() {
-
-  return (unsigned)-1;
-} // get_id()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::FIQIntrInstruction::get_name() const
-throw() {
-
-  return "FIQIntrInstruction";
-} // get_name()
-
-// -----------------------------------------------------------------------------
-
-std::string core_armcortexa9_funclt::FIQIntrInstruction::get_mnemonic() const
-throw() {
-
-  return "FIQ";
-} // get_mnemonic()
-
-// -----------------------------------------------------------------------------
-
-Instruction* core_armcortexa9_funclt::FIQIntrInstruction::replicate(Instruction*
-instr) const throw() {
-
-  return new FIQIntrInstruction(R, instr_memory, data_memory, this->FIQ);
-} // replicate()
-
-// -----------------------------------------------------------------------------
-
-unsigned core_armcortexa9_funclt::FIQIntrInstruction::behavior() {
-
-  this->num_instr_cycles = 0;
-  return this->num_instr_cycles;
-} // behavior()
-
-// -----------------------------------------------------------------------------
-
-
-// *****************************************************************************
+        std::string core_armcortexa9_funclt::LDM::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "LDM";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::LDM::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::LDM::replicate(Instruction* instr)
+        const throw() {
+
+          LDM* new_instr = new LDM(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            LDM* old_instr = dynamic_cast<LDM*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDM::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
+          : 1 /* user registers */)
+          : 0 /* user mode */);
+
+          //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // POP is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
+
+          if ((!mode || (mode == 1)) && !reg_list)
+          THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
+
+          if (w && (reg_list & (0x1 << rn_bit)))
+          THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
+
+          if ((mode == 1) && w)
+          THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_load = 0;
+          unsigned load_latency = 0;
+
+          if (!s || (reg_list & 0x00008000)) {
+            // LDMxx or LDMxx (exception return)
+            // Load memory in register i.
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+
+            // Load memory in PC.
+            // If the PC is among reg_list, this is like performing a branch.
+            if (reg_list & 0x00008000) {
+              if (s) {
+                // LDMxx (exception return)
+                unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
+                int spsr_idx = get_spsr_idx(mode);
+                if (spsr_idx >= 0) {
+                  value = SPSR[spsr_idx];
+                  mask = psr_mask(value, 0xF, mode, false, true);
+                  // If the mode is going to change, update the aliases.
+                  if ((mask & 0x1F) && (mode != (value & 0x1F))) {
+                    update_alias(mode, value & 0x1F);
+                  }
+                  if (mask) {
+                    CPSR = (CPSR & ~mask) | (value & mask);
+                  }
+                }
+              }
+              if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
+              BranchWritePC(data_memory.read_word(start_address));
+              num_regs_to_load++;
+              load_latency += 2;
+              flush();
+            }
+
+            // Optionally write back to base register.
+            if (w && !(reg_list & (0x00000001 << rn_bit))) {
+              // The writeback address is written back to the base register.
+              rn = wb_address;
+            }
+          } else {
+            // LDMxx (user registers)
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Load user mode registers.
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+          }
+          stall(load_latency);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::LDMIB::LDMIB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // LDMIB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDMIB::get_id() const throw() {
+
+          return 107;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDMIB::get_name() const throw() {
+
+          return "LDMIB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDMIB::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "LDMIB";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::LDMIB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::LDMIB::replicate(Instruction*
+        instr) const throw() {
+
+          LDMIB* new_instr = new LDMIB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            LDMIB* old_instr = dynamic_cast<LDMIB*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDMIB::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
+          : 1 /* user registers */)
+          : 0 /* user mode */);
+
+          //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // POP is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
+
+          if ((!mode || (mode == 1)) && !reg_list)
+          THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
+
+          if (w && (reg_list & (0x1 << rn_bit)))
+          THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
+
+          if ((mode == 1) && w)
+          THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_load = 0;
+          unsigned load_latency = 0;
+
+          if (!s || (reg_list & 0x00008000)) {
+            // LDMxx or LDMxx (exception return)
+            // Load memory in register i.
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+
+            // Load memory in PC.
+            // If the PC is among reg_list, this is like performing a branch.
+            if (reg_list & 0x00008000) {
+              if (s) {
+                // LDMxx (exception return)
+                unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
+                int spsr_idx = get_spsr_idx(mode);
+                if (spsr_idx >= 0) {
+                  value = SPSR[spsr_idx];
+                  mask = psr_mask(value, 0xF, mode, false, true);
+                  // If the mode is going to change, update the aliases.
+                  if ((mask & 0x1F) && (mode != (value & 0x1F))) {
+                    update_alias(mode, value & 0x1F);
+                  }
+                  if (mask) {
+                    CPSR = (CPSR & ~mask) | (value & mask);
+                  }
+                }
+              }
+              if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
+              BranchWritePC(data_memory.read_word(start_address));
+              num_regs_to_load++;
+              load_latency += 2;
+              flush();
+            }
+
+            // Optionally write back to base register.
+            if (w && !(reg_list & (0x00000001 << rn_bit))) {
+              // The writeback address is written back to the base register.
+              rn = wb_address;
+            }
+          } else {
+            // LDMxx (user registers)
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Load user mode registers.
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+          }
+          stall(load_latency);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::LDMDA::LDMDA(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // LDMDA()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDMDA::get_id() const throw() {
+
+          return 108;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDMDA::get_name() const throw() {
+
+          return "LDMDA";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDMDA::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "LDMDA";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::LDMDA::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::LDMDA::replicate(Instruction*
+        instr) const throw() {
+
+          LDMDA* new_instr = new LDMDA(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            LDMDA* old_instr = dynamic_cast<LDMDA*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDMDA::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
+          : 1 /* user registers */)
+          : 0 /* user mode */);
+
+          //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // POP is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
+
+          if ((!mode || (mode == 1)) && !reg_list)
+          THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
+
+          if (w && (reg_list & (0x1 << rn_bit)))
+          THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
+
+          if ((mode == 1) && w)
+          THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_load = 0;
+          unsigned load_latency = 0;
+
+          if (!s || (reg_list & 0x00008000)) {
+            // LDMxx or LDMxx (exception return)
+            // Load memory in register i.
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+
+            // Load memory in PC.
+            // If the PC is among reg_list, this is like performing a branch.
+            if (reg_list & 0x00008000) {
+              if (s) {
+                // LDMxx (exception return)
+                unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
+                int spsr_idx = get_spsr_idx(mode);
+                if (spsr_idx >= 0) {
+                  value = SPSR[spsr_idx];
+                  mask = psr_mask(value, 0xF, mode, false, true);
+                  // If the mode is going to change, update the aliases.
+                  if ((mask & 0x1F) && (mode != (value & 0x1F))) {
+                    update_alias(mode, value & 0x1F);
+                  }
+                  if (mask) {
+                    CPSR = (CPSR & ~mask) | (value & mask);
+                  }
+                }
+              }
+              if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
+              BranchWritePC(data_memory.read_word(start_address));
+              num_regs_to_load++;
+              load_latency += 2;
+              flush();
+            }
+
+            // Optionally write back to base register.
+            if (w && !(reg_list & (0x00000001 << rn_bit))) {
+              // The writeback address is written back to the base register.
+              rn = wb_address;
+            }
+          } else {
+            // LDMxx (user registers)
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Load user mode registers.
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+          }
+          stall(load_latency);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::LDMDB::LDMDB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // LDMDB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDMDB::get_id() const throw() {
+
+          return 109;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDMDB::get_name() const throw() {
+
+          return "LDMDB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDMDB::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "LDMDB";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::LDMDB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::LDMDB::replicate(Instruction*
+        instr) const throw() {
+
+          LDMDB* new_instr = new LDMDB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            LDMDB* old_instr = dynamic_cast<LDMDB*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDMDB::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          unsigned mode = (s? ((reg_list & 0x8000)? 2 /* exception return */
+          : 1 /* user registers */)
+          : 0 /* user mode */);
+
+          //if (!mode && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // POP is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid LDM encoding: rn = 0xF.");
+
+          if ((!mode || (mode == 1)) && !reg_list)
+          THROW_EXCEPTION("Invalid LDM encoding: reg_list = 0x0.");
+
+          if (w && (reg_list & (0x1 << rn_bit)))
+          THROW_EXCEPTION("Invalid LDM encoding: w = 1 and reg_list[rn] = 1.");
+
+          if ((mode == 1) && w)
+          THROW_WARNING("Invalid LDM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_load = 0;
+          unsigned load_latency = 0;
+
+          if (!s || (reg_list & 0x00008000)) {
+            // LDMxx or LDMxx (exception return)
+            // Load memory in register i.
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+
+            // Load memory in PC.
+            // If the PC is among reg_list, this is like performing a branch.
+            if (reg_list & 0x00008000) {
+              if (s) {
+                // LDMxx (exception return)
+                unsigned value = 0, mode = CPSR[CPSR_M], mask = 0;
+                int spsr_idx = get_spsr_idx(mode);
+                if (spsr_idx >= 0) {
+                  value = SPSR[spsr_idx];
+                  mask = psr_mask(value, 0xF, mode, false, true);
+                  // If the mode is going to change, update the aliases.
+                  if ((mask & 0x1F) && (mode != (value & 0x1F))) {
+                    update_alias(mode, value & 0x1F);
+                  }
+                  if (mask) {
+                    CPSR = (CPSR & ~mask) | (value & mask);
+                  }
+                }
+              }
+              if (!(s && (CPSR[CPSR_M] == 0x1A) && CPSR[CPSR_J] && CPSR[CPSR_T]))
+              BranchWritePC(data_memory.read_word(start_address));
+              num_regs_to_load++;
+              load_latency += 2;
+              flush();
+            }
+
+            // Optionally write back to base register.
+            if (w && !(reg_list & (0x00000001 << rn_bit))) {
+              // The writeback address is written back to the base register.
+              rn = wb_address;
+            }
+          } else {
+            // LDMxx (user registers)
+            for (int i = 0; i < 15; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Load user mode registers.
+                REGS[i] = data_memory.read_word(start_address);
+                start_address += 4;
+                num_regs_to_load++;
+              }
+            }
+            load_latency = num_regs_to_load + 1;
+          }
+          stall(load_latency);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::POP_single::POP_single(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // POP_single()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::POP_single::get_id() const throw() {
+
+          return 110;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::POP_single::get_name() const
+        throw() {
+
+          return "POP_single";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::POP_single::get_mnemonic() const
+        throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "POP";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " {";
+          oss << std::showbase << std::hex << this->imm0;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::POP_single::set_params(const unsigned&
+        bitstring) throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0 = (bitstring & 0xf000) >> 12;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::POP_single::replicate(Instruction*
+        instr) const throw() {
+
+          POP_single* new_instr = new POP_single(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            POP_single* old_instr = dynamic_cast<POP_single*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0 = old_instr->imm0;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::POP_single::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (imm0 == 13)
+          THROW_EXCEPTION("Invalid POP (single) encoding: rd = 0xD.");
+
+#ifdef ACC_MODEL
+          REGS[imm0].lock(this, 3 /* in decode */, 3 /* write in execute, 3
+          cycles ahead */);
+#endif
+          reg_list = (0x1 << imm0);
+
+          unsigned start_address = SP;
+          unsigned num_regs_to_load = 0;
+          unsigned load_latency = 0;
+
+          for (int i = 0; i < 15; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              // Load user mode registers.
+              REGS[i] = data_memory.read_word(start_address);
+              start_address += 4;
+              num_regs_to_load++;
+            }
+          }
+
+          // Load memory in PC.
+          // If the PC is among reg_list, this is like performing a branch.
+          if (reg_list & 0x00008000) {
+            BranchWritePC(data_memory.read_word(start_address));
+            num_regs_to_load++;
+            load_latency += 2;
+            flush();
+          }
+
+          // Update SP.
+          SP += 4 * num_regs_to_load;
+
+          load_latency = num_regs_to_load + 1;
+          stall(load_latency);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::POP_block::POP_block(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // POP_block()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::POP_block::get_id() const throw() {
+
+          return 111;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::POP_block::get_name() const throw()
+        {
+
+          return "POP_block";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::POP_block::get_mnemonic() const
+        throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "POP";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " {";
+          oss << std::showbase << std::hex << (((this->imm0 << 12) & (unsigned)0xF000)
+          | (this->imm1 & ((unsigned)0xFFF)));
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::POP_block::set_params(const unsigned&
+        bitstring) throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0 = (bitstring & 0xf000) >> 12;
+          this->imm1 = (bitstring & 0xfff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::POP_block::replicate(Instruction*
+        instr) const throw() {
+
+          POP_block* new_instr = new POP_block(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            POP_block* old_instr = dynamic_cast<POP_block*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0 = old_instr->imm0;
+              new_instr->imm1 = old_instr->imm1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::POP_block::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          reg_list = (imm0 << 12) | imm1;
+
+          if (reg_list & (0x1 << 13))
+          THROW_EXCEPTION("Invalid POP (block) encoding: reg_list[13] = 1.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].lock(this, 3 /* in decode */, 3 /* write in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+
+          unsigned start_address = SP;
+          unsigned num_regs_to_load = 0;
+          unsigned load_latency = 0;
+
+          for (int i = 0; i < 15; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              // Load user mode registers.
+              REGS[i] = data_memory.read_word(start_address);
+              start_address += 4;
+              num_regs_to_load++;
+            }
+          }
+
+          // Load memory in PC.
+          // If the PC is among reg_list, this is like performing a branch.
+          if (reg_list & 0x00008000) {
+            BranchWritePC(data_memory.read_word(start_address));
+            num_regs_to_load++;
+            load_latency += 2;
+            flush();
+          }
+
+          // Update SP.
+          SP += 4 * num_regs_to_load;
+
+          load_latency = num_regs_to_load + 1;
+          stall(load_latency);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::STM::STM(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // STM()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STM::get_id() const throw() {
+
+          return 112;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STM::get_name() const throw() {
+
+          return "STM";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STM::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "STM";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::STM::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::STM::replicate(Instruction* instr)
+        const throw() {
+
+          STM* new_instr = new STM(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            STM* old_instr = dynamic_cast<STM*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STM::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // PUSH is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
+
+          if (!reg_list)
+          THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
+
+          if (s && w)
+          THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_store = 0;
+          start_address &= 0xFFFFFFFC;
+
+          if (!s) {
+            // STMxx common registers
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+            // Update base register if necessary.
+            // NOTE: Using the writeback strategy and putting the base register
+            // in the list of registers to be saved is defined by the ARM as an
+            // undefined operation, unless it is first in the register list.
+            // This implies that the write back happens in parallel to the
+            // storing of the first register.
+            if (w)
+            rn = wb_address;
+          } else {
+            // STMxx (user registers)
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Store user mode registers.
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+          }
+          stall(num_regs_to_store);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::STMIB::STMIB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // STMIB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STMIB::get_id() const throw() {
+
+          return 113;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STMIB::get_name() const throw() {
+
+          return "STMIB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STMIB::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "STMIB";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::STMIB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::STMIB::replicate(Instruction*
+        instr) const throw() {
+
+          STMIB* new_instr = new STMIB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            STMIB* old_instr = dynamic_cast<STMIB*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STMIB::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // PUSH is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
+
+          if (!reg_list)
+          THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
+
+          if (s && w)
+          THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_store = 0;
+          start_address &= 0xFFFFFFFC;
+
+          if (!s) {
+            // STMxx common registers
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+            // Update base register if necessary.
+            // NOTE: Using the writeback strategy and putting the base register
+            // in the list of registers to be saved is defined by the ARM as an
+            // undefined operation, unless it is first in the register list.
+            // This implies that the write back happens in parallel to the
+            // storing of the first register.
+            if (w)
+            rn = wb_address;
+          } else {
+            // STMxx (user registers)
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Store user mode registers.
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+          }
+          stall(num_regs_to_store);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::STMDA::STMDA(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // STMDA()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STMDA::get_id() const throw() {
+
+          return 114;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STMDA::get_name() const throw() {
+
+          return "STMDA";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STMDA::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "STMDA";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::STMDA::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::STMDA::replicate(Instruction*
+        instr) const throw() {
+
+          STMDA* new_instr = new STMDA(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            STMDA* old_instr = dynamic_cast<STMDA*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STMDA::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // PUSH is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
+
+          if (!reg_list)
+          THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
+
+          if (s && w)
+          THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_store = 0;
+          start_address &= 0xFFFFFFFC;
+
+          if (!s) {
+            // STMxx common registers
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+            // Update base register if necessary.
+            // NOTE: Using the writeback strategy and putting the base register
+            // in the list of registers to be saved is defined by the ARM as an
+            // undefined operation, unless it is first in the register list.
+            // This implies that the write back happens in parallel to the
+            // storing of the first register.
+            if (w)
+            rn = wb_address;
+          } else {
+            // STMxx (user registers)
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Store user mode registers.
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+          }
+          stall(num_regs_to_store);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::STMDB::STMDB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory),
+          LSMReglistOp(R, instr_memory, data_memory) {
+
+
+        } // STMDB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STMDB::get_id() const throw() {
+
+          return 115;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STMDB::get_name() const throw() {
+
+          return "STMDB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STMDB::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "STMDB";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << ", {";
+          oss << std::showbase << std::hex << this->reg_list;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::STMDB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->s = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->reg_list = (bitstring & 0xffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::STMDB::replicate(Instruction*
+        instr) const throw() {
+
+          STMDB* new_instr = new STMDB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            STMDB* old_instr = dynamic_cast<STMDB*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->s = old_instr->s;
+              new_instr->w = old_instr->w;
+              new_instr->reg_list = old_instr->reg_list;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STMDB::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          //if (!s && w && (rn_bit == 13) && (BitCount(reg_list) > 1))
+          // PUSH is caught by the decoder as a subinstruction and never redirects
+          // here.
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid STM encoding: rn = 0xF.");
+
+          if (!reg_list)
+          THROW_EXCEPTION("Invalid STM encoding: reg_list = 0x0.");
+
+          if (s && w)
+          THROW_WARNING("Invalid STM (user registers) encoding: w != 0.");
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+          this->num_instr_cycles += LSMReglist(this->rn, this->rn_bit, this->p,
+          this->u, this->reg_list, this->start_address, this->wb_address);
+
+          unsigned num_regs_to_store = 0;
+          start_address &= 0xFFFFFFFC;
+
+          if (!s) {
+            // STMxx common registers
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+            // Update base register if necessary.
+            // NOTE: Using the writeback strategy and putting the base register
+            // in the list of registers to be saved is defined by the ARM as an
+            // undefined operation, unless it is first in the register list.
+            // This implies that the write back happens in parallel to the
+            // storing of the first register.
+            if (w)
+            rn = wb_address;
+          } else {
+            // STMxx (user registers)
+            for (int i = 0; i < 16; i++) {
+              if ((reg_list & (0x00000001 << i)) != 0) {
+                // Store user mode registers.
+                data_memory.write_word(start_address, REGS[i]);
+                start_address += 4;
+                num_regs_to_store++;
+              }
+            }
+          }
+          stall(num_regs_to_store);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::PUSH_single::PUSH_single(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // PUSH_single()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PUSH_single::get_id() const throw() {
+
+          return 116;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PUSH_single::get_name() const
+        throw() {
+
+          return "PUSH_single";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PUSH_single::get_mnemonic() const
+        throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "PUSH";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " {";
+          oss << std::showbase << std::hex << this->imm0;
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::PUSH_single::set_params(const unsigned&
+        bitstring) throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0 = (bitstring & 0xf000) >> 12;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::PUSH_single::replicate(Instruction*
+        instr) const throw() {
+
+          PUSH_single* new_instr = new PUSH_single(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            PUSH_single* old_instr = dynamic_cast<PUSH_single*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0 = old_instr->imm0;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PUSH_single::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (imm0 == 13)
+          THROW_EXCEPTION("Invalid PUSH (single) encoding: rd = 0xD.");
+
+#ifdef ACC_MODEL
+          REGS[imm0].is_locked(3 /* in decode */, 3 /* read in execute, 3 cycles
+          ahead */);
+#endif
+          reg_list = (0x1 << imm0);
+
+          unsigned input = reg_list;
+          unsigned num_regs_to_store = 0;
+          for (; input; num_regs_to_store++) {
+            // Clear least significant bit set.
+            input &= input - 1;
+          }
+          unsigned start_address = SP - 4 * num_regs_to_store;
+
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              // Store user mode registers.
+              data_memory.write_word(start_address, REGS[i]);
+              start_address += 4;
+            }
+          }
+
+          // Update SP.
+          SP -= 4 * num_regs_to_store;
+
+          stall(num_regs_to_store);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::PUSH_block::PUSH_block(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // PUSH_block()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PUSH_block::get_id() const throw() {
+
+          return 117;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PUSH_block::get_name() const
+        throw() {
+
+          return "PUSH_block";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PUSH_block::get_mnemonic() const
+        throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "PUSH";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " {";
+          oss << std::showbase << std::hex << (((this->imm0 << 12) & (unsigned)0xF000)
+          | (this->imm1 & ((unsigned)0xFFF)));
+          oss << "}";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::PUSH_block::set_params(const unsigned&
+        bitstring) throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0 = (bitstring & 0xf000) >> 12;
+          this->imm1 = (bitstring & 0xfff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::PUSH_block::replicate(Instruction*
+        instr) const throw() {
+
+          PUSH_block* new_instr = new PUSH_block(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            PUSH_block* old_instr = dynamic_cast<PUSH_block*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0 = old_instr->imm0;
+              new_instr->imm1 = old_instr->imm1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PUSH_block::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          reg_list = (imm0 << 12) | imm1;
+
+#ifdef ACC_MODEL
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              REGS[i].is_locked(3 /* in decode */, 3 /* read in execute, 3
+              cycles ahead */);
+            }
+          }
+#endif
+
+          unsigned input = reg_list;
+          unsigned num_regs_to_store = 0;
+          for (; input; num_regs_to_store++) {
+            // Clear least significant bit set.
+            input &= input - 1;
+          }
+          unsigned start_address = SP - 4 * num_regs_to_store;
+
+          for (int i = 0; i < 16; i++) {
+            if ((reg_list & (0x00000001 << i)) != 0) {
+              // Store user mode registers.
+              data_memory.write_word(start_address, REGS[i]);
+              start_address += 4;
+            }
+          }
+
+          // Update SP.
+          SP -= 4 * num_regs_to_store;
+
+          stall(num_regs_to_store);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MOV_i::MOV_i(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ARMExpandImmOp(R, instr_memory, data_memory),
+          UpdatePSRBitOp(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MOV_i()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOV_i::get_id() const throw() {
+
+          return 118;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOV_i::get_name() const throw() {
+
+          return "MOV_i";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOV_i::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MOV";
+          switch(this->s) {
+            case 1: {
+              oss << "S";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::showbase << std::hex << (((this->imm >> (2 * this->rotate))
+          & (((unsigned)0xFFFFFFFF) >> (2 * this->rotate))) | ((this->imm << (32
+          - 2 * this->rotate)) & (((unsigned)0xFFFFFFFF) << (32 - 2 * this->rotate))));
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MOV_i::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->s = (bitstring & 0x100000) >> 20;
+          this->rotate = (bitstring & 0xf00) >> 8;
+          this->imm = (bitstring & 0xff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MOV_i::replicate(Instruction*
+        instr) const throw() {
+
+          MOV_i* new_instr = new MOV_i(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MOV_i* old_instr = dynamic_cast<MOV_i*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->s = old_instr->s;
+              new_instr->rotate = old_instr->rotate;
+              new_instr->imm = old_instr->imm;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOV_i::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rn_bit && !(s && rd_bit == 15))
+          THROW_WARNING("Invalid MOV (immediate) encoding: rn != 0x0.");
+
+          unsigned cur_mode = CPSR[CPSR_M];
+          if (s && rd_bit == 15 &&
+          ((cur_mode == (unsigned)EXECMODE::USR) || (cur_mode == (unsigned)EXECMODE::SYS)
+          || (cur_mode == (unsigned)EXECMODE::HYP)))
+          THROW_EXCEPTION("SUBS is not allowed in USR, SYS or HYP modes.");
+          this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm,
+          this->operand, this->carry);
+
+          result = operand;
+          this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
+          this->result, this->carry);
+          {
+            unsigned num_cycles = 0;
+
+
+            /// In case the program counter is the updated register the latency
+            /// of the operation is incremented by two clock cycles.
+            if (rd_bit == 15) {
+              num_cycles += 2;
+              flush();
+            }
+            this->num_instr_cycles += num_cycles;
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MOV_r::MOV_r(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          UpdatePSRBitOp(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MOV_r()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOV_r::get_id() const throw() {
+
+          return 119;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOV_r::get_name() const throw() {
+
+          return "MOV_r";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOV_r::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MOV";
+          switch(this->s) {
+            case 1: {
+              oss << "S";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rd_bit;
+          oss << ", R";
+          oss << std::dec << this->rm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MOV_r::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->s = (bitstring & 0x100000) >> 20;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MOV_r::replicate(Instruction*
+        instr) const throw() {
+
+          MOV_r* new_instr = new MOV_r(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MOV_r* old_instr = dynamic_cast<MOV_r*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->s = old_instr->s;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOV_r::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rn_bit)
+          THROW_WARNING("Invalid MOV (register) encoding: rn != 0x0.");
+
+          result = rm;
+          carry = CPSR[CPSR_C];
+          this->num_instr_cycles += UpdatePSRBit(this->rd, this->rd_bit, this->s,
+          this->result, this->carry);
+          {
+            unsigned num_cycles = 0;
+
+
+            /// In case the program counter is the updated register the latency
+            /// of the operation is incremented by two clock cycles.
+            if (rd_bit == 15) {
+              num_cycles += 2;
+              flush();
+            }
+            this->num_instr_cycles += num_cycles;
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MOVW::MOVW(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MOVW()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOVW::get_id() const throw() {
+
+          return 120;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOVW::get_name() const throw() {
+
+          return "MOVW";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOVW::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MOVW";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->imm0a;
+          oss << std::showbase << std::hex << this->imm0b;
+          oss << std::showbase << std::hex << this->imm1a;
+          oss << std::showbase << std::hex << this->b;
+          oss << std::showbase << std::hex << this->imm1b;
+          oss << std::showbase << std::hex << this->op1;
+          oss << std::showbase << std::hex << this->imm2;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MOVW::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0a = (bitstring & 0xc0000) >> 18;
+          this->imm0b = (bitstring & 0x30000) >> 16;
+          this->imm1a = (bitstring & 0xc00) >> 10;
+          this->b = (bitstring & 0x200) >> 9;
+          this->imm1b = (bitstring & 0x100) >> 8;
+          this->op1 = (bitstring & 0xf0) >> 4;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MOVW::replicate(Instruction*
+        instr) const throw() {
+
+          MOVW* new_instr = new MOVW(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MOVW* old_instr = dynamic_cast<MOVW*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0a = old_instr->imm0a;
+              new_instr->imm0b = old_instr->imm0b;
+              new_instr->imm1a = old_instr->imm1a;
+              new_instr->b = old_instr->b;
+              new_instr->imm1b = old_instr->imm1b;
+              new_instr->op1 = old_instr->op1;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOVW::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit == 15)
+          THROW_EXCEPTION("Invalid MOVW encoding: rd = 0xF.");
+
+          unsigned imm0 = (imm0a << 2) | imm0b;
+          unsigned imm1 = (imm1a << 2) | (b << 1) | imm1b;
+          rd = (imm0 << 12) | (imm1 << 8) | (op1 << 4) | imm2;
+          {
+            unsigned num_cycles = 0;
+
+
+            /// In case the program counter is the updated register the latency
+            /// of the operation is incremented by two clock cycles.
+            if (rd_bit == 15) {
+              num_cycles += 2;
+              flush();
+            }
+            this->num_instr_cycles += num_cycles;
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MOVT::MOVT(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MOVT()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOVT::get_id() const throw() {
+
+          return 121;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOVT::get_name() const throw() {
+
+          return "MOVT";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MOVT::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MOVT";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->imm0a;
+          oss << std::showbase << std::hex << this->imm0b;
+          oss << std::showbase << std::hex << this->imm1a;
+          oss << std::showbase << std::hex << this->b;
+          oss << std::showbase << std::hex << this->imm1b;
+          oss << std::showbase << std::hex << this->op1;
+          oss << std::showbase << std::hex << this->imm2;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MOVT::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0a = (bitstring & 0xc0000) >> 18;
+          this->imm0b = (bitstring & 0x30000) >> 16;
+          this->imm1a = (bitstring & 0xc00) >> 10;
+          this->b = (bitstring & 0x200) >> 9;
+          this->imm1b = (bitstring & 0x100) >> 8;
+          this->op1 = (bitstring & 0xf0) >> 4;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MOVT::replicate(Instruction*
+        instr) const throw() {
+
+          MOVT* new_instr = new MOVT(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MOVT* old_instr = dynamic_cast<MOVT*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0a = old_instr->imm0a;
+              new_instr->imm0b = old_instr->imm0b;
+              new_instr->imm1a = old_instr->imm1a;
+              new_instr->b = old_instr->b;
+              new_instr->imm1b = old_instr->imm1b;
+              new_instr->op1 = old_instr->op1;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MOVT::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit == 15)
+          THROW_EXCEPTION("Invalid MOVT encoding: rd = 0xF.");
+
+          unsigned imm0 = (imm0a << 2) | imm0b;
+          unsigned imm1 = (imm1a << 2) | (b << 1) | imm1b;
+          rd = (rd & 0x0000FFFF) | (imm0 << 28) | (imm1 << 24) | (op1 << 20) |
+          (imm2 << 16);
+          {
+            unsigned num_cycles = 0;
+
+
+            /// In case the program counter is the updated register the latency
+            /// of the operation is incremented by two clock cycles.
+            if (rd_bit == 15) {
+              num_cycles += 2;
+              flush();
+            }
+            this->num_instr_cycles += num_cycles;
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::SWP::SWP(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // SWP()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SWP::get_id() const throw() {
+
+          return 122;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SWP::get_name() const throw() {
+
+          return "SWP";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SWP::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "SWP";
+          switch(this->b) {
+            case 1: {
+              oss << "B";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rd_bit;
+          oss << ", R";
+          oss << std::dec << this->rm_bit;
+          oss << ", [R";
+          oss << std::dec << this->rn_bit;
+          oss << "]";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::SWP::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->b = (bitstring & 0x400000) >> 22;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::SWP::replicate(Instruction* instr)
+        const throw() {
+
+          SWP* new_instr = new SWP(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            SWP* old_instr = dynamic_cast<SWP*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->b = old_instr->b;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SWP::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rn_bit == 15) || (rd_bit == 15) || (rm_bit == 15))
+          THROW_EXCEPTION("Invalid SWP/SWPB encoding: rn|rd|rm = 0xF.");
+
+          if ((rn_bit == rd_bit) || (rn_bit == rm_bit))
+          THROW_EXCEPTION("Invalid SWP/SWPB encoding: rn = rd|rm.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid SWP/SWPB encoding: rs != 0x0.");
+
+          // Needed in case rd == rm.
+          unsigned temp;
+          if (b) {
+            temp = data_memory.read_byte(rn);
+            data_memory.write_byte(rn, rm & 0x000000FF);
+            rd = temp & 0x000000FF;
+          }
+          else {
+            temp = data_memory.read_word(rn);
+            if ((rn & 0x00000003) != 0x0) {
+              bool carry_dummy;
+              temp = ROR(temp, (rn & 0x00000003) << 3, carry_dummy);
+            }
+            data_memory.write_word(rn, rm);
+            rd = temp;
+          }
+          stall(3);
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MRS::MRS(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MRS()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MRS::get_id() const throw() {
+
+          return 123;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MRS::get_name() const throw() {
+
+          return "MRS";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MRS::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MRS";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          switch(this->r) {
+            case 0: {
+              oss << "CPSR";
+            break;}
+            case 1: {
+              oss << "SPSR";
+            break;}
+          }
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MRS::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->r = (bitstring & 0x400000) >> 22;
+          this->imm0a = (bitstring & 0xc0000) >> 18;
+          this->imm0b = (bitstring & 0x30000) >> 16;
+          this->imm1a = (bitstring & 0xc00) >> 10;
+          this->b = (bitstring & 0x200) >> 9;
+          this->imm1b = (bitstring & 0x100) >> 8;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MRS::replicate(Instruction* instr)
+        const throw() {
+
+          MRS* new_instr = new MRS(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MRS* old_instr = dynamic_cast<MRS*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->r = old_instr->r;
+              new_instr->imm0a = old_instr->imm0a;
+              new_instr->imm0b = old_instr->imm0b;
+              new_instr->imm1a = old_instr->imm1a;
+              new_instr->b = old_instr->b;
+              new_instr->imm1b = old_instr->imm1b;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MRS::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          imm0 = (imm0a << 2) | imm0b;
+
+          if (rd_bit == 15)
+          THROW_EXCEPTION("Invalid MRS (reg/banked) encoding: rd = 0xF.");
+
+          if (!b && (imm0 != 0xF))
+          THROW_WARNING("Invalid MRS (reg) encoding: imm0 != 0xF.");
+
+          if (imm1a)
+          THROW_WARNING("Invalid MRS (reg/banked) encoding: imm1[3:2] != 0x0.");
+
+          if (!b && imm1b)
+          THROW_WARNING("Invalid MRS (reg) encoding: imm1[0] != 0x0.");
+
+          if (imm2)
+          THROW_WARNING("Invalid MRS (reg/banked) encoding: imm2 != 0x0.");
+
+          // Move from Special Register
+          if (!b) {
+            // Read CPSR
+            if (!r) {
+              if (CPSR[CPSR_M] & 0xF) {
+                // Read CPSR for execution mode != USR
+                rd = CPSR & 0xF8FF03DF;
+              } else {
+                // Read CPSR for execution mode = USR
+                rd = CPSR & 0xF8FF0000;
+              }
+              // Read SPSR for execution modes != USR || SYS
+            } else {
+              int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
+              if (spsr_idx >= 0) {
+                rd = SPSR[spsr_idx];
+              } else {
+                THROW_EXCEPTION("MRS cannot read the SPSR in USR or SYS mode.");
+              }
+            }
+            // Move from Banked Register
+          } else {
+            unsigned sys_mode = (imm1b << 4) | imm0;
+            // Read banked registers for execution modes != USR
+            if (!r) {
+              if ((CPSR[CPSR_M] & 0xF) && valid_banked_reg_access(sys_mode)) {
+                switch((sys_mode >> 3) & 0x3) {
+                  case 0x0:
+                  // Banked USR registers
+                  //rd = RB[8 + (sys_mode & 0x7)];
+                  rd = Rmode(8 + (sys_mode & 0x7), (unsigned)(EXECMODE::USR));
+                  break;
+                  case 0x1:
+                  // Banked FIQ registers
+                  //rd = RB[18 + (sys_mode & 0x7)];
+                  rd = Rmode(8 + (sys_mode & 0x7), (unsigned)(EXECMODE::FIQ));
+                  break;
+                  case 0x2:
+                  // Banked IRQ/SVC/ABT/UND registers
+                  switch (sys_mode & 0x7) {
+                    case 0x0:
+                    case 0x1:
+                    // Banked IRQ registers
+                    //rd = RB[17 - (sys_mode & 0x1)];
+                    rd = Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::IRQ));
+                    break;
+                    case 0x2:
+                    case 0x3:
+                    // Banked SVC registers
+                    //rd = RB[30 - (sys_mode & 0x1)];
+                    rd = Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::SVC));
+                    break;
+                    case 0x4:
+                    case 0x5:
+                    // Banked ABT registers
+                    //rd = RB[28 - (sys_mode & 0x1)];
+                    rd = Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::ABT));
+                    break;
+                    case 0x6:
+                    case 0x7:
+                    // Banked UND registers
+                    //rd = RB[26 - (sys_mode & 0x1)];
+                    rd = Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::UND));
+                    break;
+                  } break;
+                  case 0x3:
+                  // Banked MON/HYP registers
+                  if (sys_mode & 0x2) {
+                    // Banked HYP registers + ELR_hyp
+                    //rd = RB[32 - (sys_mode & 0x1)];
+                    if (sys_mode & 0x1) {
+                      // SP_hyp
+                      rd = Rmode(13, (unsigned)(EXECMODE::HYP));
+                    } else {
+                      // ELR_hyp
+                      rd = RB[32];
+                    }
+                  } else {
+                    // Banked MON registers
+                    //rd = RB[34 - (sys_mode & 0x1)];
+                    rd = Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::MON));
+                  }
+                }
+              } else {
+                THROW_EXCEPTION("MRS cannot read banked registers in USR mode.");
+              }
+              // Read SPSR for execution modes != USR
+            } else {
+              unsigned cur_mode = CPSR[CPSR_M];
+              if (cur_mode & 0xF) {
+                switch(sys_mode) {
+                  case 0x0E:
+                  // Banked LR_IRQ / SP_IRQ registers: Inaccessible from IRQ
+                  // mode
+                  if (cur_mode != (unsigned)EXECMODE::FIQ /* TODO: && (IsSecure()
+                  || NSACR[NSACR_RFR] != 1) */) rd = SPSR_FIQ;
+                  break;
+                  case 0x10:
+                  if (cur_mode != (unsigned)EXECMODE::IRQ) rd = SPSR_IRQ;
+                  break;
+                  case 0x12:
+                  if (cur_mode != (unsigned)EXECMODE::SVC) rd = SPSR_SVC;
+                  break;
+                  case 0x14:
+                  if (cur_mode != (unsigned)EXECMODE::ABT) rd = SPSR_ABT;
+                  break;
+                  case 0x16:
+                  if (cur_mode != (unsigned)EXECMODE::UND) rd = SPSR_UND;
+                  break;
+                  case 0x1C:
+                  if (cur_mode != (unsigned)EXECMODE::MON /* TODO: && IsSecure()
+                  */) rd = SPSR_MON;
+                  break;
+                  case 0x1E:
+                  if (cur_mode == (unsigned)EXECMODE::MON) rd = SPSR_HYP;
+                  break;
+                }
+              } else {
+                THROW_EXCEPTION("MRS cannot read the SPSR in USR mode.");
+              }
+            }
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MSR_i::MSR_i(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ARMExpandImmOp(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MSR_i()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MSR_i::get_id() const throw() {
+
+          return 124;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MSR_i::get_name() const throw() {
+
+          return "MSR_i";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MSR_i::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MSR";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          switch(this->r) {
+            case 0: {
+              oss << "CPSR";
+            break;}
+            case 1: {
+              oss << "SPSR";
+            break;}
+          }
+          oss << ", ";
+          oss << std::showbase << std::hex << this->imm1a;
+          oss << std::showbase << std::hex << this->b;
+          oss << std::showbase << std::hex << this->imm1b;
+          oss << std::showbase << std::hex << this->op1;
+          oss << std::showbase << std::hex << this->imm2;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MSR_i::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->r = (bitstring & 0x400000) >> 22;
+          this->imm0a = (bitstring & 0xc0000) >> 18;
+          this->imm0b = (bitstring & 0x30000) >> 16;
+          this->imm1a = (bitstring & 0xc00) >> 10;
+          this->b = (bitstring & 0x200) >> 9;
+          this->imm1b = (bitstring & 0x100) >> 8;
+          this->op1 = (bitstring & 0xf0) >> 4;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MSR_i::replicate(Instruction*
+        instr) const throw() {
+
+          MSR_i* new_instr = new MSR_i(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MSR_i* old_instr = dynamic_cast<MSR_i*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->r = old_instr->r;
+              new_instr->imm0a = old_instr->imm0a;
+              new_instr->imm0b = old_instr->imm0b;
+              new_instr->imm1a = old_instr->imm1a;
+              new_instr->b = old_instr->b;
+              new_instr->imm1b = old_instr->imm1b;
+              new_instr->op1 = old_instr->op1;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MSR_i::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          imm0 = (imm0a << 2) | imm0b;
+
+          if (r && !imm0)
+          THROW_EXCEPTION("Invalid MSR (imm, sys) encoding: imm0 = 0x0.");
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid MSR (imm) encoding: rd != 0xF.");
+
+          // Needed by ARMExpandImm().
+          rotate = (imm1a << 2) | (b << 1) | imm1b;
+          imm = (op1 << 4) | imm2;
+
+          // Needed by opCode shared with msr_reg_instr.
+          id = 1;
+          this->num_instr_cycles += ARMExpandImm(this->rotate, this->imm,
+          this->operand, this->carry);
+
+          // Move to Special Register (immediate or register)
+          if (id || (!id && !b)) {
+            // Write CPSR
+            if (!r) {
+              unsigned mode = CPSR[CPSR_M];
+              unsigned mask = psr_mask(operand, imm0, mode, false, false);
+              // If the mode is going to change, update the aliases.
+              if ((mask & 0x1F) && (mode != (operand & 0x1F))) {
+                update_alias(mode, operand & 0x1F);
+              }
+              if (mask) CPSR = (CPSR & ~mask) | (operand & mask);
+              if ((CPSR[CPSR_M] == (unsigned)EXECMODE::HYP) && CPSR[CPSR_J] &&
+              CPSR[CPSR_T]) {
+                THROW_EXCEPTION("MSR cannot set CPSR Jazelle and Thumb flags in HYP mode.");
+              }
+              // Write SPSR for execution modes != USR || SYS
+            } else {
+              unsigned mask;
+              int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
+              if (spsr_idx >= 0) {
+                mask = psr_mask(operand, imm0, CPSR[CPSR_M], true, false);
+                if (mask) SPSR[spsr_idx] = (SPSR[spsr_idx] & ~mask) | (operand &
+                mask);
+              } else {
+                THROW_EXCEPTION("MSR cannot write the SPSR in USR or SYS mode.");
+              }
+            }
+            // Move to Banked Register
+          } else {
+            unsigned sys_mode = (imm1b << 4) | imm0;
+            // Write banked registers for execution modes != USR
+            if (!r) {
+              if ((CPSR[CPSR_M] & 0xF) && valid_banked_reg_access(sys_mode)) {
+                switch((sys_mode >> 3) & 0x3) {
+                  case 0x0:
+                  // Banked USR registers
+                  //RB[8 + (sys_mode & 0x7)] = operand;
+                  Rmode(8 + (sys_mode & 0x7), (unsigned)(EXECMODE::USR), true,
+                  operand);
+                  break;
+                  case 0x1:
+                  // Banked FIQ registers
+                  //RB[18 + (sys_mode & 0x7)] = operand;
+                  Rmode(8 + (sys_mode & 0x7), (unsigned)(EXECMODE::FIQ), true,
+                  operand);
+                  break;
+                  case 0x2:
+                  // Banked IRQ/SVC/ABT/UND registers
+                  switch (sys_mode & 0x7) {
+                    case 0x0:
+                    case 0x1:
+                    // Banked IRQ registers
+                    //RB[17 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::IRQ),
+                    true, operand);
+                    break;
+                    case 0x2:
+                    case 0x3:
+                    // Banked SVC registers
+                    //RB[30 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::SVC),
+                    true, operand);
+                    break;
+                    case 0x4:
+                    case 0x5:
+                    // Banked ABT registers
+                    //RB[28 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::ABT),
+                    true, operand);
+                    break;
+                    case 0x6:
+                    case 0x7:
+                    // Banked UND registers
+                    //RB[26 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::UND),
+                    true, operand);
+                    break;
+                  } break;
+                  case 0x3:
+                  // Banked MON/HYP registers
+                  if (sys_mode & 0x2) {
+                    // Banked HYP registers + ELR_hyp
+                    //RB[32 - (sys_mode & 0x1)] = operand;
+                    if (sys_mode & 0x1) {
+                      // SP_hyp
+                      Rmode(13, (unsigned)(EXECMODE::HYP), true, operand);
+                    } else {
+                      // ELR_hyp
+                      RB[32] = operand;
+                    }
+                  } else {
+                    // Banked MON registers
+                    //RB[34 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::MON),
+                    true, operand);
+                  }
+                }
+              } else {
+                THROW_EXCEPTION("MSR cannot write banked registers in USR mode.");
+              }
+              // Write SPSR for execution modes != USR
+            } else {
+              unsigned cur_mode = CPSR[CPSR_M];
+              if (cur_mode & 0xF) {
+                switch(sys_mode) {
+                  case 0x0E:
+                  if (cur_mode != (unsigned)EXECMODE::FIQ /* TODO: && (IsSecure()
+                  || NSACR[NSACR_RFR] != 1) */) SPSR_FIQ = operand;
+                  break;
+                  case 0x10:
+                  if (cur_mode != (unsigned)EXECMODE::IRQ) SPSR_IRQ = operand;
+                  break;
+                  case 0x12:
+                  if (cur_mode != (unsigned)EXECMODE::SVC) SPSR_SVC = operand;
+                  break;
+                  case 0x14:
+                  if (cur_mode != (unsigned)EXECMODE::ABT) SPSR_ABT = operand;
+                  break;
+                  case 0x16:
+                  if (cur_mode != (unsigned)EXECMODE::UND) SPSR_UND = operand;
+                  break;
+                  case 0x1C:
+                  if (cur_mode != (unsigned)EXECMODE::MON /* TODO: && IsSecure()
+                  */) SPSR_MON = operand;
+                  break;
+                  case 0x1E:
+                  if (cur_mode == (unsigned)EXECMODE::MON) SPSR_HYP = operand;
+                  break;
+                }
+              } else {
+                THROW_EXCEPTION("MSR cannot write the SPSR in USR mode.");
+              }
+            }
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MSR_r::MSR_r(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MSR_r()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MSR_r::get_id() const throw() {
+
+          return 125;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MSR_r::get_name() const throw() {
+
+          return "MSR_r";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MSR_r::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MSR";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          switch(this->r) {
+            case 0: {
+              oss << "CPSR";
+            break;}
+            case 1: {
+              oss << "SPSR";
+            break;}
+          }
+          oss << ", ";
+          oss << std::showbase << std::hex << this->imm2;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MSR_r::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->r = (bitstring & 0x400000) >> 22;
+          this->imm0a = (bitstring & 0xc0000) >> 18;
+          this->imm0b = (bitstring & 0x30000) >> 16;
+          this->imm1a = (bitstring & 0xc00) >> 10;
+          this->b = (bitstring & 0x200) >> 9;
+          this->imm1b = (bitstring & 0x100) >> 8;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MSR_r::replicate(Instruction*
+        instr) const throw() {
+
+          MSR_r* new_instr = new MSR_r(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MSR_r* old_instr = dynamic_cast<MSR_r*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->r = old_instr->r;
+              new_instr->imm0a = old_instr->imm0a;
+              new_instr->imm0b = old_instr->imm0b;
+              new_instr->imm1a = old_instr->imm1a;
+              new_instr->b = old_instr->b;
+              new_instr->imm1b = old_instr->imm1b;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MSR_r::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          unsigned imm0 = (imm0a << 2) | imm0b;
+
+          if (!b && !imm0)
+          THROW_EXCEPTION("Invalid MSR (reg) encoding: imm0 = 0x0.");
+
+          if (imm2 == 15)
+          THROW_EXCEPTION("Invalid MSR (reg/banked) encoding: rn = 0xF.");
+
+          if (b && rd_bit != 0xF)
+          THROW_WARNING("Invalid MSR (reg/banked) encoding: rd != 0xF.");
+
+          if (imm1a)
+          THROW_WARNING("Invalid MSR (reg/banked) encoding: b[10:11] != 0x0.");
+
+          if (!b && imm1b)
+          THROW_WARNING("Invalid MSR (reg) encoding: b[8] != 0x0.");
+
+          // Needed by opCode shared with msr_imm_instr.
+          id = 0;
+
+          // Needed by opCode shared with msr_imm_instr.
+          operand = REGS[imm2];
+
+          // Move to Special Register (immediate or register)
+          if (id || (!id && !b)) {
+            // Write CPSR
+            if (!r) {
+              unsigned mode = CPSR[CPSR_M];
+              unsigned mask = psr_mask(operand, imm0, mode, false, false);
+              // If the mode is going to change, update the aliases.
+              if ((mask & 0x1F) && (mode != (operand & 0x1F))) {
+                update_alias(mode, operand & 0x1F);
+              }
+              if (mask) CPSR = (CPSR & ~mask) | (operand & mask);
+              if ((CPSR[CPSR_M] == (unsigned)EXECMODE::HYP) && CPSR[CPSR_J] &&
+              CPSR[CPSR_T]) {
+                THROW_EXCEPTION("MSR cannot set CPSR Jazelle and Thumb flags in HYP mode.");
+              }
+              // Write SPSR for execution modes != USR || SYS
+            } else {
+              unsigned mask;
+              int spsr_idx = get_spsr_idx(CPSR[CPSR_M]);
+              if (spsr_idx >= 0) {
+                mask = psr_mask(operand, imm0, CPSR[CPSR_M], true, false);
+                if (mask) SPSR[spsr_idx] = (SPSR[spsr_idx] & ~mask) | (operand &
+                mask);
+              } else {
+                THROW_EXCEPTION("MSR cannot write the SPSR in USR or SYS mode.");
+              }
+            }
+            // Move to Banked Register
+          } else {
+            unsigned sys_mode = (imm1b << 4) | imm0;
+            // Write banked registers for execution modes != USR
+            if (!r) {
+              if ((CPSR[CPSR_M] & 0xF) && valid_banked_reg_access(sys_mode)) {
+                switch((sys_mode >> 3) & 0x3) {
+                  case 0x0:
+                  // Banked USR registers
+                  //RB[8 + (sys_mode & 0x7)] = operand;
+                  Rmode(8 + (sys_mode & 0x7), (unsigned)(EXECMODE::USR), true,
+                  operand);
+                  break;
+                  case 0x1:
+                  // Banked FIQ registers
+                  //RB[18 + (sys_mode & 0x7)] = operand;
+                  Rmode(8 + (sys_mode & 0x7), (unsigned)(EXECMODE::FIQ), true,
+                  operand);
+                  break;
+                  case 0x2:
+                  // Banked IRQ/SVC/ABT/UND registers
+                  switch (sys_mode & 0x7) {
+                    case 0x0:
+                    case 0x1:
+                    // Banked IRQ registers
+                    //RB[17 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::IRQ),
+                    true, operand);
+                    break;
+                    case 0x2:
+                    case 0x3:
+                    // Banked SVC registers
+                    //RB[30 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::SVC),
+                    true, operand);
+                    break;
+                    case 0x4:
+                    case 0x5:
+                    // Banked ABT registers
+                    //RB[28 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::ABT),
+                    true, operand);
+                    break;
+                    case 0x6:
+                    case 0x7:
+                    // Banked UND registers
+                    //RB[26 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::UND),
+                    true, operand);
+                    break;
+                  } break;
+                  case 0x3:
+                  // Banked MON/HYP registers
+                  if (sys_mode & 0x2) {
+                    // Banked HYP registers + ELR_hyp
+                    //RB[32 - (sys_mode & 0x1)] = operand;
+                    if (sys_mode & 0x1) {
+                      // SP_hyp
+                      Rmode(13, (unsigned)(EXECMODE::HYP), true, operand);
+                    } else {
+                      // ELR_hyp
+                      RB[32] = operand;
+                    }
+                  } else {
+                    // Banked MON registers
+                    //RB[34 - (sys_mode & 0x1)] = operand;
+                    Rmode(14 - (sys_mode & 0x1), (unsigned)(EXECMODE::MON),
+                    true, operand);
+                  }
+                }
+              } else {
+                THROW_EXCEPTION("MSR cannot write banked registers in USR mode.");
+              }
+              // Write SPSR for execution modes != USR
+            } else {
+              unsigned cur_mode = CPSR[CPSR_M];
+              if (cur_mode & 0xF) {
+                switch(sys_mode) {
+                  case 0x0E:
+                  if (cur_mode != (unsigned)EXECMODE::FIQ /* TODO: && (IsSecure()
+                  || NSACR[NSACR_RFR] != 1) */) SPSR_FIQ = operand;
+                  break;
+                  case 0x10:
+                  if (cur_mode != (unsigned)EXECMODE::IRQ) SPSR_IRQ = operand;
+                  break;
+                  case 0x12:
+                  if (cur_mode != (unsigned)EXECMODE::SVC) SPSR_SVC = operand;
+                  break;
+                  case 0x14:
+                  if (cur_mode != (unsigned)EXECMODE::ABT) SPSR_ABT = operand;
+                  break;
+                  case 0x16:
+                  if (cur_mode != (unsigned)EXECMODE::UND) SPSR_UND = operand;
+                  break;
+                  case 0x1C:
+                  if (cur_mode != (unsigned)EXECMODE::MON /* TODO: && IsSecure()
+                  */) SPSR_MON = operand;
+                  break;
+                  case 0x1E:
+                  if (cur_mode == (unsigned)EXECMODE::MON) SPSR_HYP = operand;
+                  break;
+                }
+              } else {
+                THROW_EXCEPTION("MSR cannot write the SPSR in USR mode.");
+              }
+            }
+          }
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::B::B(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // B()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::B::get_id() const throw() {
+
+          return 126;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::B::get_name() const throw() {
+
+          return "B";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::B::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "B";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " PC + ";
+          oss << std::showbase << std::hex << ((((int)sign_extend(this->offset,
+          24)) << 2));
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::B::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->offset = (bitstring & 0xffffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::B::replicate(Instruction* instr)
+        const throw() {
+
+          B* new_instr = new B(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            B* old_instr = dynamic_cast<B*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->offset = old_instr->offset;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::B::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          RB[15] = sign_extend(PC, 32) + (sign_extend(offset, 24) << 2);
+          stall(2);
+          flush();
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::BL::BL(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // BL()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BL::get_id() const throw() {
+
+          return 127;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BL::get_name() const throw() {
+
+          return "BL";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BL::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "BL";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " PC + ";
+          oss << std::showbase << std::hex << ((((int)sign_extend(this->offset,
+          24)) << 2));
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::BL::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->offset = (bitstring & 0xffffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::BL::replicate(Instruction* instr)
+        const throw() {
+
+          BL* new_instr = new BL(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            BL* old_instr = dynamic_cast<BL*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->offset = old_instr->offset;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BL::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          // Find out the address of the next instruction.
+          unsigned increment = 4;
+          // Check instruction set mode.
+          // JT=00: ARM (32-bit); JT=01: Thumb (16-bit); JT=10: Jazelle (8-bit);
+          // JT=11: ThumbEE (16-bit)
+          if (CPSR[CPSR_T]) {
+            increment = 2;
+          } else if (CPSR[CPSR_J]) {
+            increment = 1;
+          }
+
+          LR = sign_extend(RB[15], 32) + increment;
+          RB[15] = sign_extend(PC, 32) + (sign_extend(offset, 24) << 2);
+
+          stall(2);
+          flush();
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::BX::BX(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // BX()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BX::get_id() const throw() {
+
+          return 128;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BX::get_name() const throw() {
+
+          return "BX";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BX::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "BX";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::BX::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::BX::replicate(Instruction* instr)
+        const throw() {
+
+          BX* new_instr = new BX(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            BX* old_instr = dynamic_cast<BX*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BX::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rn_bit != 15) || (rd_bit != 15) || (rs_bit != 15))
+          THROW_WARNING("Invalid BX encoding: rn|rd|rs != 0xF.");
+
+          BXWritePC(rm);
+
+          stall(2);
+          flush();
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::BLX_i::BLX_i(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // BLX_i()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BLX_i::get_id() const throw() {
+
+          return 129;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BLX_i::get_name() const throw() {
+
+          return "BLX_i";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BLX_i::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "BLX PC + ";
+          oss << std::showbase << std::hex << ((((int)sign_extend(this->offset,
+          24)) << 2));
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::BLX_i::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->l = (bitstring & 0x1000000) >> 24;
+          this->offset = (bitstring & 0xffffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::BLX_i::replicate(Instruction*
+        instr) const throw() {
+
+          BLX_i* new_instr = new BLX_i(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            BLX_i* old_instr = dynamic_cast<BLX_i*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->l = old_instr->l;
+              new_instr->offset = old_instr->offset;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BLX_i::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          // Find out the address of the next instruction.
+          unsigned increment = 4;
+          // Check instruction set mode.
+          // JT=00: ARM (32-bit); JT=01: Thumb (16-bit); JT=10: Jazelle (8-bit);
+          // JT=11: ThumbEE (16-bit)
+          if (CPSR[CPSR_T]) {
+            increment = 2;
+          } else if (CPSR[CPSR_J]) {
+            increment = 1;
+          }
+
+          LR = sign_extend(RB[15], 32) + increment;
+          // TODO: SelectInstructionSet(ISMODE::THUMB);
+          RB[15] = sign_extend(PC, 32) + ((sign_extend(offset, 24) << 2) | (l <<
+          1));
+
+          // TODO: We need only one stall cycle since the PC value is fed back
+          // from
+          // execute/wb to prefetch/fetch directly.
+          // @see ARMArch.py RB.setWbStageOrder(15, {...})
+          stall(1);
+          flush();
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::BLX_r::BLX_r(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // BLX_r()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BLX_r::get_id() const throw() {
+
+          return 130;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BLX_r::get_name() const throw() {
+
+          return "BLX_r";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BLX_r::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "BLX";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::BLX_r::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::BLX_r::replicate(Instruction*
+        instr) const throw() {
+
+          BLX_r* new_instr = new BLX_r(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            BLX_r* old_instr = dynamic_cast<BLX_r*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BLX_r::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rm_bit == 15)
+          THROW_EXCEPTION("Invalid BLX encoding: rm = 0xF.");
+
+          if ((rn_bit != 15) || (rd_bit != 15) || (rs_bit != 15))
+          THROW_WARNING("Invalid BLX encoding: rn|rd|rs != 0xF.");
+
+          // RB[15] has been incremented and holds the address of the next
+          // instruction.
+          LR = RB[15];
+          BXWritePC(rm);
+
+          // TODO: We need only one stall cycle since the PC value is fed back
+          // from
+          // execute/wb to prefetch/fetch directly.
+          // @see ARMArch.py RB.setWbStageOrder(15, {...})
+          stall(1);
+          flush();
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::BXJ::BXJ(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // BXJ()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BXJ::get_id() const throw() {
+
+          return 131;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BXJ::get_name() const throw() {
+
+          return "BXJ";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BXJ::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "BXJ";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::BXJ::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::BXJ::replicate(Instruction* instr)
+        const throw() {
+
+          BXJ* new_instr = new BXJ(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            BXJ* old_instr = dynamic_cast<BXJ*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BXJ::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rm_bit == 15)
+          THROW_EXCEPTION("Invalid BXJ encoding: rm = 0xF.");
+
+          if ((rn_bit != 15) || (rd_bit != 15) || (rs_bit != 15))
+          THROW_WARNING("Invalid BXJ encoding: rn|rd|rs != 0xF.");
+
+          /* TODO:
+          if (HaveVirtExt() && !IsSecure() && !CurrentModeIsHyp() && HSTR[HSTR_TJDBX]
+          == 1) {
+            WriteHSR('001010', m);
+            TakeHypTrapException();
+          } else if (!JMCR[JMCR_JE] || CurrentInstrSet() == ISMODE::THUMBEE) {
+            BXWritePC(rm);
+          } else {
+            if (JazelleAcceptsExecution()) SwitchToJazelleExecution();
+            else THROW_EXCEPTION("Jazelle Instruction Set unimplemented.");
+          } */
+
+          BXWritePC(rm);
+
+          stall(2);
+          flush();
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::BKPT::BKPT(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // BKPT()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BKPT::get_id() const throw() {
+
+          return 132;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BKPT::get_name() const throw() {
+
+          return "BKPT";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::BKPT::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "BKPT R";
+          oss << std::dec << this->rn_bit;
+          oss << std::dec << this->rd_bit;
+          oss << std::dec << this->rs_bit;
+          oss << std::dec << this->rm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::BKPT::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::BKPT::replicate(Instruction*
+        instr) const throw() {
+
+          BKPT* new_instr = new BKPT(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            BKPT* old_instr = dynamic_cast<BKPT*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::BKPT::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (cond != 0xE)
+          THROW_EXCEPTION("Invalid BKPT encoding: cond != 0xE.");
+
+          THROW_WARNING("Unimplemented instruction BKPT.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::CLREX::CLREX(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // CLREX()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::CLREX::get_id() const throw() {
+
+          return 133;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::CLREX::get_name() const throw() {
+
+          return "CLREX";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::CLREX::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "C";
+          oss << "L";
+          oss << "R";
+          oss << "E";
+          oss << "X";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::CLREX::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::CLREX::replicate(Instruction*
+        instr) const throw() {
+
+          CLREX* new_instr = new CLREX(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            CLREX* old_instr = dynamic_cast<CLREX*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::CLREX::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if ((rn_bit != 15) || (rd_bit != 15) || (rm_bit != 15))
+          THROW_WARNING("Invalid CLREX encoding: rn|rd|rm != 0xF.");
+
+          if (rs_bit != 0)
+          THROW_WARNING("Invalid CLREX encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction CLREX.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::CPS::CPS(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // CPS()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::CPS::get_id() const throw() {
+
+          return 134;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::CPS::get_name() const throw() {
+
+          return "CPS";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::CPS::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "CPS ";
+          oss << std::showbase << std::hex << this->mode0;
+          oss << std::showbase << std::hex << this->mode1;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::CPS::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->op2 = (bitstring & 0xc0000) >> 18;
+          this->M = (bitstring & 0x20000) >> 17;
+          this->b15to10 = (bitstring & 0xfc00) >> 10;
+          this->E = (bitstring & 0x200) >> 9;
+          this->A = (bitstring & 0x100) >> 8;
+          this->I = (bitstring & 0x80) >> 7;
+          this->F = (bitstring & 0x40) >> 6;
+          this->mode0 = (bitstring & 0x10) >> 4;
+          this->mode1 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::CPS::replicate(Instruction* instr)
+        const throw() {
+
+          CPS* new_instr = new CPS(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            CPS* old_instr = dynamic_cast<CPS*>(instr);
+            if (old_instr) {
+              new_instr->op2 = old_instr->op2;
+              new_instr->M = old_instr->M;
+              new_instr->b15to10 = old_instr->b15to10;
+              new_instr->E = old_instr->E;
+              new_instr->A = old_instr->A;
+              new_instr->I = old_instr->I;
+              new_instr->F = old_instr->F;
+              new_instr->mode0 = old_instr->mode0;
+              new_instr->mode1 = old_instr->mode1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::CPS::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          mode = (mode0 << 4) | mode1;
+
+          if (mode && !M)
+          THROW_EXCEPTION("Invalid CPS encoding: M = 0 and mode != 0x0.");
+
+          if ((op2 & 0x2) && !A && !I && !F)
+          THROW_EXCEPTION("Invalid CPS encoding: imod[1] = 1 and A:I:F = 0x0.");
+
+          if (!(op2 & 0x2) && (A || I || F))
+          THROW_EXCEPTION("Invalid CPS encoding: imod[1] = 0 and A:I:F != 0x0.");
+
+          if (!op2 && !M)
+          THROW_EXCEPTION("Invalid CPS encoding: imod = 0x0 and M = 0.");
+
+          if (op2 == 1)
+          THROW_EXCEPTION("Invalid CPS encoding: imod = 0x1.");
+
+          if (b15to10)
+          THROW_WARNING("Invalid CPS encoding: bit[15:10] != 0x0.");
+
+          if (E)
+          THROW_WARNING("Invalid CPS encoding: bit[9] != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction CPS.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::DBG::DBG(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // DBG()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::DBG::get_id() const throw() {
+
+          return 135;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::DBG::get_name() const throw() {
+
+          return "DBG";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::DBG::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "DBG R";
+          oss << std::showbase << std::hex << this->rm;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::DBG::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->rm = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::DBG::replicate(Instruction* instr)
+        const throw() {
+
+          DBG* new_instr = new DBG(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            DBG* old_instr = dynamic_cast<DBG*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->rm = old_instr->rm;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::DBG::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid DBG encoding: rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid DBG encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction DBG.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::DMB::DMB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // DMB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::DMB::get_id() const throw() {
+
+          return 136;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::DMB::get_name() const throw() {
+
+          return "DMB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::DMB::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "DMB ";
+          switch(this->rm_bit) {
+            case 2: {
+              oss << "OSHST";
+            break;}
+            case 3: {
+              oss << "OSH";
+            break;}
+            case 6: {
+              oss << "NSHST";
+            break;}
+            case 7: {
+              oss << "NSH";
+            break;}
+            case 10: {
+              oss << "ISHST";
+            break;}
+            case 11: {
+              oss << "ISH";
+            break;}
+            case 14: {
+              oss << "ST";
+            break;}
+            case 15: {
+              oss << "SY";
+            break;}
+          }
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::DMB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::DMB::replicate(Instruction* instr)
+        const throw() {
+
+          DMB* new_instr = new DMB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            DMB* old_instr = dynamic_cast<DMB*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::DMB::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if ((rn_bit != 15) || (rd_bit != 15))
+          THROW_WARNING("Invalid DMB encoding: rn|rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid DMB encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction DMB.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::DSB::DSB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // DSB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::DSB::get_id() const throw() {
+
+          return 137;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::DSB::get_name() const throw() {
+
+          return "DSB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::DSB::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "DSB ";
+          switch(this->rm_bit) {
+            case 2: {
+              oss << "OSHST";
+            break;}
+            case 3: {
+              oss << "OSH";
+            break;}
+            case 6: {
+              oss << "NSHST";
+            break;}
+            case 7: {
+              oss << "NSH";
+            break;}
+            case 10: {
+              oss << "ISHST";
+            break;}
+            case 11: {
+              oss << "ISH";
+            break;}
+            case 14: {
+              oss << "ST";
+            break;}
+            case 15: {
+              oss << "SY";
+            break;}
+          }
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::DSB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::DSB::replicate(Instruction* instr)
+        const throw() {
+
+          DSB* new_instr = new DSB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            DSB* old_instr = dynamic_cast<DSB*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::DSB::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if ((rn_bit != 15) || (rd_bit != 15))
+          THROW_WARNING("Invalid DSB encoding: rn|rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid DSB encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction DSB.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::ISB::ISB(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // ISB()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::ISB::get_id() const throw() {
+
+          return 138;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::ISB::get_name() const throw() {
+
+          return "ISB";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::ISB::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "ISB ";
+          switch(this->rm_bit) {
+            case 15: {
+              oss << "SY";
+            break;}
+          }
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::ISB::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::ISB::replicate(Instruction* instr)
+        const throw() {
+
+          ISB* new_instr = new ISB(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            ISB* old_instr = dynamic_cast<ISB*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::ISB::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if ((rn_bit != 15) || (rd_bit != 15))
+          THROW_WARNING("Invalid ISB encoding: rn|rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid ISB encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction ISB.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::NOP::NOP(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // NOP()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::NOP::get_id() const throw() {
+
+          return 139;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::NOP::get_name() const throw() {
+
+          return "NOP";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::NOP::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "NOP";
+          oss << std::showbase << std::hex << this->cond;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::NOP::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::NOP::replicate(Instruction* instr)
+        const throw() {
+
+          NOP* new_instr = new NOP(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            NOP* old_instr = dynamic_cast<NOP*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::NOP::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid NOP encoding: rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid NOP encoding: rs != 0x0.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::PLI_i::PLI_i(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // PLI_i()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLI_i::get_id() const throw() {
+
+          return 140;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLI_i::get_name() const throw() {
+
+          return "PLI_i";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLI_i::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "PLI [";
+          oss << "rn";
+          oss << ", ";
+          switch(this->u) {
+            case 0: {
+              oss << "-";
+            break;}
+            case 1: {
+              oss << "+";
+            break;}
+          }
+          oss << std::dec << this->rs_bit;
+          oss << std::showbase << std::hex << this->op1a;
+          oss << std::showbase << std::hex << this->op1b;
+          oss << std::dec << this->rm_bit;
+          oss << "]";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::PLI_i::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->u = (bitstring & 0x800000) >> 23;
+          this->op1a = (bitstring & 0xe0) >> 5;
+          this->op1b = (bitstring & 0x10) >> 4;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::PLI_i::replicate(Instruction*
+        instr) const throw() {
+
+          PLI_i* new_instr = new PLI_i(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            PLI_i* old_instr = dynamic_cast<PLI_i*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->u = old_instr->u;
+              new_instr->op1a = old_instr->op1a;
+              new_instr->op1b = old_instr->op1b;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLI_i::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid PLI (immediate/literal) encoding: rd != 0xF.");
+
+          THROW_WARNING("Unimplemented instruction PLI.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::PLI_r::PLI_r(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // PLI_r()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLI_r::get_id() const throw() {
+
+          return 141;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLI_r::get_name() const throw() {
+
+          return "PLI_r";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLI_r::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "PLI [";
+          oss << "rn";
+          oss << ", ";
+          switch(this->u) {
+            case 0: {
+              oss << "-";
+            break;}
+            case 1: {
+              oss << "+";
+            break;}
+          }
+          oss << std::dec << this->rm_bit;
+          oss << "]";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::PLI_r::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->u = (bitstring & 0x800000) >> 23;
+          this->op1a = (bitstring & 0xe0) >> 5;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::PLI_r::replicate(Instruction*
+        instr) const throw() {
+
+          PLI_r* new_instr = new PLI_r(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            PLI_r* old_instr = dynamic_cast<PLI_r*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->u = old_instr->u;
+              new_instr->op1a = old_instr->op1a;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLI_r::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if (rm_bit == 15)
+          THROW_EXCEPTION("Invalid PLI (register) encoding: rm = 0xF.");
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid PLI (register) encoding: rd != 0xF.");
+
+          THROW_WARNING("Unimplemented instruction PLI.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::PLD_i::PLD_i(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // PLD_i()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLD_i::get_id() const throw() {
+
+          return 142;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLD_i::get_name() const throw() {
+
+          return "PLD_i";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLD_i::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "PLD";
+          switch(this->r) {
+            case 0: {
+              oss << "W";
+            break;}
+          }
+          oss << " [";
+          oss << "rn";
+          oss << ", ";
+          switch(this->u) {
+            case 0: {
+              oss << "-";
+            break;}
+            case 1: {
+              oss << "+";
+            break;}
+          }
+          oss << std::dec << this->rs_bit;
+          oss << std::showbase << std::hex << this->op1a;
+          oss << std::showbase << std::hex << this->op1b;
+          oss << std::dec << this->rm_bit;
+          oss << "]";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::PLD_i::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->u = (bitstring & 0x800000) >> 23;
+          this->r = (bitstring & 0x400000) >> 22;
+          this->op1a = (bitstring & 0xe0) >> 5;
+          this->op1b = (bitstring & 0x10) >> 4;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::PLD_i::replicate(Instruction*
+        instr) const throw() {
+
+          PLD_i* new_instr = new PLD_i(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            PLD_i* old_instr = dynamic_cast<PLD_i*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->u = old_instr->u;
+              new_instr->r = old_instr->r;
+              new_instr->op1a = old_instr->op1a;
+              new_instr->op1b = old_instr->op1b;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLD_i::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          THROW_WARNING("Unimplemented instruction PLD.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::PLD_r::PLD_r(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // PLD_r()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLD_r::get_id() const throw() {
+
+          return 143;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLD_r::get_name() const throw() {
+
+          return "PLD_r";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::PLD_r::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "PLD";
+          switch(this->r) {
+            case 0: {
+              oss << "W";
+            break;}
+          }
+          oss << " [";
+          oss << "rn";
+          oss << ", ";
+          switch(this->u) {
+            case 0: {
+              oss << "-";
+            break;}
+            case 1: {
+              oss << "+";
+            break;}
+          }
+          oss << std::dec << this->rm_bit;
+          oss << "]";
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::PLD_r::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->u = (bitstring & 0x800000) >> 23;
+          this->r = (bitstring & 0x400000) >> 22;
+          this->op1a = (bitstring & 0xe0) >> 5;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::PLD_r::replicate(Instruction*
+        instr) const throw() {
+
+          PLD_r* new_instr = new PLD_r(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            PLD_r* old_instr = dynamic_cast<PLD_r*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->u = old_instr->u;
+              new_instr->r = old_instr->r;
+              new_instr->op1a = old_instr->op1a;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::PLD_r::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if (!r && (rn_bit == 15))
+          THROW_EXCEPTION("Invalid PLD (register) encoding: r =0 and rn = 0xF.");
+
+          if (rm_bit == 15)
+          THROW_EXCEPTION("Invalid PLD (register) encoding: rm = 0xF.");
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid PLD (register) encoding: rd != 0xF.");
+
+          THROW_WARNING("Unimplemented instruction PLD.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::RFE::RFE(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // RFE()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::RFE::get_id() const throw() {
+
+          return 144;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::RFE::get_name() const throw() {
+
+          return "RFE";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::RFE::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "RFE";
+          switch(this->u) {
+            case 0: {
+              oss << "D";
+            break;}
+            case 1: {
+              oss << "I";
+            break;}
+          }
+          switch(this->p) {
+            case 0: {
+              oss << "A";
+            break;}
+            case 1: {
+              oss << "B";
+            break;}
+          }
+          oss << " R";
+          oss << std::dec << this->rn_bit;
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::RFE::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->imm0 = (bitstring & 0xf000) >> 12;
+          this->imm1 = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xf0) >> 4;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::RFE::replicate(Instruction* instr)
+        const throw() {
+
+          RFE* new_instr = new RFE(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            RFE* old_instr = dynamic_cast<RFE*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->w = old_instr->w;
+              new_instr->imm0 = old_instr->imm0;
+              new_instr->imm1 = old_instr->imm1;
+              new_instr->op1 = old_instr->op1;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::RFE::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if (rn_bit == 15)
+          THROW_EXCEPTION("Invalid RFE encoding: rn = 0xF.");
+
+          if (imm0)
+          THROW_WARNING("Invalid RFE encoding: rd != 0x0.");
+
+          if (imm1 != 0xA)
+          THROW_WARNING("Invalid RFE encoding: rs != 0xA.");
+
+          if (imm1)
+          THROW_WARNING("Invalid RFE encoding: op1 != 0x0.");
+
+          if (imm2)
+          THROW_WARNING("Invalid RFE encoding: rm != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction RFE.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::SETEND::SETEND(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // SETEND()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SETEND::get_id() const throw() {
+
+          return 145;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SETEND::get_name() const throw() {
+
+          return "SETEND";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SETEND::get_mnemonic() const
+        throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "SETEND ";
+          switch(this->E) {
+            case 0: {
+              oss << "LE";
+            break;}
+            case 1: {
+              oss << "BE";
+            break;}
+          }
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::SETEND::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->op2 = (bitstring & 0xc0000) >> 18;
+          this->M = (bitstring & 0x20000) >> 17;
+          this->b15to10 = (bitstring & 0xfc00) >> 10;
+          this->E = (bitstring & 0x200) >> 9;
+          this->A = (bitstring & 0x100) >> 8;
+          this->mode1 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::SETEND::replicate(Instruction*
+        instr) const throw() {
+
+          SETEND* new_instr = new SETEND(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            SETEND* old_instr = dynamic_cast<SETEND*>(instr);
+            if (old_instr) {
+              new_instr->op2 = old_instr->op2;
+              new_instr->M = old_instr->M;
+              new_instr->b15to10 = old_instr->b15to10;
+              new_instr->E = old_instr->E;
+              new_instr->A = old_instr->A;
+              new_instr->mode1 = old_instr->mode1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SETEND::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if (op2)
+          THROW_WARNING("Invalid SETEND encoding: bit[19:18] != 0x0.");
+
+          if (M)
+          THROW_WARNING("Invalid SETEND encoding: bit[17] != 0.");
+
+          if (b15to10)
+          THROW_WARNING("Invalid SETEND encoding: bit[15:9] != 0x0.");
+
+          if (A)
+          THROW_WARNING("Invalid SETEND encoding: bit[8] != 0.");
+
+          if (mode1)
+          THROW_WARNING("Invalid SETEND encoding: bit[3:0] != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction SETEND.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::SEV::SEV(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // SEV()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SEV::get_id() const throw() {
+
+          return 146;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SEV::get_name() const throw() {
+
+          return "SEV";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SEV::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "SEV";
+          oss << std::showbase << std::hex << this->cond;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::SEV::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::SEV::replicate(Instruction* instr)
+        const throw() {
+
+          SEV* new_instr = new SEV(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            SEV* old_instr = dynamic_cast<SEV*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SEV::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid SEV encoding: rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid SEV encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction SEV.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::SRS::SRS(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory) {
+
+
+        } // SRS()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SRS::get_id() const throw() {
+
+          return 147;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SRS::get_name() const throw() {
+
+          return "SRS";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SRS::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "SRS";
+          switch(this->u) {
+            case 0: {
+              oss << "D";
+            break;}
+            case 1: {
+              oss << "I";
+            break;}
+          }
+          switch(this->p) {
+            case 0: {
+              oss << "A";
+            break;}
+            case 1: {
+              oss << "B";
+            break;}
+          }
+          oss << " ";
+          oss << "SP";
+          switch(this->w) {
+            case 1: {
+              oss << "!";
+            break;}
+          }
+          oss << " ";
+          oss << std::showbase << std::hex << this->imm2;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::SRS::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->imm0 = (bitstring & 0xf000) >> 12;
+          this->imm1 = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xf0) >> 4;
+          this->imm2 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::SRS::replicate(Instruction* instr)
+        const throw() {
+
+          SRS* new_instr = new SRS(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            SRS* old_instr = dynamic_cast<SRS*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->w = old_instr->w;
+              new_instr->imm0 = old_instr->imm0;
+              new_instr->imm1 = old_instr->imm1;
+              new_instr->op1 = old_instr->op1;
+              new_instr->imm2 = old_instr->imm2;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SRS::behavior() {
+
+          this->num_instr_cycles = 0;
+
+          if (rn_bit != 0xD)
+          THROW_WARNING("Invalid SRS encoding: rn != 0xD.");
+
+          if (imm0)
+          THROW_WARNING("Invalid SRS encoding: rd != 0x0.");
+
+          if (imm1 != 0x5)
+          THROW_WARNING("Invalid SRS encoding: rs != 0x5.");
+
+          if (imm1 & 0xE)
+          THROW_WARNING("Invalid SRS encoding: op1[3:1] != 0x0.");
+
+          mode = ((imm1 << 4) & 0x10) | imm2;
+
+          THROW_WARNING("Unimplemented instruction SRS.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::SVC::SVC(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // SVC()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SVC::get_id() const throw() {
+
+          return 148;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SVC::get_name() const throw() {
+
+          return "SVC";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SVC::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "SVC";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->swi_number;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::SVC::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->swi_number = (bitstring & 0xffffff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::SVC::replicate(Instruction* instr)
+        const throw() {
+
+          SVC* new_instr = new SVC(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            SVC* old_instr = dynamic_cast<SVC*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->swi_number = old_instr->swi_number;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SVC::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          // CallSupervisor(swi_number);
+          // Calls the Supervisor, with appropriate trapping etc.
+          /* TODO:
+          // Will be taken to Hyp mode so must set HSR.
+          if ((CPSR[CPSR_M] == (unsigned)EXECMODE::HYP)
+          || (HaveVirtExt() && !IsSecure() && (CPSR[CPSR_M] == (unsigned)EXECMODE::USR)
+          && HCR[HCR_TGE] == 1)) {
+            unsigned HSR_value = 0;
+            if (CurrentCond(this->bitstring) cond == 0xE) {
+              HSR_value |= (swi_number & 0xFFFF);
+            }
+            WriteHSR(0x11, HSR_value);
+          }*/
+
+          // TakeSVCException();
+          // Determine return information. SPSR is to be the current CPSR, after
+          // changing the IT[] bits to give them the correct values for the
+          // following instruction, and LR is to be the current PC minus 2 for
+          // Thumb or 4 for ARM, to change the PC offsets of 4 or 8 respectively
+          // from the address of the current instruction into the required
+          // address of the next instruction, the SVC instruction having size 2
+          // bytes for Thumb or 4 bytes for ARM.
+
+          ITAdvance();
+          unsigned LR_value = ((CPSR[CPSR_T] == 1)? PC-2 : PC-4);
+          unsigned SPSR_value = CPSR;
+          unsigned vect_offset = 8;
+
+          /* TODO:
+          bool take_to_hyp = false, route_to_hyp = false;
+          // Check whether to take exception to Hyp mode: If in Hyp mode, stay
+          // in Hyp mode.
+          take_to_hyp = (HaveVirtExt() && HaveSecurityExt() && SCR[SCR_NS] == 1
+          && CPSR[CPSR_M] == (unsigned)EXECMODE::HYP);
+
+          // If HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector.
+          route_to_hyp = (HaveVirtExt() && HaveSecurityExt() && !IsSecure() &&
+          HCR[HCR_TGE] == 1 && CPSR[CPSR_M] == (unsigned)EXECMODE::USR);
+
+          // if HCR.TGE == '1' and in a Non-secure PL1 mode, the effect is
+          // UNPREDICTABLE
+
+          if (take_to_hyp) {
+            EnterHypMode(SPSR_value, LR_value, vect_offset);
+          } else if (route_to_hyp) {
+            EnterHypMode(SPSR_value, LR_value, 20);
+          } else {
+            // Enter Supervisor mode, and ensure Secure state if initially in
+            // Monitor mode. This affects the Banked versions of various registers
+            // accessed later in the code.
+            if (CPSR[CPSR_M] == (unsigned)EXECMODE::MON) SCR[SCR_NS] = 0;*/
+
+            // Make further CPSR changes: IRQs disabled, IT state reset, instruction
+            // set and endianness set to SCTLR-configured values.
+            // CPSR &= 0xF9FF03FF;
+            CPSR[CPSR_IT72] = CPSR[CPSR_IT10] = 0;
+
+            // CPSR &= 0xFEFFFFFF;
+            CPSR[CPSR_J] = 0;
+
+            // EE=0: little-endian; EE=1: big-endian
+            // TODO: CPSR[CPSR_E] = SCTLR[SCTLR_EE];
+
+            // Disable normal interrupts.
+            // CPSR |= 0x00000080;
+            CPSR[CPSR_I] = 1;
+
+            // Execute in ARM state.
+            // CPSR &= 0xFFFFFFDF
+            // TE=0: ARM; TE=1: Thumb
+            CPSR[CPSR_T] = 0; /* TODO: SCTLR[SCTLR_TE]; */
+
+            // Enter supervisor mode.
+            // CPSR &= 0xFFFFFFF0; CPSR |= 0x00000003;
+            CPSR[CPSR_M] = (unsigned)EXECMODE::SVC;
+
+            // Write return information to registers.
+            SPSR[get_spsr_idx(CPSR[CPSR_M])] = SPSR_value;
+            Rmode(14, CPSR[CPSR_M], true, LR_value);
+
+            // Branch to SVC vector.
+            PC = ExcVectorBase() + vect_offset;
+          //}
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::UDF::UDF(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // UDF()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::UDF::get_id() const throw() {
+
+          return 149;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::UDF::get_name() const throw() {
+
+          return "UDF";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::UDF::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "UDF";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->imm0;
+          oss << std::showbase << std::hex << this->imm1;
+          oss << std::showbase << std::hex << this->imm2;
+          oss << std::showbase << std::hex << this->imm3;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::UDF::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->imm0 = (bitstring & 0xf0000) >> 16;
+          this->imm1 = (bitstring & 0xf000) >> 12;
+          this->imm2 = (bitstring & 0xf00) >> 8;
+          this->imm3 = (bitstring & 0xf);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::UDF::replicate(Instruction* instr)
+        const throw() {
+
+          UDF* new_instr = new UDF(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            UDF* old_instr = dynamic_cast<UDF*>(instr);
+            if (old_instr) {
+              new_instr->cond = old_instr->cond;
+              new_instr->imm0 = old_instr->imm0;
+              new_instr->imm1 = old_instr->imm1;
+              new_instr->imm2 = old_instr->imm2;
+              new_instr->imm3 = old_instr->imm3;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::UDF::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          THROW_WARNING("Unimplemented instruction UDF.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::WFE::WFE(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // WFE()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::WFE::get_id() const throw() {
+
+          return 150;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::WFE::get_name() const throw() {
+
+          return "WFE";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::WFE::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "WFE";
+          oss << std::showbase << std::hex << this->cond;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::WFE::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::WFE::replicate(Instruction* instr)
+        const throw() {
+
+          WFE* new_instr = new WFE(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            WFE* old_instr = dynamic_cast<WFE*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::WFE::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid WFE encoding: rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid WFE encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction WFE.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::WFI::WFI(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // WFI()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::WFI::get_id() const throw() {
+
+          return 151;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::WFI::get_name() const throw() {
+
+          return "WFI";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::WFI::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "WFI";
+          oss << std::showbase << std::hex << this->cond;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::WFI::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::WFI::replicate(Instruction* instr)
+        const throw() {
+
+          WFI* new_instr = new WFI(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            WFI* old_instr = dynamic_cast<WFI*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::WFI::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid WFI encoding: rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid WFI encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction WFI.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::YIELD::YIELD(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // YIELD()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::YIELD::get_id() const throw() {
+
+          return 152;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::YIELD::get_name() const throw() {
+
+          return "YIELD";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::YIELD::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "YIELD";
+          oss << std::showbase << std::hex << this->cond;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::YIELD::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::YIELD::replicate(Instruction*
+        instr) const throw() {
+
+          YIELD* new_instr = new YIELD(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            YIELD* old_instr = dynamic_cast<YIELD*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::YIELD::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit != 15)
+          THROW_WARNING("Invalid YIELD encoding: rd != 0xF.");
+
+          if (rs_bit)
+          THROW_WARNING("Invalid YIELD encoding: rs != 0x0.");
+
+          THROW_WARNING("Unimplemented instruction YIELD.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::SMC::SMC(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // SMC()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SMC::get_id() const throw() {
+
+          return 153;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SMC::get_name() const throw() {
+
+          return "SMC";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::SMC::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "SMC";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " R";
+          oss << std::dec << this->rm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::SMC::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rm_bit = (bitstring & 0xf);
+          this->rm.set_alias(REGS[this->rm_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->rs_bit = (bitstring & 0xf00) >> 8;
+          this->rs.set_alias(REGS[this->rs_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::SMC::replicate(Instruction* instr)
+        const throw() {
+
+          SMC* new_instr = new SMC(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            SMC* old_instr = dynamic_cast<SMC*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rm_bit = old_instr->rm_bit;
+              new_instr->rm.set_alias(REGS[new_instr->rm_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->rs_bit = old_instr->rs_bit;
+              new_instr->rs.set_alias(REGS[new_instr->rs_bit]);
+              new_instr->cond = old_instr->cond;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::SMC::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          THROW_WARNING("Unimplemented instruction SMC.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::CDP::CDP(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // CDP()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::CDP::get_id() const throw() {
+
+          return 154;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::CDP::get_name() const throw() {
+
+          return "CDP";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::CDP::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "CDP";
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->op0;
+          oss << ", ";
+          oss << std::dec << this->cprd_bit;
+          oss << ", ";
+          oss << std::dec << this->cprn_bit;
+          oss << ", ";
+          oss << std::dec << this->cprm_bit;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->op1;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::CDP::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->cprn_bit = (bitstring & 0xf0000) >> 16;
+          this->cprn.set_alias(CPREGS[this->cprn_bit]);
+          this->cprm_bit = (bitstring & 0xf);
+          this->cprm.set_alias(CPREGS[this->cprm_bit]);
+          this->cprd_bit = (bitstring & 0xf000) >> 12;
+          this->cprd.set_alias(CPREGS[this->cprd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->op0 = (bitstring & 0xf00000) >> 20;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xe0) >> 5;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::CDP::replicate(Instruction* instr)
+        const throw() {
+
+          CDP* new_instr = new CDP(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            CDP* old_instr = dynamic_cast<CDP*>(instr);
+            if (old_instr) {
+              new_instr->cprn_bit = old_instr->cprn_bit;
+              new_instr->cprn.set_alias(CPREGS[new_instr->cprn_bit]);
+              new_instr->cprm_bit = old_instr->cprm_bit;
+              new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
+              new_instr->cprd_bit = old_instr->cprd_bit;
+              new_instr->cprd.set_alias(CPREGS[new_instr->cprd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->op0 = old_instr->op0;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->op1 = old_instr->op1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::CDP::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          THROW_WARNING("Unimplemented instruction CDP.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::LDC::LDC(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // LDC()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDC::get_id() const throw() {
+
+          return 155;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDC::get_name() const throw() {
+
+          return "LDC";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::LDC::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "LDC";
+          switch(this->cond) {
+            case 15: {
+              oss << "2";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::dec << this->cprd_bit;
+          oss << ", R";
+          oss << std::dec << this->rn_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::LDC::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cprd_bit = (bitstring & 0xf000) >> 12;
+          this->cprd.set_alias(CPREGS[this->cprd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->d = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->imm = (bitstring & 0xff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::LDC::replicate(Instruction* instr)
+        const throw() {
+
+          LDC* new_instr = new LDC(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            LDC* old_instr = dynamic_cast<LDC*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cprd_bit = old_instr->cprd_bit;
+              new_instr->cprd.set_alias(CPREGS[new_instr->cprd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->d = old_instr->d;
+              new_instr->w = old_instr->w;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->imm = old_instr->imm;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::LDC::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rn_bit == 15) && (w || (!p && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))))
+          THROW_EXCEPTION("Invalid LDC/LDC2 (literal) encoding: w = 1 or (p = 0 and current instruction set != ARM).");
+
+          THROW_WARNING("Unimplemented instruction LDC.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::STC::STC(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // STC()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STC::get_id() const throw() {
+
+          return 156;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STC::get_name() const throw() {
+
+          return "STC";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::STC::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "STC";
+          switch(this->cond) {
+            case 15: {
+              oss << "2";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::dec << this->cprd_bit;
+          oss << ", R";
+          oss << std::dec << this->rn_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::STC::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cprd_bit = (bitstring & 0xf000) >> 12;
+          this->cprd.set_alias(CPREGS[this->cprd_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->p = (bitstring & 0x1000000) >> 24;
+          this->u = (bitstring & 0x800000) >> 23;
+          this->d = (bitstring & 0x400000) >> 22;
+          this->w = (bitstring & 0x200000) >> 21;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->imm = (bitstring & 0xff);
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::STC::replicate(Instruction* instr)
+        const throw() {
+
+          STC* new_instr = new STC(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            STC* old_instr = dynamic_cast<STC*>(instr);
+            if (old_instr) {
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cprd_bit = old_instr->cprd_bit;
+              new_instr->cprd.set_alias(CPREGS[new_instr->cprd_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->p = old_instr->p;
+              new_instr->u = old_instr->u;
+              new_instr->d = old_instr->d;
+              new_instr->w = old_instr->w;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->imm = old_instr->imm;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::STC::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rn_bit == 15) && (w || (CurrentInstrSet() != (unsigned)(ISMODE::ARM))))
+          THROW_EXCEPTION("Invalid STC/STC2 encoding: rn = 0xF and (w = 1 or current instruction set != ARM).");
+
+          THROW_WARNING("Unimplemented instruction STC.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MCR::MCR(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MCR()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MCR::get_id() const throw() {
+
+          return 157;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MCR::get_name() const throw() {
+
+          return "MCR";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MCR::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MCR";
+          switch(this->cond) {
+            case 15: {
+              oss << "2";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->op1;
+          oss << ", ";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::dec << this->rn_bit;
+          oss << ", ";
+          oss << std::dec << this->cprm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MCR::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(CPREGS[this->rn_bit]);
+          this->cprm_bit = (bitstring & 0xf);
+          this->cprm.set_alias(CPREGS[this->cprm_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->op0 = (bitstring & 0xe00000) >> 21;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xe0) >> 5;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MCR::replicate(Instruction* instr)
+        const throw() {
+
+          MCR* new_instr = new MCR(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MCR* old_instr = dynamic_cast<MCR*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(CPREGS[new_instr->rn_bit]);
+              new_instr->cprm_bit = old_instr->cprm_bit;
+              new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->op0 = old_instr->op0;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->op1 = old_instr->op1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MCR::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if (rd_bit == 15)
+          THROW_EXCEPTION("Invalid MCR/MCR2 encoding: rd = 0xF.");
+
+          if ((rd_bit == 13) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
+          THROW_EXCEPTION("Invalid MCR/MCR2 encoding: rd = 0xD and current instruction set != ARM.");
+
+          THROW_WARNING("Unimplemented instruction MCR.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MCRR::MCRR(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MCRR()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MCRR::get_id() const throw() {
+
+          return 158;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MCRR::get_name() const throw() {
+
+          return "MCRR";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MCRR::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MCRR";
+          switch(this->cond) {
+            case 15: {
+              oss << "2";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->op1;
+          oss << ", ";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::dec << this->rn_bit;
+          oss << ", ";
+          oss << std::dec << this->cprm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MCRR::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cprm_bit = (bitstring & 0xf);
+          this->cprm.set_alias(CPREGS[this->cprm_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xe0) >> 5;
+          this->e = (bitstring & 0x10) >> 4;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MCRR::replicate(Instruction*
+        instr) const throw() {
+
+          MCRR* new_instr = new MCRR(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MCRR* old_instr = dynamic_cast<MCRR*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cprm_bit = old_instr->cprm_bit;
+              new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->op1 = old_instr->op1;
+              new_instr->e = old_instr->e;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MCRR::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rn_bit == 15) || (rd_bit == 15))
+          THROW_EXCEPTION("Invalid MCRR/MCRR2 encoding: rn|rd = 0xF.");
+
+          if (((rn_bit == 13) || (rd_bit == 13)) && (CurrentInstrSet() !=
+          (unsigned)(ISMODE::ARM)))
+          THROW_EXCEPTION("Invalid MCRR/MCRR2 encoding: rn|rd = 0xD and current instruction set != ARM.");
+
+          THROW_WARNING("Unimplemented instruction MCRR.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MRC::MRC(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MRC()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MRC::get_id() const throw() {
+
+          return 159;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MRC::get_name() const throw() {
+
+          return "MRC";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MRC::get_mnemonic() const throw() {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MRC";
+          switch(this->cond) {
+            case 15: {
+              oss << "2";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->op1;
+          oss << ", ";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::dec << this->rn_bit;
+          oss << ", ";
+          oss << std::dec << this->cprm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MRC::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(CPREGS[this->rn_bit]);
+          this->cprm_bit = (bitstring & 0xf);
+          this->cprm.set_alias(CPREGS[this->cprm_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->op0 = (bitstring & 0xe00000) >> 21;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xe0) >> 5;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MRC::replicate(Instruction* instr)
+        const throw() {
+
+          MRC* new_instr = new MRC(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MRC* old_instr = dynamic_cast<MRC*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(CPREGS[new_instr->rn_bit]);
+              new_instr->cprm_bit = old_instr->cprm_bit;
+              new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->op0 = old_instr->op0;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->op1 = old_instr->op1;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MRC::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rd_bit == 13) && (CurrentInstrSet() != (unsigned)(ISMODE::ARM)))
+          THROW_EXCEPTION("Invalid MRC/MRC2 encoding: rd = 0xD and current instruction set != ARM.");
+
+          THROW_WARNING("Unimplemented instruction MRC.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::MRRC::MRRC(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory) :
+          Instruction(R, instr_memory, data_memory),
+          ConditionPassedOp(R, instr_memory, data_memory) {
+
+
+        } // MRRC()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MRRC::get_id() const throw() {
+
+          return 160;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MRRC::get_name() const throw() {
+
+          return "MRRC";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::MRRC::get_mnemonic() const throw()
+        {
+
+          std::ostringstream oss (std::ostringstream::out);
+          oss << "MRRC";
+          switch(this->cond) {
+            case 15: {
+              oss << "2";
+            break;}
+          }
+          oss << std::showbase << std::hex << this->cond;
+          oss << " ";
+          oss << std::showbase << std::hex << this->cpnum;
+          oss << ", ";
+          oss << std::showbase << std::hex << this->op1;
+          oss << ", ";
+          oss << std::dec << this->rd_bit;
+          oss << ", ";
+          oss << std::dec << this->rn_bit;
+          oss << ", ";
+          oss << std::dec << this->cprm_bit;
+          return oss.str();
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        void core_armcortexa9_funclt::MRRC::set_params(const unsigned& bitstring)
+        throw() {
+
+          this->rd_bit = (bitstring & 0xf000) >> 12;
+          this->rd.set_alias(REGS[this->rd_bit]);
+          this->rn_bit = (bitstring & 0xf0000) >> 16;
+          this->rn.set_alias(REGS[this->rn_bit]);
+          this->cprm_bit = (bitstring & 0xf);
+          this->cprm.set_alias(CPREGS[this->cprm_bit]);
+          this->cond = (bitstring & 0xf0000000) >> 28;
+          this->cpnum = (bitstring & 0xf00) >> 8;
+          this->op1 = (bitstring & 0xe0) >> 5;
+          this->e = (bitstring & 0x10) >> 4;
+        } // set_params()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::MRRC::replicate(Instruction*
+        instr) const throw() {
+
+          MRRC* new_instr = new MRRC(R, instr_memory, data_memory);
+
+          // Set instruction fields.
+          if (instr) {
+            MRRC* old_instr = dynamic_cast<MRRC*>(instr);
+            if (old_instr) {
+              new_instr->rd_bit = old_instr->rd_bit;
+              new_instr->rd.set_alias(REGS[new_instr->rd_bit]);
+              new_instr->rn_bit = old_instr->rn_bit;
+              new_instr->rn.set_alias(REGS[new_instr->rn_bit]);
+              new_instr->cprm_bit = old_instr->cprm_bit;
+              new_instr->cprm.set_alias(CPREGS[new_instr->cprm_bit]);
+              new_instr->cond = old_instr->cond;
+              new_instr->cpnum = old_instr->cpnum;
+              new_instr->op1 = old_instr->op1;
+              new_instr->e = old_instr->e;
+            }
+          }
+          return new_instr;
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::MRRC::behavior() {
+
+          this->num_instr_cycles = 0;
+          this->num_instr_cycles += ConditionPassed(this->cond);
+
+          if ((rn_bit == 15) || (rd_bit == 15))
+          THROW_EXCEPTION("Invalid MRRC/MRRC2 encoding: rn|rd = 0xF.");
+
+          if (rn_bit == rd_bit)
+          THROW_EXCEPTION("Invalid MRRC/MRRC2 encoding: rn = rd.");
+
+          if (((rn_bit == 13) || (rd_bit == 13)) && (CurrentInstrSet() !=
+          (unsigned)(ISMODE::ARM)))
+          THROW_EXCEPTION("Invalid MRRC/MRRC2 encoding: rn|rd = 0xD and current instruction set != ARM.");
+
+          THROW_WARNING("Unimplemented instruction MRRC.");
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::IRQIntrInstruction::IRQIntrInstruction(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory,
+            bool& IRQ) :
+          Instruction(R, instr_memory, data_memory),
+          IRQ(IRQ) {
+
+
+        } // IRQIntrInstruction()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::IRQIntrInstruction::get_id() const
+        throw() {
+
+          return (unsigned)-1;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::IRQIntrInstruction::get_name()
+        const throw() {
+
+          return "IRQIntrInstruction";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::IRQIntrInstruction::get_mnemonic()
+        const throw() {
+
+          return "IRQ";
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::IRQIntrInstruction::replicate(Instruction*
+        instr) const throw() {
+
+          return new IRQIntrInstruction(R, instr_memory, data_memory, this->IRQ);
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::IRQIntrInstruction::behavior() {
+
+          this->num_instr_cycles = 0;
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
+
+        core_armcortexa9_funclt::FIQIntrInstruction::FIQIntrInstruction(
+            Registers& R,
+            MemoryInterface& instr_memory,
+            MemoryInterface& data_memory,
+            bool& FIQ) :
+          Instruction(R, instr_memory, data_memory),
+          FIQ(FIQ) {
+
+
+        } // FIQIntrInstruction()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::FIQIntrInstruction::get_id() const
+        throw() {
+
+          return (unsigned)-1;
+        } // get_id()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::FIQIntrInstruction::get_name()
+        const throw() {
+
+          return "FIQIntrInstruction";
+        } // get_name()
+
+        // ---------------------------------------------------------------------
+
+        std::string core_armcortexa9_funclt::FIQIntrInstruction::get_mnemonic()
+        const throw() {
+
+          return "FIQ";
+        } // get_mnemonic()
+
+        // ---------------------------------------------------------------------
+
+        Instruction* core_armcortexa9_funclt::FIQIntrInstruction::replicate(Instruction*
+        instr) const throw() {
+
+          return new FIQIntrInstruction(R, instr_memory, data_memory, this->FIQ);
+        } // replicate()
+
+        // ---------------------------------------------------------------------
+
+        unsigned core_armcortexa9_funclt::FIQIntrInstruction::behavior() {
+
+          this->num_instr_cycles = 0;
+          return this->num_instr_cycles;
+        } // behavior()
+
+        // ---------------------------------------------------------------------
+
+
+        // *********************************************************************
 

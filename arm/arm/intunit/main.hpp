@@ -76,8 +76,8 @@
 
 void stop_simulation(int sig);
 
-std::pair<unsigned, unsigned> get_cycle_range(
-const std::string& cycles_range, const std::string& application);
+std::pair<unsigned, unsigned> get_cycle_range(const std::string& cycles_range,
+const std::string& application);
 
 class TLMIntrInitiator_1 : public sc_core::sc_module {
   /// @name Constructors and Destructors
@@ -93,10 +93,10 @@ class TLMIntrInitiator_1 : public sc_core::sc_module {
 
   public:
   tlm::tlm_sync_enum nb_transport_bw(
-  int tag, tlm::tlm_generic_payload& payload, tlm::tlm_phase& phase, sc_core::sc_time&
-  delay);
+      int tag, tlm::tlm_generic_payload& payload, tlm::tlm_phase& phase, sc_core::sc_time&
+      delay);
   void invalidate_direct_mem_ptr(
-  int tag, sc_dt::uint64 start_range, sc_dt::uint64 end_range) {}
+      int tag, sc_dt::uint64 start_range, sc_dt::uint64 end_range) {}
 
 
   /// @} Methods
@@ -122,7 +122,6 @@ class TLMIntrInitiator_1 : public sc_core::sc_module {
 * TRAP-Gen debugging and profiling tools as instantiated as chosen by the
 * command-line options.
 */
-int sc_main(
-int argc, char** argv);
+int sc_main(int argc, char** argv);
 
 #endif // CORE_ARMCORTEXA9_FUNC_LT_MAIN_HPP

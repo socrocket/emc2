@@ -213,6 +213,10 @@ int sc_main(
   ("prof_range,g", boost::program_options::value<std::string>(),
   "specifies the range of addresses restricting the profiler instruction statistics")
   ("disable_fun_prof,n", "disables profiling statistics for the application routines")
+  ("frequency,f", boost::program_options::value<double>(),
+  "processor clock frequency specified in MHz [Default 1MHz]")
+  ("cycles_range,c", boost::program_options::value<std::string>(),
+  "start-end addresses between which computing the execution cycles")
   ("application,a", boost::program_options::value<std::string>(),
   "application to be executed on the simulator")
   ("disassembler,i", "prints the disassembly of the application")
@@ -263,6 +267,10 @@ int sc_main(
     std::cerr << desc << std::endl;
     return -1;
   }
+  double latency = 1; // 1us
+  if (vm.count("frequency") != 0) {
+    latency = 1/(vm["frequency"].as<double>());
+  }
 
   // ...........................................................................
   // Modules
@@ -272,7 +280,8 @@ int sc_main(
   LocalMemory data_memory(1024*1024*10);
 
   // Processor
-  CoreARMCortexA9FuncLT processor("ARMCortexA9", instr_memory, data_memory);
+  CoreARMCortexA9FuncLT processor("ARMCortexA9", sc_time(latency, SC_US),
+  instr_memory, data_memory);
 
   // TLM Sockets
   TLMIntrInitiator_1 IRQ_initiator("IRQ_initiator");
@@ -323,6 +332,18 @@ int sc_main(
   processor.ENTRY_POINT = loader.get_program_start();
   processor.PROGRAM_LIMIT = program_dim + program_data_start;
   processor.PROGRAM_START = program_data_start;
+
+  // Profiler: Check if counting the cycles between two locations (addresses or
+  // symbols) is required.
+  std::pair<unsigned, unsigned> decoded_range((unsigned)-1, (unsigned)-1);
+  if (vm.count("cycles_range") != 0) {
+    // The range is in the form start-end, where start and end can be both
+    // integers (both normal and hex) or symbols of the binary file.
+    std::string cycles_range = vm["cycles_range"].as<std::string>();
+    decoded_range = get_cycle_range(cycles_range, vm["application"].as<std::string>());
+    // Initialize the processor with the given address range values.
+    processor.set_profiling_range(decoded_range.first, decoded_range.second);
+  }
 
   // History: Both debugging and history need to be enabled if the debugger is
   // being used and/or if history needs to be dumped to an output file.
@@ -460,7 +481,22 @@ int sc_main(
   std::endl;
   std::cout << "Execution speed: " << (double)processor.num_instructions/(elapsed_sec*1e6)
   << "MIPS" << std::endl;
-  std::cout << "Elapsed time: " << std::dec << processor.total_cycles << " cycles" << std::endl;
+  std::cout << "Simulated time: " << ((sc_time_stamp().to_default_time_units())/(sc_time(1,
+  SC_US).to_default_time_units())) << "us" << std::endl;
+  std::cout << "Elapsed time: " << std::dec << (unsigned)(sc_time_stamp()/sc_time(latency,
+  SC_US)) << " cycles" << std::endl;
+  if (decoded_range.first != (unsigned)-1 || decoded_range.second != (unsigned)-1)
+  {
+    if (processor.profiler_time_end == SC_ZERO_TIME) {
+      processor.profiler_time_end = sc_time_stamp();
+      std::cout << "End address: " << std::hex << std::showbase << decoded_range.second
+      << " not found, counting until the end." << std::endl;
+    }
+    std::cout << "Cycles between addresses " << std::hex << std::showbase <<
+    decoded_range.first << " - " << decoded_range.second << ": " << std::dec <<
+    (unsigned)((processor.profiler_time_end - processor.profiler_time_start)/sc_time(latency,
+    SC_US)) << std::endl;
+  }
   std::cout << std::endl;
 
   return 0;
