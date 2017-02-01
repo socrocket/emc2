@@ -45,7 +45,7 @@
 #ifndef CORE_ARMCORTEXA9_FUNC_LT_MEMORY_HPP
 #define CORE_ARMCORTEXA9_FUNC_LT_MEMORY_HPP
 
-#include "gaisler/leon3/mmucache/cpu_if.h"
+#include "arm/arm/mmucache/cpu_if.h"
 
 #include <systemc.h>
 #include <common/tools_if.hpp>

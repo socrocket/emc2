@@ -993,6 +993,17 @@ bool core_armcortexa9_funclt::Instruction::JazelleAcceptsExecution() {
 } // JazelleAcceptsExecution()
 
 // -----------------------------------------------------------------------------
+void core_armcortexa9_funclt::Instruction::print_trace() {
+  /*std::cerr << "Simulated time: " << std::dec << this->num_instr_cycles << " cycles." << std::endl;
+  std::cerr << "Instruction: " << this->get_name() << '.' << std::endl;
+  std::cerr << "Mnemonic: " << this->get_mnemonic() << std::endl;
+  std::cerr << "CPSR = " << std::hex << std::showbase << CPSR << std::endl;
+  for (int reg_i = 0; reg_i < 35; reg_i++) {
+    std::cerr << "RB[" << std::dec << reg_i << "] = " << std::hex << std::showbase
+    << RB[reg_i] << std::endl;
+  }
+  std::cerr << std::endl;*/
+} // print_trace()
 
 
 // *****************************************************************************

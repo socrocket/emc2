@@ -57,18 +57,17 @@ core_armcortexa9_funclt::TLMIntrPort_1::TLMIntrPort_1(
     bool& irq_signal) :
   sc_module(port_name),
   irq_signal(irq_signal),
-  target_socket(port_name) {
+  irq_target_socket("irq_target_socket", amba::amba_AHB, amba::amba_LT, false) {
 
-  this->target_socket.register_b_transport(this, &TLMIntrPort_1::b_transport);
-  this->target_socket.register_nb_transport_fw(this, &TLMIntrPort_1::nb_transport_fw);
-  this->target_socket.register_transport_dbg(this, &TLMIntrPort_1::transport_dbg);
+  //this->irq_target_socket.register_b_transport(this, &TLMIntrPort_1::b_transport);
+  //this->irq_target_socket.register_nb_transport_fw(this, &TLMIntrPort_1::nb_transport_fw);
+  //this->irq_target_socket.register_transport_dbg(this, &TLMIntrPort_1::transport_dbg);
   end_module();
 } // TLMIntrPort_1()
 
 // -----------------------------------------------------------------------------
 
 void core_armcortexa9_funclt::TLMIntrPort_1::b_transport(
-    int tag,
     tlm::tlm_generic_payload& trans,
     sc_time& delay) {
 
@@ -87,7 +86,6 @@ void core_armcortexa9_funclt::TLMIntrPort_1::b_transport(
 // -----------------------------------------------------------------------------
 
 unsigned core_armcortexa9_funclt::TLMIntrPort_1::transport_dbg(
-    int tag,
     tlm::tlm_generic_payload& trans) {
 
   unsigned char* ptr = trans.get_data_ptr();
@@ -106,7 +104,6 @@ unsigned core_armcortexa9_funclt::TLMIntrPort_1::transport_dbg(
 // -----------------------------------------------------------------------------
 
 tlm::tlm_sync_enum core_armcortexa9_funclt::TLMIntrPort_1::nb_transport_fw(
-    int tag,
     tlm::tlm_generic_payload& trans,
     tlm::tlm_phase& phase,
     sc_time& delay) {

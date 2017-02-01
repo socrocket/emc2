@@ -354,6 +354,8 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
         num_cycles = this->FIQ_instr->behavior();
       }
       catch(annul_exception& etc) {
+        /*std::cerr << "Instruction=" << std::setw(10) << std::left << this->FIQ_instr->get_name()
+        << ", Mnemonic=" << this->FIQ_instr->get_mnemonic() << ": Skipped instruction." << std::endl;*/
         num_cycles = 0;
       }
 
@@ -364,6 +366,8 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
         num_cycles = this->IRQ_instr->behavior();
       }
       catch(annul_exception& etc) {
+        /*std::cerr << "Instruction=" << std::setw(10) << std::left << this->IRQ_instr->get_name()
+        << ", Mnemonic=" << this->IRQ_instr->get_mnemonic() << ": Skipped instruction." << std::endl;*/
         num_cycles = 0;
       }
 
@@ -386,6 +390,7 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
       }
 #endif
       unsigned bitstring = this->instr_memory.read_instr(cur_PC);
+      //std::cerr << "Current PC: " << std::hex << std::showbase << cur_PC << '.' << std::endl;
       cur_instr = NULL;
       template_map< unsigned, CacheElem >::iterator cached_instr = this->instr_cache.find(bitstring);
       if (cached_instr != icache_end) {
@@ -403,11 +408,17 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
             if (!(this->tool_manager.issue(cur_PC, cur_instr))) {
 #endif
               num_cycles = cur_instr->behavior();
+              //cur_instr->print_trace();
 #ifndef DISABLE_TOOLS
             }
+            /*else {
+              std::cerr << "Instruction anulled by tools." << std::endl << std::endl;
+            }*/
 #endif
           }
           catch(annul_exception& etc) {
+            /*cur_instr->print_trace();
+            std::cerr << "Skipped Instruction " << cur_instr->get_name() << '.' << std::endl;*/
             num_cycles = 0;
           }
         } else {
@@ -428,11 +439,17 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
             if (!(this->tool_manager.issue(cur_PC, cur_instr))) {
 #endif
               num_cycles = cur_instr->behavior();
+              //cur_instr->print_trace();
 #ifndef DISABLE_TOOLS
             }
+            /*else {
+              std::cerr << "Instruction anulled by tools." << std::endl << std::endl;
+            }*/
 #endif
           }
           catch(annul_exception& etc) {
+            /*cur_instr->print_trace();
+            std::cerr << "Skipped Instruction " << cur_instr->get_name() << '.' << std::endl;*/
             num_cycles = 0;
           }
           if (cur_instr_count < 256) {
@@ -460,11 +477,17 @@ void core_armcortexa9_funclt::CoreARMCortexA9FuncLT::main_loop() {
           if (!(this->tool_manager.issue(cur_PC, cur_instr))) {
 #endif
             num_cycles = cur_instr->behavior();
+            //cur_instr->print_trace();
 #ifndef DISABLE_TOOLS
+          }
+          else {
+            //std::cerr << "Instruction anulled by tools." << std::endl << std::endl;
           }
 #endif
         }
         catch(annul_exception& etc) {
+          /*cur_instr->print_trace();
+          std::cerr << "Skipped Instruction " << cur_instr->get_name() << '.' << std::endl;*/
           num_cycles = 0;
         }
         this->instr_cache.insert(std::pair<unsigned, CacheElem>(bitstring,

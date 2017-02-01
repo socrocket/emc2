@@ -132,8 +132,8 @@ namespace core_armcortexa9_funclt {
     Registers R;
     MemoryInterface& instr_memory;
     MemoryInterface& data_memory;
-    //TLMIntrPort_1 IRQ_port;
-    //TLMIntrPort_1 FIQ_port;
+    TLMIntrPort_1 IRQ_port;
+    TLMIntrPort_1 FIQ_port;
     unsigned num_instructions;
     IRQIntrInstruction* IRQ_instr;
     FIQIntrInstruction* FIQ_instr;

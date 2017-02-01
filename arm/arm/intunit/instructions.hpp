@@ -84,6 +84,7 @@ namespace core_armcortexa9_funclt {
     virtual void set_params(const unsigned& bitstring) throw() {}
 
     virtual Instruction* replicate(Instruction* instr = NULL) const throw() = 0;
+    void print_trace();
 
     virtual unsigned behavior();
     inline void annul() {
@@ -7985,7 +7986,7 @@ namespace core_armcortexa9_funclt {
   * access can occur to the memory location between the load access and the
   * store access.
   * NOTE: Deprecated in favor of LDREX(B)/STREX(B)
-  * 
+  *
   */
   class SWP : public ConditionPassedOp {
     /// @name Constructors and Destructors

@@ -25,6 +25,7 @@ usi.registry.load('./build/quadcopter/libsr_quadcopter.so')
 
 class BaseSystem(USIModule):
     def __init__(self, name):
+        self.name = name
         self.ahbctrl = module.AHBCtrl("ahbctrl",
             ioaddr = 0xFFF,    # The MSB address of the I/O area
             iomask = 0xFFF,    # The I/O area address mask
@@ -48,15 +49,26 @@ class BaseSystem(USIModule):
         # Connect to AHB and clock
         self.ahbctrl.ahbOUT.socket_bind(self.apbctrl.ahb)
 
-        self.irqmp = module.Irqmp("irqmp",
-            paddr = 0x002,    # paddr PSiegl: SoCRocket default 0x1F0, try to mimic TSIM therefore 0x2
-            pmask = 0xFFF,    # pmask
-            ncpu = 1,         # ncpu
-            eirq = 0,         # eirq
-            pindex = self.apb_id(),       # pindex
-        )
-        # Connect to APB and clock
-        self.apbctrl.apb.socket_bind(self.irqmp.apb)
+        if (self.name != "arm_system"):
+            self.irqmp = module.Irqmp("irqmp",
+                paddr = 0x002,    # paddr PSiegl: SoCRocket default 0x1F0, try to mimic TSIM therefore 0x2
+                pmask = 0xFFF,    # pmask
+                ncpu = 1,         # ncpu
+                eirq = 0,         # eirq
+                pindex = self.apb_id(),       # pindex
+            )
+            # Connect to APB and clock
+            self.apbctrl.apb.socket_bind(self.irqmp.apb)
+        else:
+            self.irqmp = module.ArmGIC("irqmp",
+                paddr = 0x002,    # paddr PSiegl: SoCRocket default 0x1F0, try to mimic TSIM therefore 0x2
+                pmask = 0xFFF,    # pmask
+                ncpu = 1,         # ncpu
+                eirq = 0,         # eirq
+                pindex = self.apb_id(),       # pindex
+            )
+            # Connect to APB and clock
+            self.apbctrl.apb.socket_bind(self.irqmp.apb)
 
         self.apbuart = module.APBUART("apbuart",
             backend = "ReportIO",
@@ -111,7 +123,6 @@ class BaseSystem(USIModule):
         # Connecting Interrupts
         for i in range(0, 8):
             self.irqmp.irq_in.signal_bind(self.gptimer.irq, 8 + i)
-
 
         self.mctrl = module.Mctrl( "mctrl",
         #    ambaLayer,
@@ -275,6 +286,9 @@ class BaseSystem(USIModule):
             self.cpu.cpu.irqAck.ack.signal_bind(self.irqmp.irq_ack, long(0))
             self.cpu.cpu.irqAck.run.signal_bind(self.irqmp.cpu_rst, long(0))
             self.cpu.cpu.irqAck.status.signal_bind(self.irqmp.cpu_stat, long(0))
+        else:
+            self.irqmp.irq_init_socket.socket_bind(self.cpu.cpu.FIQ_port.irq_target_socket)
+            self.irqmp.irq_init_socket.socket_bind(self.cpu.cpu.IRQ_port.irq_target_socket)
 
         self.reset = module.ResetIrqmp("reset")
         self.irqmp.rst.signal_bind(self.reset.rst)
@@ -283,14 +297,20 @@ class BaseSystem(USIModule):
         self._ram = ram
         self._use_intrinsics = use_intrinsics
     def start_of_simulation(self):
+        start = 0x40000000
+        intrinsics = 'standard'
+        storage = self.ram
+        if self.name == "arm_system":
+            intrinsics = 'underscore'
+            storage = self.sram
         if hasattr(self, '_rom'):
             print self.rom
             elf.load_elf_into_scireg(self._rom, self.rom, 0x00000000)
         if hasattr(self, '_ram'):
             print self.ram
-            elf.load_elf_into_scireg(self._ram, self.ram, 0x40000000)
+            elf.load_elf_into_scireg(self._ram, storage, start)
             #if self.use_intrinsics:
-            elf.load_elf_intrinsics_to_processor(self._ram, [self.cpu], elf.intrinsic_groups['standard'])
+            elf.load_elf_intrinsics_to_processor(self._ram, [self.cpu], elf.intrinsic_groups[intrinsics])
         #shell_start()
 
 
@@ -339,16 +359,15 @@ def class_systems(*k, **kw):
     #leonsystem.store_elf("build/core/software/prom/ahbram/ahbram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
-    # 
+
     microblazesystem = MicroBlazeSystem("microblaze_system")
     #microblazesystem = LeonSystem("microblaze_system")
     microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #microblazesystem.store_elf("./build/emc2quadcopter/software/hellospecial.sparc", True)
 
-    #armsystem = ARMSystem("arm_system")
-    armsystem = LeonSystem("arm_system")
-    armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
-    #armsystem.store_elf("./build/emc2quadcopter/software/hellospecial.sparc", True)
+    armsystem = ARMSystem("arm_system")
+    armsystem.store_elf("build/arm/prom/arm.prom", "build/core/software/grlib_tests/hello.arm", True)
+
     supervisorsystem = SupervisorSystem("supervisor_system")
     #usi.add_to_reporting_list("leon_system.ahbctrl", usi.report.SC_WARNING, 0)
     #for vec in ['ivectorcache', 'dvectorcache']:

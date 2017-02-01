@@ -49,7 +49,8 @@
 #include <systemc.h>
 #include <tlm.h>
 #include <common/report.hpp>
-#include <tlm_utils/multi_passthrough_target_socket.h>
+#include <tlm_utils/passthrough_target_socket.h>
+#include <amba.h>
 
 
 #define FUNC_MODEL
@@ -70,11 +71,9 @@ namespace core_armcortexa9_funclt {
     /// @{
 
     public:
-    void b_transport(
-        int tag, tlm::tlm_generic_payload& trans, sc_time& delay);
-    unsigned transport_dbg(int tag, tlm::tlm_generic_payload& trans);
-    tlm::tlm_sync_enum nb_transport_fw(
-        int tag, tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_time&
+    void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+    unsigned transport_dbg(tlm::tlm_generic_payload& trans);
+    tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_time&
         delay);
 
     /// @} Methods
@@ -84,8 +83,8 @@ namespace core_armcortexa9_funclt {
 
     public:
     bool& irq_signal;
-    tlm_utils::multi_passthrough_target_socket<TLMIntrPort_1, 1, tlm::tlm_base_protocol_types,
-    1, sc_core::SC_ZERO_OR_MORE_BOUND> target_socket;
+    //tlm_utils::passthrough_target_socket<TLMIntrPort_1, 32, tlm::tlm_base_protocol_types> irq_target_socket;
+    amba::amba_slave_socket<32, 0> irq_target_socket;
 
     /// @} Data
     // -------------------------------------------------------------------------

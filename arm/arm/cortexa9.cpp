@@ -16,7 +16,7 @@
 ///
 
 #include <boost/filesystem.hpp>
-#include "arm/cortexa9.h"
+#include "cortexa9.h"
 #include "core/base/vendian.h"
 #include "core/common/sr_report.h"
 
@@ -240,13 +240,17 @@ unsigned int CortexA9::read_instr(const unsigned int & address, const unsigned i
     //Now lets keep track of time
     this->cpu.quant_keeper.set(delay);
     if(this->cpu.quant_keeper.need_sync()){
-//std::cout << "Quantum (external) sync" << std::endl;
+      //std::cout << "Quantum (external) sync" << std::endl;
       this->cpu.quant_keeper.sync();
     }
+
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
+
     v::debug << name() << "Read word:0x" << hex << v::setw(8) << v::setfill('0')
              << datum << ", from:0x" << hex << v::setw(8) << v::setfill('0')
              << address << endl;
@@ -284,7 +288,7 @@ sc_dt::uint64 CortexA9::read_dword(
         this->cpu.quant_keeper.sync();
     }
 
-    #ifdef LITTLE_ENDIAN_BO
+    #ifdef ARM_BIG_ENDIAN
     uint32_t datum1 = (uint32_t)(datum);
     swapEndianess(datum1);
     uint32_t datum2 = (uint32_t)(datum >> 32);
@@ -325,12 +329,14 @@ uint32_t CortexA9::read_word(
     if(this->cpu.quant_keeper.need_sync()){
       this->cpu.quant_keeper.sync();
     }
+
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
-    #ifdef LITTLE_ENDIAN_BO
     swapEndianess(datum);
     #endif
+
     v::debug << name() << "Read word:0x" << hex << v::setw(8) << v::setfill('0')
              << datum << ", from:0x" << hex << v::setw(8) << v::setfill('0')
              << address << endl;
@@ -369,10 +375,13 @@ uint16_t CortexA9::read_half(
         this->cpu.quant_keeper.sync();
     }
 
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
+
     return datum;
 }
 
@@ -418,11 +427,17 @@ void CortexA9::write_dword(
     const uint32_t flush,
     const uint32_t lock) throw(){
 
+    #ifdef ARM_BIG_ENDIAN
+    //Now the code for endianess conversion: the processor is always modeled
+    //with the host endianess; in case they are different, the endianess
+    //is turned
     uint32_t datum1 = (uint32_t)(datum);
     swapEndianess(datum1);
     uint32_t datum2 = (uint32_t)(datum >> 32);
     swapEndianess(datum2);
     datum = datum1 | (((sc_dt::uint64)datum2) << 32);
+    #endif
+
     if(this->debugger != NULL){
         this->debugger->notify_address(address, sizeof(datum));
     }
@@ -458,10 +473,13 @@ void CortexA9::write_word(
   const unsigned int flush,
   const unsigned int lock) throw() {
 
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
+
     if(this->debugger != NULL){
         v::debug << name() << "Debugger" << endl;
         this->debugger->notify_address(address, sizeof(datum));
@@ -502,10 +520,13 @@ void CortexA9::write_half(
     uint32_t flush,
     uint32_t lock) throw() {
 
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
+
     if(this->debugger != NULL){
         this->debugger->notify_address(address, sizeof(datum));
     }
@@ -589,11 +610,13 @@ sc_dt::uint64 CortexA9::read_dword_dbg(const uint32_t &address) throw() {
         true,
         response);
 
+    #ifdef ARM_BIG_ENDIAN
     uint32_t datum1 = (uint32_t)(datum);
     swapEndianess(datum1);
     uint32_t datum2 = (uint32_t)(datum >> 32);
     swapEndianess(datum2);
     datum = datum1 | (((sc_dt::uint64)datum2) << 32);
+    #endif
 
     return datum;
 }
@@ -617,10 +640,12 @@ uint32_t CortexA9::read_word_dbg(const uint32_t &address) throw(){
         true,
         response);
 
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
 
     return datum;
 }
@@ -644,10 +669,13 @@ uint16_t CortexA9::read_half_dbg(const uint32_t &address) throw() {
         true,
         response);
 
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
+
     return datum;
 }
 
@@ -674,11 +702,13 @@ uint8_t CortexA9::read_byte_dbg(const uint32_t &address) throw(){
 }
 
 void CortexA9::write_dword_dbg(const uint32_t &address, sc_dt::uint64 datum) throw() {
+    #ifdef ARM_BIG_ENDIAN
     uint32_t datum1 = static_cast<uint32_t>(datum);
     swapEndianess(datum1);
     uint32_t datum2 = static_cast<uint32_t>(datum >> 32);
     swapEndianess(datum2);
     datum = datum1 | (((sc_dt::uint64)datum2) << 32);
+    #endif
 
     sc_time delay = this->cpu.quant_keeper.get_local_time();
     uint32_t debug = 0;
@@ -699,10 +729,12 @@ void CortexA9::write_dword_dbg(const uint32_t &address, sc_dt::uint64 datum) thr
 }
 
 void CortexA9::write_word_dbg(const uint32_t &address, uint32_t datum) throw() {
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
 
     uint32_t debug = 0;
     sc_time delay = this->cpu.quant_keeper.get_local_time();
@@ -723,10 +755,13 @@ void CortexA9::write_word_dbg(const uint32_t &address, uint32_t datum) throw() {
 }
 
 void CortexA9::write_half_dbg(const uint32_t &address, uint16_t datum) throw() {
+    #ifdef ARM_BIG_ENDIAN
     //Now the code for endianess conversion: the processor is always modeled
     //with the host endianess; in case they are different, the endianess
     //is turned
     swapEndianess(datum);
+    #endif
+
     uint32_t debug = 0;
     sc_time delay = this->cpu.quant_keeper.get_local_time();
     tlm::tlm_response_status response = tlm::TLM_INCOMPLETE_RESPONSE;

@@ -24,7 +24,7 @@ def build(bld):
     bld.objects(source = sources, target = target, use = uselib + ' ' + objects, includes = includes)
     sources = 'main.cpp'
     includes = '.'
-    uselib = 'TRAP BOOST ELF_LIB SYSTEMC TLM'
+    uselib = 'TRAP BOOST ELF_LIB SYSTEMC TLM AMBA'
     import sys
     cppflags_custom = ''
     if sys.platform == 'cygwin':

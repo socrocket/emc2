@@ -31,8 +31,8 @@
 #include "amba/amba.h"
 #include "amba/ahbmaster.h"
 
-#include "gaisler/leon3/mmucache/mmu_cache_base.h"
-#include "gaisler/leon3/mmucache/localram.h"
+#include "arm/arm/mmucache/mmu_cache_base.h"
+#include "arm/arm/mmucache/localram.h"
 
 // CortexA9
 #include "arm/intunit/processor.hpp"
