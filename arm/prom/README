@@ -1,0 +1,16 @@
+Compiling ROM
+-------------
+
+arm-none-eabi-g++ -marm -msoft-float -g -c arm/prom/rominit.S -o build/arm/prom/rominit.S.o
+
+arm-none-eabi-g++ -o "build/arm/prom/arm.prom" build/arm/prom/rominit.S.o -g -Ttext=0 -nostartfiles -nostdlib
+
+Compiling RAM
+-------------
+- The files crti.o and crtbegin.o should be provided by the toolchain (<ARMCC>/lib/gcc/arm-none-eabi/<version>/)
+
+- The files raminit.S, ramcrt0.S and syscalls.c should be compiled and either placed in <ARMCC>/arm-none-eabi/lib/ or anywhere where ld will find them.
+
+arm-none-eabi-gcc -mcpu=cortex-a9 -marm -msoft-float -g -static -c core/software/grlib_tests/hello.c -o build/core/software/grlib_tests/arm/hello.c.o
+
+arm-none-eabi-g++ -Lbuild/arm/prom -o "build/core/software/grlib_tests/hello.arm" build/core/software/grlib_tests/arm/hello.c.o  -g -static -specs=arm/prom/ram.specs
