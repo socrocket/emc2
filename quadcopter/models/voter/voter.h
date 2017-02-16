@@ -41,7 +41,7 @@ class Voter : public BaseModule<>, public CLKDevice {
     Voter(sc_module_name name,
     //  uint32_t systems = 3,
       uint32_t irq = 1,
-      uint32_t wdog = 0xFF
+      uint32_t wdog = 0x2FF
     );
 
     ~Voter();

@@ -23,10 +23,12 @@ SR_HAS_MODULE(CommitRegister);
 CommitRegister::CommitRegister(ModuleName name,
   uint16_t pindex,
   uint16_t paddr,
-  uint16_t pmask) :
+  uint16_t pmask,
+  uint32_t id) :
   APBSlave(name, pindex, 0x1, 0x00C, 1, 0, APBIO, pmask, false, false, paddr),
   commit("commit"),
-  m_nregisters(4) {
+  m_nregisters(4),
+  m_id("sysindex", id, m_generics) {
 
   srInfo("/configuration/commitregister/apbslave")
      ("addr", (uint64_t)apb.get_base_addr())
@@ -49,6 +51,9 @@ CommitRegister::~CommitRegister() {
 }
 
 void CommitRegister::init_generics() {
+  m_id.add_properties()
+    ("name", "Subsystem ID")
+    ("Identifies the subsystem");
 }
 
 void CommitRegister::init_registers() {
@@ -57,11 +62,12 @@ void CommitRegister::init_registers() {
     0,                                                              // offset
     0,                                                              // init value
     0x00000001)                                                     // write mask
-  .callback(SR_POST_WRITE, this, &CommitRegister::commit_write);
+  .callback(SR_POST_WRITE, this, &CommitRegister::commit_write)
+  .callback(SR_PRE_READ, this, &CommitRegister::commit_read);
 
   for(uint32_t reg = 0; reg < m_nregisters; ++reg) {
     r.create_register(gen_unique_name("data", true), "Data Register",
-      ((1+reg)<<2), 0, 0);
+      ((1+reg)<<2), 0, 0xFFFFFFFF);
   }
 }
 
@@ -69,6 +75,11 @@ void CommitRegister::commit_write() {
   for(uint32_t reg = 0; reg<m_nregisters;++reg) {
     commit.write(std::pair<uint32_t, uint32_t>(reg, r[((1+reg)<<2)]));
   }
+//  r[i]
+}
+
+void CommitRegister::commit_read() {
+  r[0] = m_id;
 //  r[i]
 }
 

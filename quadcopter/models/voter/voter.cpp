@@ -117,6 +117,7 @@ void Voter::watchdog() {
       srWarn()("System 0 Error");
       mask = 1 << 0;
     }
+    printf("\n%x (%d, %d, %d) #####################################################################\n", mask, m_values[0][0], m_values[1][0], m_values[2][0]);
     if(mask) {
       reset.write(0xF, false);
     }

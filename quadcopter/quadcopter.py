@@ -24,7 +24,7 @@ usi.registry.load('./build/arm/libsr_arm.so')
 usi.registry.load('./build/quadcopter/libsr_quadcopter.so')
 
 class BaseSystem(USIModule):
-    def __init__(self, name):
+    def __init__(self, name, idno):
         self.name = name
         self.ahbctrl = module.AHBCtrl("ahbctrl",
             ioaddr = 0xFFF,    # The MSB address of the I/O area
@@ -253,7 +253,8 @@ class BaseSystem(USIModule):
         self.commitreg = module.CommitRegister("commitregister",
             pindex = self.apb_id(),
             paddr = 0x008,
-            pmask = 0xFFF
+            pmask = 0xFFF,
+            sysindex = idno
         )
         self.apbctrl.apb.socket_bind(self.commitreg.apb)
 
@@ -310,30 +311,32 @@ class BaseSystem(USIModule):
             print self.ram
             elf.load_elf_into_scireg(self._ram, storage, start)
             #if self.use_intrinsics:
-            elf.load_elf_intrinsics_to_processor(self._ram, [self.cpu], elf.intrinsic_groups[intrinsics])
+            intrinsics = dict(elf.intrinsic_groups['standard'])
+            intrinsics.update({'sensor_read': 'SensorIntrinsic32'})
+            elf.load_elf_intrinsics_to_processor(self._ram, [self.cpu], intrinsics)
         #shell_start()
 
 
 class LeonSystem(BaseSystem):
-    def __init__(self, name):
+    def __init__(self, name, idno):
         print " * Creating Leon Subsystem:"
-        super(LeonSystem, self).__init__(name)
+        super(LeonSystem, self).__init__(name, idno)
         self.cpu = module.Leon3("cpu", hindex = 1)
         #self.cpu.cpu.historyEnabled.cci_write("true")
         #self.cpu.gdb.cci_write("2000")
         self.connect_cpu()
 
 class MicroBlazeSystem(BaseSystem):
-    def __init__(self, name):
+    def __init__(self, name, idno):
         print " * Creating MicroBlaze Subsystem:"
-        super(MicroBlazeSystem, self).__init__(name)
+        super(MicroBlazeSystem, self).__init__(name, idno)
         self.cpu = module.MicroBlaze("cpu", hindex = 1)
         self.connect_cpu(True)
 
 class ARMSystem(BaseSystem):
-    def __init__(self, name):
+    def __init__(self, name, idno):
         print " * Creating ARM Subsystem:"
-        super(ARMSystem, self).__init__(name)
+        super(ARMSystem, self).__init__(name, idno)
         self.cpu = module.CortexA9("cpu", hindex = 1)
         self.connect_cpu(True)
 
@@ -341,33 +344,33 @@ class SupervisorSystem(USIModule):
     def __init__(self, name):
         print " * Creating Supervisor Subsystem:"
         super(SupervisorSystem, self).__init__()
-        voter = module.Voter("voter",
+        self.voter = module.Voter("voter",
             irq=4,       # Interuptline Used
-            wdog=0xFFF   # CLK Cycles to hit
+            wdog=0x21FF   # CLK Cycles to hit
         )
 
         for idx, name in enumerate(["leon", "microblaze", "arm"]):
             commitreg = usi.find(name + "_system.commitregister")[0]
             irqmp = usi.find(name + "_system.irqmp")[0]
-            voter.commit.signal_bind(commitreg.commit, idx)
-            #voter.irq.socket_bind(irqmp.irq_in, 4)
+            self.voter.commit.signal_bind(commitreg.commit, idx)
+            self.voter.irq.signal_bind(irqmp.irq_in, 4)
             #voter.reset(name->rst) # ?????? or Subsystem reseter ???? or interrupt ???
 
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
-    leonsystem = LeonSystem("leon_system")
+    leonsystem = LeonSystem("leon_system", 0)
     #leonsystem.store_elf("build/core/software/prom/ahbram/ahbram.prom", "build/core/software/grlib_tests/hello.sparc", True)
-    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
+    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
+    microblazesystem = LeonSystem("microblaze_system", 1)
+    microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    #microblazesystem = MicroBlazeSystem("microblaze_system")
+    #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
 
-    microblazesystem = MicroBlazeSystem("microblaze_system")
-    #microblazesystem = LeonSystem("microblaze_system")
-    microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
-    #microblazesystem.store_elf("./build/emc2quadcopter/software/hellospecial.sparc", True)
-
-    armsystem = ARMSystem("arm_system")
-    armsystem.store_elf("build/arm/prom/arm.prom", "build/core/software/grlib_tests/hello.arm", True)
-
+    armsystem = LeonSystem("arm_system", 2)
+    armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    #armsystem = ARMSystem("arm_system")
+    #armsystem.store_elf("build/arm/prom/arm.prom", "build/core/software/grlib_tests/hello.arm", True)
     supervisorsystem = SupervisorSystem("supervisor_system")
     #usi.add_to_reporting_list("leon_system.ahbctrl", usi.report.SC_WARNING, 0)
     #for vec in ['ivectorcache', 'dvectorcache']:

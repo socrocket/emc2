@@ -18,13 +18,12 @@ class SensorIntrinsic : public PlatformIntrinsic<wordSize> {
   public:
     SensorIntrinsic(sc_core::sc_module_name mn) : PlatformIntrinsic<wordSize>(mn) {}
     bool operator()() {
-      static int idx = 0;
       this->m_processor->pre_call();
       // Lets get the system call arguments
       std::vector<wordSize> callArgs = this->m_processor->read_args();
 
       // Assign value from array
-      int value = values[(idx=(idx+1)%10)];
+      int value = (int)readValue();
 
       this->m_processor->set_return_value(value);
       this->m_processor->return_from_call();
@@ -35,6 +34,13 @@ class SensorIntrinsic : public PlatformIntrinsic<wordSize> {
       }
 
       return true;
+    }
+
+    static unsigned int readValue() {
+       sc_time current_time = sc_time_stamp();
+       double magnitude = current_time.to_default_time_units();
+       uint64_t value = *reinterpret_cast<uint64_t*>(&magnitude);
+       return static_cast<uint32_t>((value & 0xFFFFFFFF) | ((value >>32)));
     }
 };
 

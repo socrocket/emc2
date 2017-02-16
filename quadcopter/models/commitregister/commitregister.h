@@ -35,7 +35,7 @@ class CommitRegister : public APBSlave, public CLKDevice {
 
     signal<std::pair<uint32_t, uint32_t> >::out commit;
 
-    CommitRegister(ModuleName name,  uint16_t pindex = 0, uint16_t paddr = 0, uint16_t pmask = 4095);
+    CommitRegister(ModuleName name,  uint16_t pindex = 0, uint16_t paddr = 0, uint16_t pmask = 4095, uint32_t id = 0);
 
     /// Free all counter and unregister all callbacks.
     ~CommitRegister();
@@ -43,10 +43,12 @@ class CommitRegister : public APBSlave, public CLKDevice {
     void init_registers();
 
     void commit_write();
+    void commit_read();
     virtual void dorst();
     void before_end_of_elaboration();
   private:
     const uint32_t m_nregisters;
+    sr_param<uint32_t> m_id;
 };
 
 #endif  // EMC2QUADCOPTER_MODELS_COMMITREGS_COMMITREGISTER_H_
