@@ -7,6 +7,7 @@ def build(self):
     self(
         target          = 'armmmucache',
         features        = 'cxx cxxstlib',
+        cxxflags        = '-std=gnu++11',
         source          = [
                             'mmucache/icio_payload_extension.cpp',
                             'mmucache/dcio_payload_extension.cpp',
