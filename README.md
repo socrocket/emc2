@@ -65,4 +65,4 @@ In my case: Visual Studio 2015 C++ (MSVS1400) / x86_64 (amd64)
 * Clone https://github.com/socrocket/greenlib.git into contrib/greenlib/
 * Open SoCRocket.sln in Visual Studio 2015
 * Compile usiexec
-* Execute usiexec
+* Execute x64/Debug/usiexec.exe -s <toplevel.py>
