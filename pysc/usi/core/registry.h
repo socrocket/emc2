@@ -15,6 +15,26 @@
 #include <systemc.h>
 #include "core/base/sc_find.h"
 
+#ifndef USIEXPORT
+#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(STATIC_LINKED)
+#define USIEXPORT
+#define USIIMPORT extern
+#else
+#define USIEXPORT __declspec(dllexport)
+#define USIIMPORT __declspec(dllimport)
+#endif
+#else
+#if defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+#define USIEXPORT __attribute__ ((visibility("default")))
+#define USIIMPORT extern
+#else
+#define USIEXPORT
+#define USIIMPORT export
+#endif
+#endif
+#endif
+
 extern "C" {
 #if ! defined(_object)
 struct _object;
@@ -61,7 +81,7 @@ class PyScModule {
 #else
 #define PYSC_REGISTER_MODULE(name) \
   extern "C" { \
-    void init_##name(void); \
+    USIEXPORT void init_##name(void); \
   }; \
   static PyScModule __pysc_module("_"#name, init_##name); \
   volatile PyScModule *__pysc_module_##name = &__pysc_module;
@@ -80,7 +100,7 @@ class PyScModule {
   PyScModule::prepareEmbedded();
 
 #define PYSC_HAS_MODULE(name) \
-  extern PyScModule *__pysc_module_##name; \
+  extern volatile PyScModule *__pysc_module_##name; \
   __pysc_module_##name->embedded = true;
 
 class PyScObjectGenerator {

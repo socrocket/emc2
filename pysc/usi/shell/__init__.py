@@ -24,8 +24,8 @@ def start(*k, **kw):
         rlcompleter = None
         readline = None
 
-    histfile = os.path.join(os.environ["HOME"], ".socrocket_history")
-    rcfile = os.path.join(os.environ["HOME"], ".socrocketrc")
+    histfile = os.path.join(os.environ.get("HOME", "."), ".socrocket_history")
+    rcfile = os.path.join(os.environ.get("HOME", "."), ".socrocketrc")
 
     if not CONSOLE:
 

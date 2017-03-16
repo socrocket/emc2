@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)pysc;$(SolutionDir)\contrib\systemc-2.3.2\src;C:\Python27\include;C:\local\boost_1_61_0;$(SolutionDir)\contrib\greenlib\greencontrol\include;$(SolutionDir)\contrib\greenlib\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;SC_INCLUDE_DYNAMIC_PROCESSES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4244;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

@@ -47,3 +47,22 @@ An introduction about TLM can be found at [Doulos](http://www.doulos.com/knowhow
 More informations are always available at the [Accellera](http://www.accellera.org/home/) page.
 Read further for more information. 
 
+PYSC Windows
+============
+
+Be carefull to install all dependencies for the correct compiler and architecture:
+In my case: Visual Studio 2015 C++ (MSVS1400) / x86_64 (amd64)
+
+* Please install the binary python dirstribution from here:
+  http://www.p-nand-q.com/python/building-python-27-with-visual_studio.html
+* Install Boost 1.61.0 (Last version with boost::any)
+  https://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/
+* Install Git: https://git-scm.com/
+* Clone SoCRocket: git clone https://github.com/socrocket/emc2.git -b feature/pysc-win32
+* Enter the repository directory
+* Make contrib Directory: mkdir -p contrib
+* Download SystemC 2.3.2 and extract it into: contrib/systemc-2.3.2/
+* Clone https://github.com/socrocket/greenlib.git into contrib/greenlib/
+* Open SoCRocket.sln in Visual Studio 2015
+* Compile usiexec
+* Execute usiexec

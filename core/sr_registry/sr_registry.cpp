@@ -102,13 +102,17 @@ bool SrModuleRegistry::load(std::string name) {
   //void * handle = dlopen(name.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #ifndef _WIN32
   void * handle = dlopen(name.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+  if (!handle) {
+	  std::cerr << "Could not open file: " << dlerror() << std::endl;
+	  return false;
+  }
 #else
   HMODULE handle = LoadLibrary(name.c_str());
-#endif
-  if(!handle) {
-    std::cerr << "Could not open file: " << dlerror() << std::endl;
-    return false;
+  if (!handle) {
+	  std::cerr << "Could not open file: " << name << std::endl;
+	  return false;
   }
+#endif
   SrModuleRegistry::m_libs->insert(std::make_pair(name, reinterpret_cast<void *>(handle)));
   return true;
 }
@@ -124,7 +128,7 @@ bool SrModuleRegistry::unload(std::string name) {
 #ifndef _WIN32
   int ret = dlclose(item->second);
 #else
-  bool ret FreeLibrary(reinterpret_cast<HMODULE>(item->second));
+  bool ret = FreeLibrary(reinterpret_cast<HMODULE>(item->second));
 #endif
   if(!ret) {
     return false;

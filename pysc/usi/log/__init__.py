@@ -3,7 +3,6 @@ import sys
 import usi
 from usi.tools.args import parser, get_args
 from . import console_reporter
-from . import db_reporter
 
 REPORT = console_reporter.report
 
@@ -17,6 +16,7 @@ def start_of_initialization(phase):
     verbosity = get_args().verbosity
     filename = None
     if reporter.startswith("hdf5="):
+        from . import db_reporter
         filename = reporter[5:]
         db_reporter.logger = db_reporter.Logger(filename)
         REPORT = db_reporter.report

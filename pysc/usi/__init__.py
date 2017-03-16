@@ -222,9 +222,10 @@ def on(phase, obj=None, debug=False, time_unit = NS, keyargs = {}):
 def onCommandFrom(obj, debug=False, time_unit=NS, keyargs={}):
     return on("command", obj, debug, time_unit, keyargs)
 
-from usi.tools import waf
 import os
 import imp
+"""
+from usi.tools import waf
 waf_out_dir = waf.get_lockfile_attr("out_dir")
 
 for filename in registry.api.get_module_files("module"):
@@ -234,7 +235,7 @@ for filename in registry.api.get_module_files("module"):
     #print fullname, pypath, pymodule
     if os.path.exists(pypath):
         imp.load_source(pymodule, pypath)
-
+"""
 default_pause_handler = start
 
 def set_default_pause_handler(function):

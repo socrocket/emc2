@@ -19,12 +19,20 @@
 #ifndef SR_REPORT_H_
 #define SR_REPORT_H_
 
+#if defined(__has_include) and __has_include(<any>)
+#include <any>
+using std::any;
+#else
 #include <boost/any.hpp>
+using boost::any;
+#endif
+
 #include <systemc.h>
 #include <map> // gcc-5 doesn't like vmap within this file
 #include <string>
 #include <iomanip>
 #include <iostream>  // NOLINT(readability/streams)
+#include <sstream>
 #include <streambuf>
 
 namespace v {
@@ -37,6 +45,10 @@ namespace v {
 #else
 #define VERBOSITY 4
 #endif
+#endif
+
+#ifdef WIN32
+#define __builtin_expect(x, y) x
 #endif
 
 class pair {
@@ -95,14 +107,14 @@ class pair {
     DOUBLE,
     TIME
   } type;
-  boost::any data;
+  any data;
 };
 
 };  // namespace v
 
 class sr_report : public sc_core::sc_report {
   public:
-#if SYSTEMC_VERSION != 20140417
+#if SYSTEMC_VERSION < 20140417
     sr_report() : sc_core::sc_report(), enabled(false) {};
 #endif
     sr_report(const sr_report &copy) : sc_core::sc_report(copy), enabled(copy.enabled), actions(copy.actions), pairs(copy.pairs) {}

@@ -52,6 +52,10 @@
 #if SYSTEMC_VERSION == 20140417
 #define SYSTEMC_API 231
 #endif
+// OSCI SystemC 2.3.2
+#if SYSTEMC_VERSION == 20170223
+#define SYSTEMC_API 231
+#endif
 // SystemC API to use must be defined at this point
 // include the detection above for other SystemC vendors to
 // define the SYSTEMC_API macro

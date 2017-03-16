@@ -39,7 +39,7 @@ PythonModule *PythonModule::globalInstance = NULL;
 PythonModule::PythonModule(
     sc_core::sc_module_name mn,
     const char* script_filename,
-    int argc,
+    const int argc,
     char **argv) :
         sc_core::sc_module(mn),
         initialised(false),
@@ -71,7 +71,7 @@ PythonModule::PythonModule(
     }
     PySys_SetArgvEx(argc, args, 0);
 #else
-    char *args[argc];
+    char **args = new char *[argc];
     for(int i = 0; i< argc; i++) {
         args[i] = argv[i];
     }
@@ -108,6 +108,7 @@ PythonModule::PythonModule(
 
     // Now add the virtual env to the sys.path to load pysc and other socrocket modules
     unblock_threads();
+#ifndef WIN32
 #if defined(MTI_SYSTEMC) || defined(NC_SYSTEMC)
     boost::filesystem::path builddir = findPath("build", __FILE__);
 #else
@@ -117,11 +118,19 @@ PythonModule::PythonModule(
     boost::filesystem::path builddir(outdir);
 #endif
     boost::filesystem::path venvactivate(".conf_check_venv/bin/activate_this.py");
-    std::string activate = (builddir/venvactivate).string();
-    exec(
-        "with open('"+activate+"') as script:\n" +
-        "    code = compile(script.read(), '"+activate+"', 'exec')\n" +
-        "    exec(code, dict(__file__='"+activate+"'))");
+	std::string activate = (builddir / venvactivate).string();
+	exec(
+		"with open('" + activate + "') as script:\n" +
+		"    code = compile(script.read(), '" + activate + "', 'exec')\n" +
+		"    exec(code, dict(__file__='" + activate + "'))");
+#else  \\ WIN32
+	boost::filesystem::path builddir = boost::filesystem::current_path();
+	std::cout << "CWD " << builddir << std::endl;
+	add_to_pythonpath((builddir / "pysc").string());
+	add_to_pythonpath((builddir / "core").string());
+	//boost::filesystem::path venvactivate("contrib");
+	//venvactivate = venvactivate / "env" / "Scripts" / "activate_this.py";
+#endif  \\ WIN32
     block_threads();
 
 #ifndef MTI_SYSTEMC
@@ -208,7 +217,6 @@ void PythonModule::exec(std::string statement) {
 
     unblock_threads();
 }
-
 void PythonModule::add_to_pythonpath(std::string path) {
   if(!initialised) {
       return;

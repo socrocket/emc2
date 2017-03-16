@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Interface Files">
+      <UniqueIdentifier>{6eb72f9c-fe6c-4344-ab56-f4bb780ec1ae}</UniqueIdentifier>
+      <Extensions>*.i</Extensions>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{dea1c104-332a-462c-8517-43c77cb52d63}</UniqueIdentifier>
+      <Extensions>*.i</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Python Files">
+      <UniqueIdentifier>{fe422bda-e646-4072-8cd5-f6df073c8106}</UniqueIdentifier>
+      <Extensions>*.py</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="usi\core\api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usi\core\delegate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usi\core\module.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usi\core\registry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usi\api\cci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usi\api\systemc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="usi\api\amba.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi\api\greensocket.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi\api\intrinsics.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi\api\mtrace.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi\sc_object.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi\api\tlmsockets.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi.i">
+      <Filter>Interface Files</Filter>
+    </None>
+    <None Include="usi\__init__.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\sc_module.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\sc_object.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\systemc.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\usage.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\log\__init__.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\log\console_reporter.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\log\db_reporter.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\log\full_console_reporter.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\log\log_query.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\log\printdb.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\shell\__init__.py">
+      <Filter>Python Files</Filter>
+    </None>
+    <None Include="usi\shell\console.py">
+      <Filter>Python Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="usi\core\api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\core\module.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\core\registry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\api\cci.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\api\systemc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\api\cci_wrap.cxx">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\api\delegate_wrap.cxx">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\api\sc_module_wrap.cxx">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usi\api\systemc_wrap.cxx">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="usi\api\cci.i">
+      <Filter>Interface Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="usi\api\delegate.i">
+      <Filter>Interface Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="usi\api\sc_module.i">
+      <Filter>Interface Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="usi\api\systemc.i">
+      <Filter>Interface Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
