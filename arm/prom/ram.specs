@@ -1,7 +1,0 @@
-%rename link                old_link
-
-*link:
--T arm/prom/link.ld%s %(old_link)
-
-*startfile:
-raminit%O%s crti%O%s crtbegin%O%s ramcrt0%O%s syscalls%O%s
