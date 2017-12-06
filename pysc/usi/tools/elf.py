@@ -71,45 +71,53 @@ parser.add_argument('-e', '--loadelf', dest='loadelf', action='append', default=
 parser.add_argument('-i', '--intrinsics', dest='intrinsics', action='append', default=[], type=str, help='Load intrinsics for an elf file to a processor')
 
 def load_elf_into_scireg(filename, stores, base):
-    with open(filename, "rb") as stream:
-        elf = ELFFile(stream)
-        for section in elf.iter_sections():
-            if section.header["sh_flags"] & constants.SH_FLAGS.SHF_ALLOC:
-                addr = section.header["sh_addr"] - base
-                data = section.data()
+    try:
+        with open(filename, "rb") as stream:
+            elf = ELFFile(stream)
+            for section in elf.iter_sections():
+                if section.header["sh_flags"] & constants.SH_FLAGS.SHF_ALLOC:
+                    addr = section.header["sh_addr"] - base
+                    data = section.data()
 
-                if isinstance(stores, usi.USIDelegate):
-                    stores = [stores]
-                for store in stores:
-                    if isinstance(store, str):
-                        store = store.encode('utf-8')
-                    print("Loading %s section %s into %s at address %s and offset %s" % (filename, section.name, store.name(), base, addr))
-                    if sys.version_info >= (3,0):
-                        store.scireg_write(data, int(addr))
-                    else:
-                        store.scireg_write(data, long(addr))
+                    if isinstance(stores, usi.USIDelegate):
+                        stores = [stores]
+                    for store in stores:
+                        if isinstance(store, str):
+                            store = store.encode('utf-8')
+                        print("Loading %s section %s into %s at address %s and offset %s" % (filename, section.name, store.name(), base, addr))
+                        if sys.version_info >= (3,0):
+                            store.scireg_write(data, int(addr))
+                        else:
+                            store.scireg_write(data, long(addr))
+    except IOError as err:
+        print("ERROR: Cannot open ELF File to load into ScIReg '{}'".format(filename))
+        sys.exit(1)
 
 def load_elf_intrinsics_to_processor(filename, cpus, intrinsics):
-    with open(filename, "rb") as stream:
-        elf = ELFFile(stream)
-        for section in elf.iter_sections():
-            if section.header['sh_type'] == 'SHT_SYMTAB':
-                for name, klass, entry in [(name, intrinsics[name], entry) for name, entry in [(symbol.name.decode('utf-8'), symbol.entry) for symbol in section.iter_symbols()] if name in list(intrinsics.keys())]:
-                    for cpu in cpus:
-                        intrinsic_manager = None
-                        if 'register_intrinsic' in dir(cpu):
-                            intrinsic_manager = cpu
-                        else:
-                            for child in cpu.children():
-                                if child.basename() == 'intrinsics' and 'register_intrinsic' in dir(child):
-                                    intrinsic_manager = child
-                                    break
+    try:
+        with open(filename, "rb") as stream:
+            elf = ELFFile(stream)
+            for section in elf.iter_sections():
+                if section.header['sh_type'] == 'SHT_SYMTAB':
+                    for name, klass, entry in [(name, intrinsics[name], entry) for name, entry in [(symbol.name.decode('utf-8'), symbol.entry) for symbol in section.iter_symbols()] if name in list(intrinsics.keys())]:
+                        for cpu in cpus:
+                            intrinsic_manager = None
+                            if 'register_intrinsic' in dir(cpu):
+                                intrinsic_manager = cpu
+                            else:
+                                for child in cpu.children():
+                                    if child.basename() == 'intrinsics' and 'register_intrinsic' in dir(child):
+                                        intrinsic_manager = child
+                                        break
 
-                        if not intrinsic_manager:
-                            print("intrinsic manager for cpu %s not found" % cpu.name())
-                        print("Intrinsic on symbol %s at address %x is inserted with class %s on CPU %s" % (name, entry['st_value'], klass, cpu.name()))
-                        intrinsic_instance = registry.api.create_object_by_name('PlatformIntrinsic', klass, str(name))
-                        intrinsic_manager.register_intrinsic(entry['st_value'], intrinsic_instance)
+                            if not intrinsic_manager:
+                                print("intrinsic manager for cpu %s not found" % cpu.name())
+                            print("Intrinsic on symbol %s at address %x is inserted with class %s on CPU %s" % (name, entry['st_value'], klass, cpu.name()))
+                            intrinsic_instance = registry.api.create_object_by_name('PlatformIntrinsic', klass, str(name))
+                            intrinsic_manager.register_intrinsic(entry['st_value'], intrinsic_instance)
+    except IOError as err:
+        print("ERROR: Cannot open ELF File to load intrinsic addesses '{}'".format(filename))
+        sys.exit(1)
 
 @usi.on('start_of_simulation')
 def start_of_simulation(*k, **kw):

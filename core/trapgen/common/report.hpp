@@ -44,6 +44,7 @@
 #include <iostream>
 #include <exception>
 #include <stdexcept>
+#include <cstdlib>
 
 namespace trap {
 
@@ -120,21 +121,53 @@ class Log {
 }; // class Log
 
 #define LOG(level) \
-if (level <= trap::Log::get_level()) \
-trap::Log().get_stream(level, __FILE__, __LINE__)
-
-#define THROW_EXCEPTION(msg) \
-trap::Log().get_stream(trap::EXCEPTION, __FILE__, __LINE__);
-
-#define THROW_ERROR(msg) \
-if (trap::ERROR <= trap::Log::get_level()) \
-trap::Log().get_stream(trap::ERROR, __FILE__, __LINE__);
+  if (level <= trap::Log::get_level()) \
+    trap::Log().get_stream(level, __FILE__, __LINE__)
 
 #define THROW_WARNING(msg) \
-if (trap::WARNING <= trap::Log::get_level()) \
-trap::Log().get_stream(trap::WARNING, __FILE__, __LINE__);
+  if (trap::WARNING <= trap::Log::get_level()) \
+    trap::Log().get_stream(trap::WARNING, __FILE__, __LINE__);
 
 } // namespace trap
 
 /// ****************************************************************************
+
+namespace trap {
+inline void throw_error_helper(std::string message){
+    std::cerr << message << std::endl;
+    ::exit(0);
+}
+
+inline void throw_exception_helper(std::string message){
+    throw std::runtime_error(message);
+}
+}
+
+#ifndef __GNUC__
+#ifndef __PRETTY_FUNCTION__
+#ifdef __FUNCDNAME__
+#define __PRETTY_FUNCTION__ __FUNCDNAME__
+#else
+#define __PRETTY_FUNCTION__ "NONAME"
+#endif
+#endif
+#endif
+
+#ifdef MAKE_STRING
+#undef MAKE_STRING
+#endif
+#define MAKE_STRING(msg)  (((std::ostringstream &)((std::ostringstream() << '\x0') << msg)).str().substr(1))
+
+#ifdef THROW_EXCEPTION
+#undef THROW_EXCEPTION
+#endif
+#define THROW_EXCEPTION(msg) (trap::throw_exception_helper(MAKE_STRING("At: function " << __PRETTY_FUNCTION__ << \
+  " file: " << __FILE__ << ":" << __LINE__ << " --> " << msg)))
+
+#ifdef THROW_ERROR
+#undef THROW_ERROR
+#endif
+#define THROW_ERROR(msg) (trap::throw_error_helper(MAKE_STRING("At: function " << __PRETTY_FUNCTION__ << " file: " << \
+  __FILE__ << ":" << __LINE__ << " --> " << msg << std::endl)))
+
 #endif // TRAP_REPORT_HPP

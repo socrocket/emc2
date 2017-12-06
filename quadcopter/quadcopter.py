@@ -250,6 +250,7 @@ class BaseSystem(USIModule):
         # Connect to ahbctrl and clock
         self.ahbctrl.ahbOUT.socket_bind(self.ahbram.ahb)
         """
+        """
         self.commitreg = module.CommitRegister("commitregister",
             pindex = self.apb_id(),
             paddr = 0x008,
@@ -257,6 +258,7 @@ class BaseSystem(USIModule):
             sysindex = idno
         )
         self.apbctrl.apb.socket_bind(self.commitreg.apb)
+        """
 
     def master_id(self):
         if not hasattr(self, '_master_id'):
@@ -359,19 +361,19 @@ class SupervisorSystem(USIModule):
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
     leonsystem = LeonSystem("leon_system", 0)
-    #leonsystem.store_elf("build/core/software/prom/ahbram/ahbram.prom", "build/core/software/grlib_tests/hello.sparc", True)
-    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    leonsystem.store_elf("build/core/software/prom/sram/sram.prom", "build/core/software/grlib_tests/hello.sparc", True)
+    #leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
-    microblazesystem = LeonSystem("microblaze_system", 1)
-    microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    #microblazesystem = LeonSystem("microblaze_system", 1)
+    #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     #microblazesystem = MicroBlazeSystem("microblaze_system")
     #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
 
-    armsystem = LeonSystem("arm_system", 2)
-    armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    #armsystem = LeonSystem("arm_system", 2)
+    #armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     #armsystem = ARMSystem("arm_system")
     #armsystem.store_elf("build/arm/prom/arm.prom", "build/core/software/grlib_tests/hello.arm", True)
-    supervisorsystem = SupervisorSystem("supervisor_system")
+    #supervisorsystem = SupervisorSystem("supervisor_system")
     #usi.add_to_reporting_list("leon_system.ahbctrl", usi.report.SC_WARNING, 0)
     #for vec in ['ivectorcache', 'dvectorcache']:
     #    caches = usi.find("leon_system.cpu.{}.*".format(vec))

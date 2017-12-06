@@ -196,7 +196,7 @@ unsigned core_armcortexa9_funclt::Instruction::Rmode(
       reg_index += 12;
       break;
       default:
-      THROW_EXCEPTION("Invalid execution mode " << next_mode << " while updating the register banks.");
+      THROW_EXCEPTION("Invalid execution mode " << mode << " while updating the register banks.");
       break;
     }
   } else if ((reg_index > 7) && (reg_index < 15) && (mode == (unsigned)EXECMODE::FIQ))
