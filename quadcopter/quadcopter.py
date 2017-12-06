@@ -307,10 +307,8 @@ class BaseSystem(USIModule):
             intrinsics = 'underscore'
             storage = self.sram
         if hasattr(self, '_rom'):
-            print self.rom
             elf.load_elf_into_scireg(self._rom, self.rom, 0x00000000)
         if hasattr(self, '_ram'):
-            print self.ram
             elf.load_elf_into_scireg(self._ram, storage, start)
             #if self.use_intrinsics:
             intrinsics = dict(elf.intrinsic_groups['standard'])
@@ -361,7 +359,7 @@ class SupervisorSystem(USIModule):
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
     leonsystem = LeonSystem("leon_system", 0)
-    leonsystem.store_elf("build/core/software/prom/sram/sram.prom", "build/core/software/grlib_tests/hello.sparc", True)
+    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
     #microblazesystem = LeonSystem("microblaze_system", 1)
