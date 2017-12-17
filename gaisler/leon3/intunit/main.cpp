@@ -51,7 +51,7 @@
 #include "core/trapgen/modules/sparse_memory_lt.hpp"
 #include "gaisler/leon3/intunit/processor.hpp"
 #include "gaisler/leon3/intunit/instructions.hpp"
-#include "core/trapgen/utils/trap_utils.hpp"
+//#include "core/trapgen/utils/trap_utils.hpp"
 #include "core/trapgen/elfloader/elfFrontend.hpp"
 #include "core/trapgen/elfloader/execLoader.hpp"
 #include <stdexcept>
