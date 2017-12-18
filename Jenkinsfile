@@ -22,5 +22,9 @@ node('rocketbrew.c0e.de') {
     stage('Documents') {
       sh './waf docs'
     }
+    stage('Testing') {
+      sh 'python performance_test.py --asuser "./build/pysc/usiexec/usiexec.platform -s quadcopter/quadcopter.py"'
+
+    }
   }
 }
