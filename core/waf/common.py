@@ -4,10 +4,11 @@ from __future__ import print_function
 import os
 import fnmatch
 import subprocess
+import sys
 from core.tools.repository import read_repos
 from waflib import Errors, Context, Utils, Options, Build, Configure, TaskGen
 
-def options(self): 
+def options(self):
     """Setting default waf options right for SoCRocket"""
     #common = self.get_option_group("--prefix")
     #common.set_title("Common Configuration Options")
@@ -21,9 +22,9 @@ def options(self):
     #    """All following options can be provided to the configure rule."""
     #)
     self.add_option(
-        "--verbosity", 
-        dest="verbosity", 
-        help="Defines the verbosity for the build", 
+        "--verbosity",
+        dest="verbosity",
+        help="Defines the verbosity for the build",
         default=os.environ.get("VERBOSITY",'4')
     )
 
@@ -31,7 +32,7 @@ def configure(self):
     """Standard tools needed for fetching and building"""
     print("""
       To compile SoCRocket you need to have installed a basic Unix system.
-      Atleast it needs to contain: 
+      Atleast it needs to contain:
 
         nm, git, patch, make, wget / curl, tar, ln, bash ans swig, python.
 
@@ -40,7 +41,7 @@ def configure(self):
         libreadline-dev
 
       Furthermore you need to provide cross compiler for sparc. If not provided
-      we will try to fetch them from Gaisler (sparc-elf-gcc). But you will need 
+      we will try to fetch them from Gaisler (sparc-elf-gcc). But you will need
       to provice a 32bit environment to execute the precompiled toolchain.
 
       For the ipython support blas and lapack needs to be installed.
@@ -55,6 +56,18 @@ def configure(self):
     self.find_program('tar', var='TAR', mandatory=True, okmsg="ok")
     self.find_program('ln', var='LN', mandatory=True, okmsg="ok")
     self.find_program('bash', var='BASH', mandatory=True, okmsg="ok")
+    self.find_program('perf', var='PERF', mandatory=False, okmsg="ok")
+    if 'PERF' not in self.env:
+        print ("""
+        For any performance record with perf you have to install:
+
+         linux-tools-common linux-tools-generic linux-tools-`uname -r`
+          """)
+
+    pythonversion = str(sys.version_info[0]) + '.' + str(sys.version_info[1])
+
+    #necessary for performance tests
+    self.find_program('python%s-dbg'%pythonversion, var='PYTHON-DBG', mandatory=False, okmsg="ok")
 
     if self.options.jobs:
         self.env["JOBS"] = "-j%d" % self.options.jobs
@@ -90,15 +103,15 @@ def conf(f):
 # Find all project targets:
 # ./waf list
 #
-#def target_list(ctx): 
+#def target_list(ctx):
 #  """returns a list of all targets"""
 #
-#  bld = Build.BuildContext() 
-#  proj = Environment.Environment(Options.lockfile) 
-#  bld.load_dirs(proj['srcdir'], proj['blddir']) 
+#  bld = Build.BuildContext()
+#  proj = Environment.Environment(Options.lockfile)
+#  bld.load_dirs(proj['srcdir'], proj['blddir'])
 #  bld.load_envs()
 #
-#  bld.add_subdirs([os.path.split(Utils.g_module.root_path)[0]]) 
+#  bld.add_subdirs([os.path.split(Utils.g_module.root_path)[0]])
 #
 #  nlibs = set([])
 #  ntests = set([])
@@ -111,14 +124,14 @@ def conf(f):
 #        napps.add(x.name or x.target)
 #      elif "cstaticlib" in x.features:
 #        nlibs.add(x.name or x.target)
-#        
+#
 #    except AttributeError:
 #      pass
 #
 #  libs  = list(nlibs)
 #  tests = list(ntests)
 #  apps = list(napps)
-#  
+#
 #  libs.sort()
 #  tests.sort()
 #  apps.sort()
@@ -131,7 +144,7 @@ def conf(f):
 #  for name in tests:
 #    print " ", name
 #  print ""
-#  
+#
 #  print "Executable targets:"
 #  for name in apps:
 #    print " ", name
@@ -149,7 +162,7 @@ def get_subdirs(self,path='.'):
     """Return a list of all subdirectories from path"""
     REPOS = read_repos(Context.top_dir)
     result = [name
-            for name in os.listdir(path) 
+            for name in os.listdir(path)
                 if os.path.isfile(os.path.join(path, name, "wscript")) and (not os.path.relpath(
                     os.path.join(path,name), Context.top_dir) in REPOS.keys() or name == 'core') and not name.startswith('.')]
     return result
@@ -167,8 +180,8 @@ conf(recurse_all_tests)
 
 def get_testdirs(path='.'):
     """Return a list of all test subdirectories of path"""
-    return [os.path.join(name, "tests") 
-              for name in os.listdir(path) 
+    return [os.path.join(name, "tests")
+              for name in os.listdir(path)
                   if os.path.isfile(
                       os.path.join(path, name, "tests", "wscript"))]
 
@@ -176,7 +189,7 @@ def getdirs(base = '.', excludes = list()):
     """
     For external resources
     Not used at the moment, maybe with grlib
-    Return recursively all subdirectories of base, 
+    Return recursively all subdirectories of base,
     exept directories matching excludes.
     """
     result = []
@@ -193,13 +206,13 @@ def getfiles(base = '.', ext = list('*'), excludes = list()):
         for cdir in dirs:
             if any([fnmatch.fnmatchcase(os.path.join(root, cdir), exc) for exc in excludes]):
                 del(cdir)
-        
+
         for cfile in files:
             if any([fnmatch.fnmatchcase(os.path.join(root, cfile), exc) for exc in excludes]):
                 continue
-            if any([fnmatch.fnmatchcase(os.path.join(root, cfile), e) for e in ext]): 
+            if any([fnmatch.fnmatchcase(os.path.join(root, cfile), e) for e in ext]):
                 result.append(os.path.join(root, cfile))
-            
+
     return result
 
 @TaskGen.before('process_source', 'process_rule')
@@ -209,4 +222,3 @@ def export_has_define(self):
   defines = Utils.to_list(defines)
   defines += ["HAVE_" + self.target.replace(".", "_").upper()]
   setattr(self, "export_defines", defines)
-

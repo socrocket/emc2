@@ -31,7 +31,9 @@ REPOSITORY_TOOLS = [
     'cpplint',
     'oclint',
     'clang_compilation_database',
-    'sparcelf'
+    'sparcelf',
+    'libelf',
+    'flamegraph'
 ]
 
 def build(self):

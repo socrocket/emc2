@@ -6,10 +6,10 @@ from waflib.Errors import ConfigurationError
 
 def options(self):
     self.add_option(
-        '--with-amba', 
-        type='string', 
-        help='Basedir of your AmbaKit installation', 
-        dest='ambadir', 
+        '--with-amba',
+        type='string',
+        help='Basedir of your AmbaKit installation',
+        dest='ambadir',
         default=os.environ.get("AMBA_HOME")
     )
 
@@ -57,7 +57,7 @@ def find(self, path = None):
       use          = 'BOOST SYSTEMC TLM GREENSOCS AMBA',
       okmsg        = "ok",
     )
-    
+
 def configure(self):
     try:
         if self.options.ambadir:
@@ -70,9 +70,9 @@ def configure(self):
         #try:
             self.dep_fetch(
                 name    = name,
-                version = version, 
+                version = version,
                 tar     = "amba_socket-1.0.15.tgz",
-                tar_url = "amba_socket-1.0.15.tgz",
+                tar_url = "https://git.greensocs.com/chef/amba-kit/raw/master/files/default/amba_socket-1.0.15.tgz",
                 base    = name,
                 patch   = [os.path.join(self.path.abspath(), "core", "waf", "ambakit-2015-10-16-rmeyer.patch")]
             )

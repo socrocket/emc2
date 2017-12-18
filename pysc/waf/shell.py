@@ -31,7 +31,7 @@ packages = [
     "scipy==0.12.1",
     "numexpr==2.4",
     "pandas==0.14.1",
-    "tables==3.1.1",
+    "tables==3.4.2",
     "future"
 ]
 

@@ -359,22 +359,24 @@ class SupervisorSystem(USIModule):
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
     leonsystem = LeonSystem("leon_system", 0)
-    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
+    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/trapgen/matrix.sparc", True)
     #leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
     #microblazesystem = LeonSystem("microblaze_system", 1)
-    #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/trapgen/hanoi.sparc", True)
     #microblazesystem = MicroBlazeSystem("microblaze_system")
     #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
-
+    #"hello.microblaze",
+    #microblazesystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
+    #armsystem = LeonSystem("a_system", 1)
+    #armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/trapgen/hanoi.sparc", True)
     #armsystem = LeonSystem("arm_system", 2)
-    #armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
+    #armsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #armsystem = ARMSystem("arm_system")
-    #armsystem.store_elf("build/arm/prom/arm.prom", "build/core/software/grlib_tests/hello.arm", True)
+    #armsystem.store_elf("build/arm/prom/arm.prom", "build/core/software/grlib_tests/hello.sparc", True)
     #supervisorsystem = SupervisorSystem("supervisor_system")
-    #usi.add_to_reporting_list("leon_system.ahbctrl", usi.report.SC_WARNING, 0)
-    #for vec in ['ivectorcache', 'dvectorcache']:
-    #    caches = usi.find("leon_system.cpu.{}.*".format(vec))
-    #    usi.add_to_reporting_list(caches, usi.report.SC_WARNING, 0)
+    usi.add_to_reporting_list("leon_system.ahbctrl", usi.report.SC_WARNING, 0)
+    for vec in ['ivectorcache', 'dvectorcache']:
+       caches = usi.find("leon_system.cpu.{}.*".format(vec))
+       usi.add_to_reporting_list(caches, usi.report.SC_WARNING, 0)
 usi.report.set_filter_to_whitelist(True)
-

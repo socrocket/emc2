@@ -7,12 +7,15 @@
 # @date 2010-2014
 # @copyright All rights reserved.
 #            Any reproduction, use, distribution or disclosure of this
-#            program, without the express, prior written consent of the 
+#            program, without the express, prior written consent of the
 #            authors is strictly prohibited.
 # @author Rolf Meyer
 import usi
 from usi.shell import start as shell_start
 from usi.systemc import NS as SC_NS
+from sr_registry import api
+
+api.load('./build/gaisler/libsr_gaisler.so')
 
 @usi.on('start_of_initialization')
 def configuration(*k, **kw):
@@ -338,4 +341,3 @@ def configuration(*k, **kw):
     irqmp.rst.signal_bind(reset.rst)
 
     #shell_start()
-
