@@ -34,7 +34,7 @@ def performance_test_dot ( name ):
 def performance_test_txt ( name, rootuser ):
     #perf report --sort comm,dso | c++filt >> output.txt
     print "Generating Report txt"
-    with open(name +"_report.txt","w") as cg_report_file:
+    with open(name + "_report.txt","w") as cg_report_file:
         if rootuser:
             txt_p1 = subprocess.Popen([#"sudo",
             "perf",
@@ -97,20 +97,20 @@ name = os.path.basename(origin_norm)
 
 # Update current working directory
 wd = os.getcwd()+os.sep
+print "Current Working Directory: " + wd
 
 # Set User mode
 asroot = True if args.asroot else False
 
-print "collecting performance data of %s" %(origin_norm)
-
+print "Collect performance data:"
 perf_record = "perf record --call-graph dwarf -F 99 %s" %(origin_norm) if asroot else "sudo perf record --call-graph dwarf -F 99 %s" %(origin_norm)
-
-print perf_record
+print " " + perf_record
 pt_p0 = subprocess.Popen(perf_record.split())
 pt_p0.wait()
 
 # If performance data were collected
 if os.stat('perf.data').st_size>0:
+    print "Prepare performance data"
 
     with open(name + ".perf", "w") as name_perf_file:
         # If script is run as root
@@ -136,13 +136,15 @@ if os.stat('perf.data').st_size>0:
                 stdout = name_perf_file)
             pt_p2.communicate()[0]
             pt_p2.wait()
-    if os.stat(name +'.perf').st_size==0:
-        print name+".perf not found"
+
+    if os.stat(name +'.perf').st_size == 0:
+        print name + ".perf not found"
+        print "Performance data cannot be analysed."
     else:
         #post_processing
         performance_test_flame(name)
-        performance_test_dot(name)
-        performance_test_txt(name,asroot)
+        performance_test_dot( name )
+        performance_test_txt( name, asroot )
         performance_test_txt_stat(name,asroot, origin_norm)
 
         print "Deleting system files"

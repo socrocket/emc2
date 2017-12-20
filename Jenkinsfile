@@ -19,9 +19,9 @@ node('rocketbrew.c0e.de') {
     stage('Build') {
       sh './waf build --nosystests'
     }
-    //stage('Documents') {
-    //  sh './waf docs'
-    //}
+    stage('Documents') {
+      sh './waf docs'
+    }
     stage('Testing') {
       sh 'python performance_test.py --asroot "./build/pysc/usiexec/usiexec.platform -s quadcopter/quadcopter.py"'
       archiveArtifacts 'quadcopter.py_*'
