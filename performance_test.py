@@ -120,7 +120,7 @@ if os.stat('perf.data').st_size>0:
                 "script",
                 "-v"],
                  stdout = subprocess.PIPE)
-            pt_p2 = subprocess.Popen(["c++filt"],
+            pt_p2 = subprocess.Popen(["""c++filt"""],
                  stdin = pt_p1.stdout,
                  stdout = name_perf_file)
             pt_p2.communicate()[0]
@@ -133,7 +133,7 @@ if os.stat('perf.data').st_size>0:
                 "script"
                 "-v"],
                  stdout = subprocess.PIPE)
-            pt_p2 = subprocess.Popen(["c++filt"],
+            pt_p2 = subprocess.Popen(["""c++filt"""],
                 stdin = pt_p1.stdout,
                 stdout = name_perf_file)
             pt_p2.communicate()[0]
@@ -147,7 +147,7 @@ if os.stat('perf.data').st_size>0:
         performance_test_flame(name)
         performance_test_dot( name )
         performance_test_txt( name, asroot )
-        
+
         print "Deleting system files"
         os.remove("perf.data")
         os.remove(name+".perf")
