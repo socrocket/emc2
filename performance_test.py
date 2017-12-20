@@ -117,7 +117,8 @@ if os.stat('perf.data').st_size>0:
         if asroot:
             pt_p1 = subprocess.Popen([
                 "perf", # converts perf.data into readable file
-                "script"],
+                "script",
+                "-v"],
                  stdout = subprocess.PIPE)
             pt_p2 = subprocess.Popen(["c++filt"],
                  stdin = pt_p1.stdout,
@@ -129,7 +130,8 @@ if os.stat('perf.data').st_size>0:
         else:
             pt_p1 = subprocess.Popen(["sudo",
                 "perf", # converts perf.data into readable file
-                "script"],
+                "script"
+                "-v"],
                  stdout = subprocess.PIPE)
             pt_p2 = subprocess.Popen(["c++filt"],
                 stdin = pt_p1.stdout,
