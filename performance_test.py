@@ -119,12 +119,15 @@ if os.stat('perf.data').st_size>0:
                 "perf", # converts perf.data into readable file
                 "script",
                 "-v"],
-                 stdout = subprocess.PIPE)
-            pt_p2 = subprocess.Popen(["""c++filt"""],
-                 stdin = pt_p1.stdout,
+                 #stdout = subprocess.PIPE)
                  stdout = name_perf_file)
-            pt_p2.communicate()[0]
-            pt_p2.wait()
+            pt_p1.communicate()[0]
+            pt_p1.wait()
+            #pt_p2 = subprocess.Popen(["c++filt"],
+                #stdin = pt_p1.stdout,
+                #stdout = name_perf_file)
+            #pt_p2.communicate()[0]
+            #pt_p2.wait()
 
         # Get super user permission
         else:
@@ -132,12 +135,15 @@ if os.stat('perf.data').st_size>0:
                 "perf", # converts perf.data into readable file
                 "script"
                 "-v"],
-                 stdout = subprocess.PIPE)
-            pt_p2 = subprocess.Popen(["""c++filt"""],
-                stdin = pt_p1.stdout,
-                stdout = name_perf_file)
-            pt_p2.communicate()[0]
-            pt_p2.wait()
+                 #stdout = subprocess.PIPE)
+                 stdout = name_perf_file)
+            pt_p1.communicate()[0]
+            pt_p1.wait()
+            #pt_p2 = subprocess.Popen(["c++filt"],
+                #stdin = pt_p1.stdout,
+                #stdout = name_perf_file)
+            #pt_p2.communicate()[0]
+            #pt_p2.wait()
 
     if os.stat(name +'.perf').st_size == 0:
         print name + ".perf not found"
