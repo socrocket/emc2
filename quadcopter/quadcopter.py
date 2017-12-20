@@ -359,7 +359,7 @@ class SupervisorSystem(USIModule):
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
     leonsystem = LeonSystem("leon_system", 0)
-    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/trapgen/matrix.sparc", True)
+    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/trapgen/hanoi.sparc", True)
     #leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
     #microblazesystem = LeonSystem("microblaze_system", 1)
