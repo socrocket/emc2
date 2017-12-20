@@ -147,13 +147,12 @@ if os.stat('perf.data').st_size>0:
         performance_test_flame(name)
         performance_test_dot( name )
         performance_test_txt( name, asroot )
-        performance_test_txt_stat(name,asroot, origin_norm)
-
+        
         print "Deleting system files"
         os.remove("perf.data")
         os.remove(name+".perf")
         os.remove(name+".perf.folded")
-
-
 else:
     print "No samples recorded"
+
+performance_test_txt_stat(name,asroot, origin_norm)
