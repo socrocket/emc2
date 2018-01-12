@@ -37,4 +37,4 @@ def build(bld):
             use             = 'BOOST SYSTEMC TLM AMBA GREENSOCS ELF_LIB',
             install_path    = '${PREFIX}/lib',
         )
-
+        bld.recurse(os.path.join('libelf', 'elfloader'))

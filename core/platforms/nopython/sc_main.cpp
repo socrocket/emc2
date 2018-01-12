@@ -117,87 +117,45 @@ class irqmp_rst_stimuli : sc_core::sc_module {
     }
 };
 
-class write_data_to_rom : sc_core::sc_module {
+class write_memory_stimuli : sc_core::sc_module {
   public:
-    Memory &rom;
-
-    // PROM
-    unsigned int p_mctrl_prom_addr;
-    unsigned int p_mctrl_prom_mask;
-    std::string p_mctrl_prom_elf;
-
-    write_data_to_rom ( sc_core::sc_module_name mn,
-       Memory &_rom,
-       unsigned int _p_mctrl_prom_addr,
-       unsigned int _p_mctrl_prom_mask,
-       std::string _p_mctrl_prom_elf) :
-          sc_core::sc_module(mn),
-          rom(_rom),
-          p_mctrl_prom_addr(_p_mctrl_prom_addr),
-          p_mctrl_prom_mask(_p_mctrl_prom_mask),
-          p_mctrl_prom_elf(_p_mctrl_prom_elf){
-
-          }
-
-    void start_of_simulation() {
-      if(!((std::string)p_mctrl_prom_elf).empty()) {
-        if(boost::filesystem::exists(boost::filesystem::path((std::string)p_mctrl_prom_elf))) {
-          uint8_t *execData;
-          ExecLoader prom_loader(p_mctrl_prom_elf);
-          execData = prom_loader.get_program_data();
-
-          for(unsigned int i = 0; i < prom_loader.get_program_dim(); i++) {
-            rom.write_dbg(prom_loader.get_data_start() + i - ((((unsigned int)p_mctrl_prom_addr)&((unsigned int)p_mctrl_prom_mask))<<20), execData[i]);
-          }
-        } else {
-          v::warn << "rom" << "File " << p_mctrl_prom_elf << " does not exist!" << v::endl;
-          exit(1);
-        }
-      }
-    }
-};
-
-class write_data_to_sdram : sc_core::sc_module {
-  public:
-    Memory &sdram;
+    Memory &memory;
 
     // SDRAM
-    unsigned int p_mctrl_ram_addr;
-    unsigned int p_mctrl_ram_mask;
-    std::string p_mctrl_ram_sdram_elf;
+    unsigned int p_mctrl_mem_addr;
+    unsigned int p_mctrl_mem_mask;
+    std::string p_mctrl_mem_elf;
 
-    write_data_to_sdram(sc_core::sc_module_name mn,
-      Memory &_sdram,
-      unsigned int _p_mctrl_ram_addr,
-      unsigned int _p_mctrl_ram_mask,
-      std::string _p_mctrl_ram_sdram_elf) :
+    write_memory_stimuli(sc_core::sc_module_name mn,
+      Memory &_memory,
+      unsigned int _p_mctrl_mem_addr,
+      unsigned int _p_mctrl_mem_mask,
+      std::string _p_mctrl_mem_elf) :
           sc_core::sc_module(mn),
-          sdram(_sdram),
-          p_mctrl_ram_addr(_p_mctrl_ram_addr),
-          p_mctrl_ram_mask(_p_mctrl_ram_mask),
-          p_mctrl_ram_sdram_elf(_p_mctrl_ram_sdram_elf){
+          memory(_memory),
+          p_mctrl_mem_addr(_p_mctrl_mem_addr),
+          p_mctrl_mem_mask(_p_mctrl_mem_mask),
+          p_mctrl_mem_elf(_p_mctrl_mem_elf){
 
           }
 
     void start_of_simulation() {
-      if(!((std::string)p_mctrl_ram_sdram_elf).empty()) {
-        if(boost::filesystem::exists(boost::filesystem::path((std::string)p_mctrl_ram_sdram_elf))) {
+      if(!((std::string)p_mctrl_mem_elf).empty()) {
+        if(boost::filesystem::exists(boost::filesystem::path((std::string)p_mctrl_mem_elf))) {
 
           uint8_t *execData;
-          ExecLoader loader(p_mctrl_ram_sdram_elf);
+          ExecLoader loader(p_mctrl_mem_elf);
           execData = loader.get_program_data();
           for(unsigned int i = 0; i < loader.get_program_dim(); i++) {
-            sdram.write_dbg(loader.get_data_start() + i - ((((unsigned int)p_mctrl_ram_addr)&((unsigned int)p_mctrl_ram_mask))<<20), execData[i]);
-            sdram.write(i, execData[i]);
+            memory.write_dbg(loader.get_data_start() + i - ((((unsigned int)p_mctrl_mem_addr)&((unsigned int)p_mctrl_mem_mask))<<20), execData[i]);
           }
         } else {
-          v::warn << "sdram" << "File " << p_mctrl_ram_sdram_elf << " does not exist!" << v::endl;
+          v::warn << "sdram" << "File " << p_mctrl_mem_elf << " does not exist!" << v::endl;
           exit(1);
         }
       }
     }
 };
-
 
 int sc_main(int argc, char** argv) {
     clock_t cstart, cend;
@@ -419,7 +377,7 @@ int sc_main(int argc, char** argv) {
     gs::gs_param<std::string> p_mctrl_prom_elf("elf", "", p_mctrl_prom);
     p_mctrl_prom_elf = "/home/y0084866/emc2/build/core/software/prom/sdram/sdram.prom";
 
-    write_data_to_rom writestimuli_rom ("writestimuli_rom",
+    write_memory_stimuli writestimuli_rom ("writestimuli_rom",
                                       rom,
                                       p_mctrl_prom_addr,
                                       p_mctrl_prom_mask,
@@ -478,9 +436,9 @@ int sc_main(int argc, char** argv) {
 
     // ELF loader from leon (Trap-Gen)
     gs::gs_param<std::string> p_mctrl_ram_sdram_elf("elf", "", p_mctrl_ram_sdram);
-    p_mctrl_ram_sdram_elf = "/home/y0084866/emc2/build/core/software/trapgen/matrix.sparc";
+    p_mctrl_ram_sdram_elf = "/home/y0084866/emc2/build/core/software/trapgen/hanoi.sparc";
 
-    write_data_to_sdram writestimuli_sdram ( "writestimuli_sdram",
+    write_memory_stimuli writestimuli_sdram ( "writestimuli_sdram",
                                               sdram,
                                               p_mctrl_ram_addr,
                                               p_mctrl_ram_mask,
@@ -666,7 +624,8 @@ int sc_main(int argc, char** argv) {
       }
 
       OSEmulator<unsigned int> *osemu = new OSEmulator<unsigned int>(leon3->cpu.abiIf);
-      osemu->init_sys_calls("/home/y0084866/emc2/build/core/software/trapgen/matrix.sparc");
+      osemu->init_sys_calls(p_mctrl_ram_sdram_elf);
+      leon3->cpu.toolManager.add_tool(*osemu);
     }
 
 

@@ -45,6 +45,7 @@
 #include <exception>
 #include <stdexcept>
 #include <cstdlib>
+#include <sstream>
 
 namespace trap {
 
