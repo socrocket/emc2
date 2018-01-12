@@ -25,6 +25,10 @@ node('rocketbrew.c0e.de') {
     stage('Testing') {
       sh 'python performance_test.py --asroot "./build/pysc/usiexec/usiexec.platform -s quadcopter/quadcopter.py"'
       archiveArtifacts 'quadcopter.py_*'
+      sh 'python performance_test.py'--asroot "./build/core/platforms/nopython/nopython.platform"
+      archiveArtifacts 'nopython.platform_*'
+      sh 'python performance_test.py'--asroot "./build/core/platforms/puretlm/puretlm.platform"
+      archiveArtifacts 'puretlm.platform_*'
       //publishHTML for gui
     }
   }

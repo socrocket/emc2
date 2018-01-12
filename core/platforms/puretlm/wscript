@@ -1,0 +1,20 @@
+top = '../..'
+
+def build(bld):
+
+    bld(
+        target       = 'puretlm.platform',
+        features     = 'cxx cprogram pyembed',
+        source       = 'sc_main.cpp',
+        includes     = '.',
+        use          = ['BOOST', 'usi',
+                        'ahbctrl', 'ahbmem', 'irqmp', 'gptimer', 'apbctrl', 'apbuart',
+                        'socwire', 'socw_socket', 'mctrl', 'ahbin', 'ahbprof', 'greth', 'ahbgpgpu',
+                        'usi',
+                        'ahbdisplay', 'ahbcamera', 'ahbshuffler', 'leon3', 'sr_iss', 'trap',
+                        'sr_registry', 'sr_register', 'sr_report', 'sr_signal', 'common', 'base',
+                        'AMBA', 'GREENSOCS', 'TLM', 'SYSTEMC', 'BOOST', 'WINSOCK',
+                        'elfloader','ELF_LIB'
+                       ],
+       lib           = 'z',
+    )
