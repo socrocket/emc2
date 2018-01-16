@@ -74,10 +74,10 @@ def performance_test_txt_stat( name, rootuser, origin ):
             if "seconds time elapsed" in line and i+1 < len(lines):
                 seconds = lines[i]
                 print seconds
-                start = seconds.find('0,')
+                start = seconds.find(',')
                 end = seconds.find('seconds time elapsed')
                 # extract number of seconds in line
-                seconds = seconds[start:end-1]
+                seconds = seconds[start-1:end-1]
                 # replace , to .
                 seconds = seconds.replace(',','.')
                 # add to array
