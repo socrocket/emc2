@@ -42,7 +42,10 @@
 #include "gaisler/ahbctrl/ahbctrl.h"
 #include "gaisler/ahbprof/ahbprof.h"
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/errors.hpp>
 #include "core/trapgen/osemu/osemu.hpp"
+#include "core/common/json_parser.h"
 
 #ifdef HAVE_SOCWIRE
 #include "models/socwire/AHB2Socwire.h"
@@ -79,6 +82,21 @@ void stopSimFunction(int sig) {
   v::warn << "main" << "Simulation interrupted by user" << std::endl;
   sc_core::sc_stop();
   wait(SC_ZERO_TIME);
+}
+
+boost::filesystem::path find_top_path(char *start) {
+
+  #if (BOOST_VERSION < 104600)
+    boost::filesystem::path path = boost::filesystem::path(start).parent_path();
+  #else
+    boost::filesystem::path path = boost::filesystem::absolute(boost::filesystem::path(start).parent_path());
+  #endif
+
+  boost::filesystem::path waf("waf");
+  while(!boost::filesystem::exists(path/waf) && !path.empty()) {
+    path = path.parent_path();
+  }
+  return path;
 }
 
 string greth_script_path;
@@ -155,27 +173,145 @@ class write_memory_stimuli : sc_core::sc_module {
 };
 
 int sc_main(int argc, char** argv) {
+    boost::program_options::options_description desc("Options");
+     desc.add_options()
+       ("help", "Shows this message.")
+       ("jsonconfig,j", boost::program_options::value<std::string>(), "The main configuration file. Usual config.json.")
+       ("option,o", boost::program_options::value<std::vector<std::string> >(), "Additional configuration options.")
+       ("argument,a", boost::program_options::value<std::vector<std::string> >(), "Arguments to the software running inside the simulation.")
+    #ifdef HAVE_GRETH
+       ("greth,g", boost::program_options::value<std::vector<std::string> >(), "Initial Options for GREth-Core.")
+    #endif
+       ("listoptions,l", "Show a list of all avaliable options")
+       ("interactiv,i", "Start simulation in interactiv mode")
+       ("listoptionsfiltered,f", boost::program_options::value<std::string>(), "Show a list of avaliable options containing a keyword")
+       ("listgsconfig,c", "Show a list of all avaliable gs_config options")
+       ("listgsconfigfiltered,g", boost::program_options::value<std::string>(), "Show a list of avaliable options containing a keyword")
+       ("saveoptions,s", boost::program_options::value<std::string>(), "Save options to json file. Default: saved_config.json");
+
+     boost::program_options::positional_options_description p;
+     p.add("argument", -1);
+
+     boost::program_options::variables_map vm;
+     try {
+       boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+       boost::program_options::notify(vm);
+     } catch(boost::program_options::unknown_option o) {
+       #if (BOOST_VERSION > 104600)
+       std::cout << "Comand line argument '" << o.get_option_name() << "' unknown. Please use -a,[argument] to add it to the software arguments or correct it." << std::endl;
+       #endif
+       exit(1);
+     }
+
+     if(vm.count("help")) {
+         std::cout << std::endl << "SoCRocket -- LEON3 Multi-Processor Platform" << std::endl;
+         std::cout << std::endl << "Usage: " << argv[0] << " [options]" << std::endl;
+         std::cout << std::endl << desc << std::endl;
+         return 0;
+     }
+
+     bool paramlist = false, paramlistfiltered = false, configlist = false, configlistfiltered = false;//, saveoptions = false;
+
     clock_t cstart, cend;
     std::string prom_app;
     sr_report_handler::handler = sr_report_handler::default_handler;
 
-    //gs::ctr::GC_Core       core;
-    //gs::cnf::ConfigDatabase cnfdatabase("ConfigDatabase");
-    //gs::cnf::ConfigPlugin configPlugin(&cnfdatabase);
+    json_parser* jsonreader = new json_parser();
+
+    if(vm.count("jsonconfig")) {
+        setenv("JSONCONFIG", vm["jsonconfig"].as<std::string>().c_str(), true);
+    }
+
+    // Find *.json
+    // - First search on the comandline
+    // - Then search environment variable
+    // - Then search in current dir
+    // - and finaly in the application directory
+    // - searches in the source directory
+    // Print an error if it is not found!
+    boost::filesystem::path topdir = find_top_path(argv[0]);
+    boost::filesystem::path appdir = (boost::filesystem::path(argv[0]).parent_path());
+    boost::filesystem::path srcdir = (topdir / boost::filesystem::path("build") / boost::filesystem::path(__FILE__).parent_path());
+    boost::filesystem::path json("leon3mp.json");
+    char *json_env = std::getenv("JSONCONFIG");
+    if(json_env) {
+        json = boost::filesystem::path(json_env);
+    } else if(boost::filesystem::exists(json)) {
+        json = json;
+    } else if(boost::filesystem::exists(appdir / json)) {
+        json = appdir / json;
+    } else if(boost::filesystem::exists(srcdir / json)) {
+        json = srcdir / json;
+    }
+    if(boost::filesystem::exists(boost::filesystem::path(json))) {
+        v::info << "main" << "Open Configuration " << json << v::endl;
+        jsonreader->config(json.string().c_str());
+    } else {
+        v::warn << "main" << "No *.json found. Please put it in the current work directory, application directory or put the path to the file in the JSONCONFIG environment variable" << v::endl;
+    }
+
+
+    //gs::cnf::cnf_api *mApi = gs::cnf::GCnf_Api::getApiInstance(NULL);
+    if(vm.count("option")) {
+        std::vector<std::string> vec = vm["option"].as< std::vector<std::string> >();
+        for(std::vector<std::string>::iterator iter = vec.begin(); iter!=vec.end(); iter++) {
+           std::string parname;
+           std::string parvalue;
+
+           // *** Check right format (parname=value)
+           // of no space
+           if(iter->find_first_of("=") == std::string::npos) {
+               v::warn << "main" << "Option value in command line option has no '='. Type '--help' for help. " << *iter;
+           }
+           // if not space before equal sign
+           if(iter->find_first_of(" ") < iter->find_first_of("=")) {
+               v::warn << "main" << "Option value in command line option may not contain a space before '='. " << *iter;
+           }
+
+           // Parse parameter name
+           parname = iter->substr(0,iter->find_first_of("="));
+           // Parse parameter value
+           parvalue = iter->substr(iter->find_first_of("=")+1);
+
+           // Set parameter
+           //mApi->setInitValue(parname, parvalue);
+        }
+    }
+
+
+
+    if(vm.count("listoptions")) {
+       paramlist = true;
+    }
+
+    if(vm.count("listgsconfig")) {
+       configlist = true;
+    }
+    //if(vm.count("saveoptions")) {
+    //   saveoptions = true;
+    //}
+
+    std::string optionssearchkey = "";
+    if(vm.count("listoptionsfiltered")) {
+        optionssearchkey = vm["listoptionsfiltered"].as<std::string>();
+      paramlistfiltered = true;
+    }
+
+    std::string configssearchkey = "";
+    if(vm.count("listgsconfigfiltered")) {
+        configssearchkey = vm["listgsconfigfiltered"].as<std::string>();
+      configlistfiltered= true;
+    }
+
 
     SR_INCLUDE_MODULE(ArrayStorage);
     SR_INCLUDE_MODULE(MapStorage);
     SR_INCLUDE_MODULE(ReportIO);
     SR_INCLUDE_MODULE(TcpIO);
 
-    // Build GreenControl Configuration Namespace
-    // ==========================================
-    //gs::gs_param_array p_conf("conf");
-    //gs::gs_param_array p_system("system", p_conf);
 
     // Decide whether LT or AT
     bool p_system_at = false;
-
 
     unsigned int p_system_ncpu = 1;
     unsigned int p_system_clock = 10.0;
@@ -365,8 +501,8 @@ int sc_main(int argc, char** argv) {
     rom.set_clk(p_system_clock, SC_NS);
 
     // ELF loader from leon (Trap-Gen)
-    std::string p_mctrl_prom_elf = "/home/y0084866/emc2/build/core/software/prom/sdram/sdram.prom";
-
+    //std::string p_mctrl_prom_elf = "/home/y0084866/emc2/build/core/software/prom/sdram/sdram.prom";
+    std::string p_mctrl_prom_elf;
     write_memory_stimuli writestimuli_rom ("writestimuli_rom",
                                       rom,
                                       p_mctrl_prom_addr,
@@ -423,8 +559,8 @@ int sc_main(int argc, char** argv) {
     sdram.set_clk(p_system_clock, SC_NS);
 
     // ELF loader from leon (Trap-Gen)
-    std::string p_mctrl_ram_sdram_elf = "/home/y0084866/emc2/build/core/software/trapgen/hanoi.sparc";
-
+    //std::string p_mctrl_ram_sdram_elf = "/home/y0084866/emc2/build/core/software/trapgen/hanoi.sparc";
+    std::string p_mctrl_ram_sdram_elf;
     write_memory_stimuli writestimuli_sdram ( "writestimuli_sdram",
                                               sdram,
                                               p_mctrl_ram_addr,

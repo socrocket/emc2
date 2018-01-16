@@ -6,10 +6,11 @@ def build(self):
   self(
     target          = 'common',
     features        = 'cxx cxxstlib',
+    source          = ['block_allocator.cpp',
+                       'json_parser.cpp'],
     export_includes = self.top_dir,
     includes        = self.top_dir,
-    use             = 'sr_registry sr_register sr_report utils base BOOST SYSTEMC TLM GREENSOCS',
+    use             = 'sr_registry sr_register sr_report utils base BOOST SYSTEMC TLM GREENSOCS ',
     install_path    = '${PREFIX}/lib',
   )
   self.install_files('${PREFIX}/include', self.path.ant_glob('**/*.h', excl=['**/tests/**', '**/extern/**', '**/contrib/**', '**/platform/**', '**/software/**', '**/.svn/**', '**/.git/**']), relative_trick=True)
-
