@@ -120,15 +120,13 @@ print "Current Working Directory: " + wd
 # Set User mode
 asroot = True if args.asroot else False
 
-
-
 print "Collect performance data:"
 perf_record = "perf record --call-graph dwarf -F 99 %s" %(origin_norm) if asroot else "sudo perf record --call-graph dwarf -F 99 %s" %(origin_norm)
 print " " + perf_record
 pt_p0 = subprocess.Popen(perf_record.split())
 pt_p0.wait()
 
-##If performance data were collected
+## <If performance data were collected
 if os.stat('perf.data').st_size>0:
     print "Prepare performance data"
 
@@ -144,7 +142,7 @@ if os.stat('perf.data').st_size>0:
                 stdout = name_perf_file)
             pt_p2.communicate()[0]
             pt_p2.wait()
-#
+
         #Get super user permission
         else:
             pt_p1 = subprocess.Popen(["sudo",
@@ -156,7 +154,7 @@ if os.stat('perf.data').st_size>0:
                 stdout = name_perf_file)
             pt_p2.communicate()[0]
             pt_p2.wait()
-#
+
     if os.stat(name +'.perf').st_size == 0:
         print name + ".perf not found"
         print "Performance data cannot be analysed."
@@ -165,7 +163,7 @@ if os.stat('perf.data').st_size>0:
         performance_test_flame(name)
         performance_test_dot( name )
         performance_test_txt( name, asroot )
-#
+
         print "Deleting system files"
         os.remove("perf.data")
         os.remove(name+".perf")
@@ -173,7 +171,8 @@ if os.stat('perf.data').st_size>0:
 else:
     print "No samples recorded"
 
-#Avarage Execution Time
+# Sample execution time of given path
+# Average Execution Time of
 execTime = []
 loop = 1
 if args.loop :
@@ -181,4 +180,4 @@ if args.loop :
 for i in range (0, loop, 1) :
     performance_test_txt_stat(name,asroot, origin_norm)
 execTimeSum = sum(execTime)/loop
-print "Avarage Execution Time of %s Executions: %s seconds" %(loop, execTimeSum)
+print "Average Execution Time of %s Executions: %s seconds" %(loop, execTimeSum)
