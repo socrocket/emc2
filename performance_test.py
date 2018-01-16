@@ -61,13 +61,14 @@ def performance_test_txt ( name, rootuser ):
 def performance_test_txt_stat( name, rootuser, origin ):
     #perf report --sort comm,dso | c++filt >> output.txt
     print "Generating statistics with execution time"
-    with open(name+"_stat.txt","r+") as cg_report_file:
+    with open(name+"_stat.txt","w") as cg_report_file:
         perf_record = "perf stat -o %s -e cpu-clock %s" %(cg_report_file.name, origin) if asroot else "sudo perf stat -o %s -e cpu-clock %s" %(cg_report_file.name, origin)
         #perf_record = "(time %s) 2> %s" %(origin, cg_report_file.name)
         print perf_record
         txt_p1 = subprocess.Popen(perf_record.split())
         txt_p1.wait()
         #print cg_report_file.read()
+    with open(name+"_stat.txt","r") as cg_report_file:
         lines = cg_report_file.readlines()
         for i,line in enumerate(lines):
             if "seconds time elapsed" in line and i+1 < len(lines):
