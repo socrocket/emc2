@@ -26,7 +26,7 @@ node('rocketbrew.c0e.de') {
       sh 'python performance_test.py --asroot "./build/pysc/usiexec/usiexec.platform -s quadcopter/quadcopter.py"'
       archiveArtifacts 'quadcopter.py_*'
       sh 'python performance_test.py --asroot --loop=100 "./build/core/platforms/nopython/nopython.platform -o conf.mctrl.prom.elf=./build/core/software/prom/sdram/sdram.prom -o conf.mctrl.ram.sdram.elf=./build/core/software/trapgen/hanoi.sparc -o conf.system.osemu=./build/core/software/trapgen/hanoi.sparc"'
-      archiveArtifacts 'nopython.platform_*'
+      archiveArtifacts 'hanoi.sparc_*'
       sh 'python performance_test.py --asroot "./build/core/platforms/puretlm/puretlm.platform"'
       archiveArtifacts 'puretlm.platform_*'
       //publishHTML for gui
