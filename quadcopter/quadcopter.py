@@ -14,6 +14,7 @@ import sys
 import usi
 from usi.shell import start as shell_start
 from usi.systemc import NS as SC_NS
+from usi.tools.args import parser, get_args
 from sr_registry import module
 from usi.sc_module import USIModule
 from usi.tools import elf
@@ -22,6 +23,15 @@ usi.registry.load('./build/gaisler/libsr_gaisler.so')
 usi.registry.load('./build/microblaze/libsr_microblaze.so')
 usi.registry.load('./build/arm/libsr_arm.so')
 usi.registry.load('./build/quadcopter/libsr_quadcopter.so')
+parser.add_argument('-o',
+                    '--option',
+                    dest='option',
+                    action='append',
+                    default=[],
+                    type=str,
+                    help='Load extra configuration ')
+
+
 
 class BaseSystem(USIModule):
     def __init__(self, name, idno):
@@ -100,8 +110,7 @@ class BaseSystem(USIModule):
         # Connecting Interrupts
         self.irqmp.irq_in.signal_bind(self.apbuart.irq, 3)
         # Set clock
-        #apbuart.set_clk(clk,SC_NS)
-
+        # apbuart.set_clk(clk,SC_NS)
 
         self.gptimer = module.GPTimer("gptimer",
             ntimers = 2,
@@ -118,7 +127,7 @@ class BaseSystem(USIModule):
 
         # Connect to apb and clock
         self.apbctrl.apb.socket_bind(self.gptimer.apb)
-        #gptimer.set_clk(clk, SC_NS)
+        # gptimer.set_clk(clk, SC_NS)
 
         # Connecting Interrupts
         for i in range(0, 8):
@@ -154,10 +163,10 @@ class BaseSystem(USIModule):
         # Connecting APB Slave
         self.apbctrl.apb.socket_bind(self.mctrl.apb);
         # Set clock
-        #mctrl.set_clk(clk, SC_NS);
+        # mctrl.set_clk(clk, SC_NS);
 
         self.rom = module.Memory("rom",
-            type = "0", #"ROM",
+            type = "0", # "ROM",
             banks = 2,
             bsize = 256 * 1024 * 1024, # bsize * 1024 * 1024
             bits = 32,
@@ -358,8 +367,25 @@ class SupervisorSystem(USIModule):
 
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
+
+    _mctrl_prom_elf_arg = "config.mctrl.prom.elf"
+    _mctrl_ram_sdram_elf_arg = "config.mctrl.ram.sdram.elf"
+
+
+    for param in get_args().option
+        #TODO parse for parameters
+
+        # save in variables
+        if param == _mctrl_prom_elf_arg
+            mctrl_prom_elf = parvalue
+
+        if param == _mctrl_ram_sdram_elf_arg
+            mctrl_ram_sdram_elf = parvalue
+
+
+
     leonsystem = LeonSystem("leon_system", 0)
-    leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/core/software/trapgen/hanoi.sparc", True)
+    leonsystem.store_elf( mctrl_prom_elf, mctrl_ram_sdram_elf, True)
     #leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
     #microblazesystem = LeonSystem("microblaze_system", 1)
