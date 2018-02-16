@@ -24,13 +24,13 @@ node('rocketbrew.c0e.de') {
       sh './waf docs'
     }
     stage('Testing') {
-      sh 'python performance_test.py --name quadcopter.py_ -- ./build/pysc/usiexec/usiexec.platform -s quadcopter/quadcopter.py'
+      sh 'python performance_test.py --sudo --name quadcopter.py_ -- ./build/pysc/usiexec/usiexec.platform -s quadcopter/quadcopter.py'
       archiveArtifacts 'quadcopter.py_*'
 
-      sh 'python performance_test.py --name hanoi.sparc_ --loop=100  -- ./build/core/platforms/nopython/nopython.platform -o conf.mctrl.prom.elf=./build/core/software/prom/sdram/sdram.prom -o conf.mctrl.ram.sdram.elf=./build/core/software/trapgen/hanoi.sparc -o conf.system.osemu=./build/core/software/trapgen/hanoi.sparc'
+      sh 'python performance_test.py --sudo --name hanoi.sparc_ --loop=100  -- ./build/core/platforms/nopython/nopython.platform -o conf.mctrl.prom.elf=./build/core/software/prom/sdram/sdram.prom -o conf.mctrl.ram.sdram.elf=./build/core/software/trapgen/hanoi.sparc -o conf.system.osemu=./build/core/software/trapgen/hanoi.sparc'
       archiveArtifacts 'hanoi.sparc_*'
 
-      sh 'python performance_test.py --name puretlm.platform_ -- ./build/core/platforms/puretlm/puretlm.platform'
+      sh 'python performance_test.py --sudo --name puretlm.platform_ -- ./build/core/platforms/puretlm/puretlm.platform'
       archiveArtifacts 'puretlm.platform_*'
       //publishHTML for gui
     }
