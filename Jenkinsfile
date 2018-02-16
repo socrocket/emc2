@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-# -*- coding: utf-8 -*-
+// -*- coding: utf-8 -*-
 
 def efWs(cb) {
     def ws = pwd().replace("%2F", "_")
