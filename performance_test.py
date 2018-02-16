@@ -1,112 +1,166 @@
-#!/usr/bin/python
-"""Performance Tool for SocRocket.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Performance Tool for SocRocket
+==============================
 
+Requirements
+------------
 Please enable FlameGraph and gprof2dot in core/waf beforehand
+
+Usage
+-----
+Just call it as an application
+"""
+from __future__ import print_function
+import os
+import sys
+import subprocess
+#from usi.tools.waf import OBJECT as waf_config # Does not work
+sys.path.insert(0, os.path.abspath('pysc/usi/tools'))
+from waf import OBJECT as waf_config # pylint: disable=import-error,wrong-import-position
+
+__author__ = "Luise Moritz <luise.moritz@tu-braunschweig.de>"
+__copyright__ = "Copyright 2018, SoCRocket TLM Framework"
+__license__ = "GPL"
+__version__ = "1.0.1"
+
+APP_DESCRIPTION = """
+SocRocket performance test tool
+-------------------------------
+For this script you need to install:
+    perf (linux generic tools), graphviz (dot), sudo, c++filt[,  gprof2dot,  FlameGraph]
+
+- FlameGraph is part of /core/waf
+- gprof2dot is part of usi's virtualenv
 """
 
-import os
-import subprocess
-import argparse
+FILENAME_DATA = "{}.pref.data"
+FILENAME_PERF = "{}.perf"
+FILENAME_FOLDED = "{}.perf.folded"
+FILENAME_SVG = "{}.pref.flamegraph.svg"
+FILENAME_CALL = "{}.pref.callgraph.png"
+FILENAME_REPORT = "{}.pref.report.txt"
+FILENAME_STATS = "{}.pref.stat.txt"
 
+OUT_DIR = waf_config['out_dir']
+VENV_DIR = os.path.join(OUT_DIR, '.conf_check_venv', 'bin')
+DIST_DIR = os.path.join(OUT_DIR, '.conf_check_deps', 'dist')
+FGRAPH_DIR = os.path.join(DIST_DIR, 'FlameGraph-1.0')
 
-def performance_test_flame(name):
-    """Generate a FlameGraph of perf.data.
+STACKCOLLAPSE = os.path.join(FGRAPH_DIR, 'stackcollapse-perf.pl')
+FLAMEGRAPH = os.path.join(FGRAPH_DIR, 'flamegraph.pl')
+GPROF2DOT = os.path.join(VENV_DIR, 'gprof2dot')
+SUDO = 'sudo'
+PERF = 'perf'
+CFILT = 'c++filt'
+DOT = 'dot'
 
-    Enable FlameGraph in wscript of core/waf beforehand.
+def sudo(as_root, cmd):
     """
-    with open(name + ".perf", "r") as flame_perf_file,\
-        open(name + ".perf.folded", "w") as flame_perf_folded_file,\
-            open(name + "_flamegraph.svg", "w") as flame_image_file:
-            print "Generating FlameGraph of" + name + ":"
-            print " Fold Report Data"
-            fg_p3 = subprocess.Popen([wd+"build/.conf_check_deps/dist/" +
-                                     "FlameGraph-1.0/stackcollapse-perf.pl",
-                                      wd+flame_perf_file.name],
-                                     stdout=flame_perf_folded_file)
+    Add sudo to a command if as_root is True
+
+    Parameter
+    ---------
+      as_root: boolean
+      cmd: list of strings
+    """
+    if as_root:
+        return [SUDO] + cmd
+    return cmd
+
+
+class PerformanceTest(object):
+    """
+    Wrapper class for the pref command and some tools
+    """
+    def __init__(self, name, root, command, loop=1):
+        self.name = name
+        self.root = root
+        self.command = command
+        self.loop = loop
+
+    def _flame(self):
+        """Generate a FlameGraph of perf.data.
+
+        Enable FlameGraph in wscript of core/waf beforehand.
+        """
+        with open(FILENAME_FOLDED.format(self.name), "w") as flame_perf_folded_file:
+            print("Generating FlameGraph of {}:".format(self.name))
+            print(" Fold Report Data")
+            cmd = [STACKCOLLAPSE, FILENAME_PERF.format(self.name)]
+            print(' '.join(cmd))
+            fg_p3 = subprocess.Popen(cmd, stdout=flame_perf_folded_file)
             fg_p3.wait()
-            print " Generate Image"
-            fg_p4 = subprocess.Popen([wd+"build/.conf_check_deps/dist/" +
-                                     "FlameGraph-1.0/flamegraph.pl",
-                                      wd+flame_perf_folded_file.name],
-                                     stdout=flame_image_file)
+
+        with open(FILENAME_SVG.format(self.name), "w") as flame_image_file:
+            print(" Generate Image")
+            fg_p4 = subprocess.Popen(
+                [FLAMEGRAPH, FILENAME_FOLDED.format(self.name)],
+                stdout=flame_image_file)
             fg_p4.wait()
 
+    def _dot(self):
+        """
+        Generate a DotGraph.
+        Enable gprof2dot in pysc/usi/wscript beforehand
+        """
+        with open(FILENAME_PERF.format(self.name), "r") as cg_perf_file:
+            print("Generating Dot Graph of {}:".format(self.name))
+            cg_p3 = subprocess.Popen([
+                GPROF2DOT,  # creates a dot graph
+                "-f", "perf",  # format perf
+                "--strip",  # strip funktction parameters
+                "--wrap"  # wrap function names
+            ], stdin=cg_perf_file, stdout=subprocess.PIPE)
+            subprocess.Popen(
+                [DOT, '-Tpng', '-o', FILENAME_CALL.format(self.name)],
+                stdin=cg_p3.stdout)
 
-def performance_test_dot(name):
-    """Generate a DotGraph.
+    def _txt(self):
+        """
+        Save Results in a Textfile.
+        Sorted by command and  name of library.
+        """
+        print("Generating Report txt")
+        for rootuser in [self.root, True]:
+            with open(FILENAME_REPORT.format(self.name), "w") as cg_report_file:
+                txt_p1 = subprocess.Popen(sudo(rootuser, [
+                    "perf",
+                    "report",
+                    "--input={}".format(FILENAME_DATA.format(self.name)),
+                    "-I",  # show CPU information in header
+                    "--header",  # show header
+                    "--sort",
+                    "comm,dso"]), stdout=subprocess.PIPE)
+                txt_p2 = subprocess.Popen(
+                    "c++filt",
+                    stdin=txt_p1.stdout,
+                    stdout=cg_report_file)
+                txt_p2.wait()
+            if os.stat(FILENAME_REPORT.format(self.name)).st_size != 0:
+                break
 
-    Enable gprof2dot in pysc/usi/wscript beforehand
-    """
-    with open(name + "_callgraph.png", "w") as cg_image_file, \
-     open(name + ".perf", "r") as cg_perf_file:
-        print "Generating Dot Graph of " + name + ":"
-        cg_p3 = subprocess.Popen([
-            wd+"/build/.conf_check_venv/bin/gprof2dot",  # creates a dot graph
-            "-f", "perf",  # format perf
-            "--strip",  # strip funktction parameters
-            "--wrap"  # wrap function names
-        ], stdin=cg_perf_file, stdout=subprocess.PIPE)
-        subprocess.Popen(("dot -Tpng -o " + cg_image_file.name).split(),
-                         stdin=cg_p3.stdout)
-
-
-def performance_test_txt(name, rootuser):
-    """Save Results in a Textfile.
-
-    Sorted by command and  name of library.
-    """
-    print "Generating Report txt"
-    with open(name + "_report.txt", "w") as cg_report_file:
-        if rootuser:
-            txt_p1 = subprocess.Popen([  # "sudo",
-                "perf",
-                "report",
-                "-I",  # show CPU information in header
-                "--header",  # show header
-                "--sort",
-                "comm,dso"],
-                stdout=subprocess.PIPE)
-            txt_p2 = subprocess.Popen(
-                "c++filt",
-                stdin=txt_p1.stdout,
-                stdout=cg_report_file)
-            txt_p2.wait()
-        if not rootuser or 0 == os.stat(cg_report_file.name).st_size:
-            txt_p1 = subprocess.Popen(["sudo",
-                                       "perf",
-                                       "report",
-                                       "-I",
-                                       # show CPU information in header
-                                       "--header",  # show header
-                                       "--sort",
-                                       "comm,dso"],
-                                      stdout=subprocess.PIPE)
-            txt_p2 = subprocess.Popen("c++filt",
-                                      stdin=txt_p1.stdout,
-                                      stdout=cg_report_file)
-            txt_p2.wait()
-
-
-# Saves results to textfile
-def performance_test_txt_stat(name, rootuser, origin):
-    """Measure Execution Time.
-
-    Extract Execution Time of File.
-    """
-    # perf report --sort comm,dso | c++filt >> output.txt
-    result = 0.0
-    print "Generating statistics with execution time"
-    with open(name+"_stat.txt", "w") as cg_report_file:
-        perf_record = "perf stat -o %s -e cpu-clock %s" \
-         % (cg_report_file.name, origin) \
-         if asroot else "sudo perf stat -o %s -e cpu-clock %s" \
-         % (cg_report_file.name, origin)
-        # perf_record = "(time %s) 2> %s" %(origin, cg_report_file.name)
-        print perf_record
-        txt_p1 = subprocess.Popen(perf_record.split())
+    # Saves results to textfile
+    def _txt_stat(self):
+        """
+        Measure Execution Time.
+        Extract Execution Time of File.
+        """
+        # perf report --sort comm,dso | c++filt >> output.txt
+        result = 0.0
+        print("Generating statistics with execution time")
+        # perf_record = sh 'sudo "(time %s) 2> %s" %(origin, cg_report_file.name)'
+        perf_record = sudo(self.root, [
+            PERF, 'stat', '-o', FILENAME_STATS.format(self.name), '-e' 'cpu-clock'
+            ] + self.command)
+        print(" ".join(perf_record))
+        txt_p1 = subprocess.Popen(perf_record)
         txt_p1.wait()
-    with open(name+"_stat.txt", "r") as cg_report_file:
-        lines = cg_report_file.readlines()
+        lines = []
+
+        with open(FILENAME_STATS.format(self.name), "r") as cg_report_file:
+            lines = cg_report_file.readlines()
         for i, line in enumerate(lines):
             if 'seconds time elapsed' in line and i+1 < len(lines):
                 seconds = lines[i]
@@ -118,112 +172,126 @@ def performance_test_txt_stat(name, rootuser, origin):
                 seconds = seconds.replace(',', '.')
                 # add to array
                 result = float(seconds)
-                print "Execution Time:  %ss" % (seconds)
+                print("Execution Time:  {}s".format(seconds))
                 break
         return result
 
 
-print ("""
+    def _collect(self):
+        """
+        Collect performance data
+        """
+        print("Collect performance data:")
+        perf_record = sudo(self.root, [
+            PERF,
+            'record',
+            '--output={}'.format(FILENAME_DATA.format(self.name)),
+            '--call-graph=dwarf',
+            '--freq=99',
+            '--'
+            ] + self.command)
+        print(" ".join(perf_record))
+        pt_p0 = subprocess.Popen(perf_record)
+        pt_p0.wait()
 
-        SocRocket Performance test
+    def _prepare(self):
+        """
+        Prepare performance data
+        """
+        print("Prepare performance data")
 
-        For this test you need to install
-
-            perf (linux generic tools),  gprof2dot,  FlameGraph
-
-                FlameGraph is part of /core/waf
-
-                gprof2dot is part of usi's virtualenv
-
- """)
-
-parser = argparse.ArgumentParser()
-parser.add_argument('filename')
-parser.add_argument("--asroot",
-                    help="run this script as root",
-                    action="store_true")
-parser.add_argument("--asuser",
-                    help="run this script as user",
-                    action="store_true")
-parser.add_argument("-l", "--loop", type=int,
-                    help="increase output verbosity")
-args = parser.parse_args()
-
-# Get path from first argument
-origin_norm = os.path.realpath(args.filename)
-origin = origin_norm.split()
-
-# Get filename from path
-name = os.path.basename(origin_norm)
-
-# Update current working directory
-wd = os.getcwd()+os.sep
-print "Current Working Directory: " + wd
-
-# Set User mode
-asroot = True if args.asroot else False
-
-print "Collect performance data:"
-perf_record = "perf record --call-graph dwarf -F 99 %s" % (origin_norm) \
- if asroot else "sudo perf record --call-graph dwarf -F 99 %s" % (origin_norm)
-print " " + perf_record
-pt_p0 = subprocess.Popen(perf_record.split())
-pt_p0.wait()
-
-# If performance data were collected
-if os.stat('perf.data').st_size > 0:
-    print "Prepare performance data"
-
-    with open(name + ".perf", "w") as name_perf_file:
-        # If script is run as root
-        if asroot:
-            pt_p1 = subprocess.Popen([
-                "perf",  # converts perf.data into readable file
-                "script"],
-                 stdout=subprocess.PIPE)
-            pt_p2 = subprocess.Popen(["c++filt"],
-                                     stdin=pt_p1.stdout,
-                                     stdout=name_perf_file)
-            pt_p2.communicate()[0]
+        with open(FILENAME_PERF.format(self.name), "w") as name_perf_file:
+            # If script is run as root
+            # converts perf.data into readable file
+            pt_p1 = subprocess.Popen(sudo(self.root, [
+                PERF,
+                'script',
+                '--input={}'.format(FILENAME_DATA.format(self.name))
+                ]), stdout=subprocess.PIPE)
+            pt_p2 = subprocess.Popen([CFILT], stdin=pt_p1.stdout, stdout=name_perf_file)
+            pt_p2.communicate()
             pt_p2.wait()
 
-        # Get super user permission
+    def _check(self):
+        """
+        Check if data file exists
+        """
+        return os.stat(FILENAME_DATA.format(self.name)).st_size > 0
+
+    def _cleanup(self):
+        """
+        Clean up data files
+        """
+        print("Deleting system files")
+        os.remove(FILENAME_DATA.format(self.name))
+        os.remove(FILENAME_PERF.format(self.name))
+
+
+    def averagetime(self):
+        """
+        Sample execution time of given path
+        Average Execution Time of
+        """
+        exec_time = []
+        loop = 1
+        if self.loop:
+            loop = self.loop
+
+        for _ in range(0, loop, 1):
+            exec_time.append(self._txt_stat())
+
+        exec_time_sum = sum(exec_time)/loop
+        print("Average Execution Time of {} Executions: {} seconds".format(loop, exec_time_sum))
+
+    def test(self):
+        """
+        Start performance test
+        """
+        self._collect()
+
+        # If performance data were collected
+        if self._check():
+            self._prepare()
+
+            if os.stat(FILENAME_PERF.format(self.name)).st_size == 0:
+                print(FILENAME_PERF.format(self.name), "not found")
+                print("Performance data cannot be analysed.")
+
+            else:
+                # post_processing
+                self._flame()
+                self._dot()
+                self._txt()
+
+                self._cleanup()
+
         else:
-            pt_p1 = subprocess.Popen(["sudo",
-                                      # converts perf.data into readable file
-                                      "perf",
-                                      "script"],
-                                     stdout=subprocess.PIPE)
-            pt_p2 = subprocess.Popen(["c++filt"],
-                                     stdin=pt_p1.stdout,
-                                     stdout=name_perf_file)
-            pt_p2.communicate()[0]
-            pt_p2.wait()
+            print("No samples recorded")
 
-    if os.stat(name + '.perf').st_size == 0:
-        print name + ".perf not found"
-        print "Performance data cannot be analysed."
-    else:
-        # post_processing
-        performance_test_flame(name)
-        performance_test_dot(name)
-        performance_test_txt(name, asroot)
+def main():
+    """
+    Run performance test as a cli command
+    """
 
-        print "Deleting system files"
-        os.remove("perf.data")
-        os.remove(name+".perf")
+    import argparse
+    from argparse import RawTextHelpFormatter
+    parser = argparse.ArgumentParser(description=APP_DESCRIPTION,
+                                     formatter_class=RawTextHelpFormatter)
+    parser.add_argument('-s', '--sudo', dest='root', action='store_true', default=False,
+                        help="run this script as root")
+    parser.add_argument('-n', '--name', dest='name', default=None,
+                        help="basename of the outputfiles")
+    parser.add_argument('-l', '--loop', type=int,
+                        help="increase output verbosity")
+    parser.add_argument('--', dest='orig_args', nargs=argparse.REMAINDER)
 
-else:
-    print "No samples recorded"
+    argv = sys.argv[1:]
+    idx = argv.index('--') if '--' in argv else len(argv)
+    args, extra = parser.parse_args(argv[:idx]), argv[idx + 1:]
 
-# Sample execution time of given path
-# Average Execution Time of
-execTime = []
-loop = 1
-if args.loop:
-    loop = args.loop
-for i in range(0, loop, 1):
-    execTime.append(performance_test_txt_stat(name, asroot, origin_norm))
-execTimeSum = sum(execTime)/loop
-print "Average Execution Time of %s Executions: %s seconds" \
-    % (loop, execTimeSum)
+    perf = PerformanceTest(args.name or extra[0], args.root, extra, args.loop)
+    perf.test()
+    perf.averagetime()
+
+if __name__ == "__main__":
+    main()
