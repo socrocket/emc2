@@ -6,7 +6,6 @@ def build(bld):
         target       = 'nopython.platform',
         features     = 'cxx cprogram pyembed',
         source       = 'sc_main.cpp',
-
         includes     = '.',
         use          = ['BOOST', 'usi',
                         'ahbctrl', 'ahbmem', 'irqmp', 'gptimer', 'apbctrl', 'apbuart',
@@ -15,7 +14,7 @@ def build(bld):
                         'ahbdisplay', 'ahbcamera', 'ahbshuffler', 'leon3', 'sr_iss', 'trap',
                         'sr_registry', 'sr_register', 'sr_report', 'sr_signal', 'common', 'base',
                         'AMBA', 'GREENSOCS', 'TLM', 'SYSTEMC', 'BOOST', 'WINSOCK',
-                        'elfloader','ELF_LIB'
+                        'elfloader','ELF_LIB', 'json_parser'
                        ],
        lib           = 'z',
     )

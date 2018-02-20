@@ -23,15 +23,6 @@ usi.registry.load('./build/gaisler/libsr_gaisler.so')
 usi.registry.load('./build/microblaze/libsr_microblaze.so')
 usi.registry.load('./build/arm/libsr_arm.so')
 usi.registry.load('./build/quadcopter/libsr_quadcopter.so')
-parser.add_argument('-o',
-                    '--option',
-                    dest='option',
-                    action='append',
-                    default=[],
-                    type=str,
-                    help='Load extra configuration ')
-
-
 
 class BaseSystem(USIModule):
     def __init__(self, name, idno):
@@ -367,25 +358,23 @@ class SupervisorSystem(USIModule):
 
 @usi.on('start_of_initialization')
 def class_systems(*k, **kw):
+    
+    # gs_params for options
+    _mctrl_prom_elf_arg = "conf.mctrl.prom.elf"
+    _mctrl_ram_sdram_elf_arg = "conf.mctrl.ram.sdram.elf"
 
-    _mctrl_prom_elf_arg = "config.mctrl.prom.elf"
-    _mctrl_ram_sdram_elf_arg = "config.mctrl.ram.sdram.elf"
-
-
-    for param in get_args().option
-        #TODO parse for parameters
+    for param in get_args().option:
+        param = param.split("=")
 
         # save in variables
-        if param == _mctrl_prom_elf_arg
-            mctrl_prom_elf = parvalue
+        if param[0] == _mctrl_prom_elf_arg:
+            mctrl_prom_elf = param[1]
 
-        if param == _mctrl_ram_sdram_elf_arg
-            mctrl_ram_sdram_elf = parvalue
-
-
+        if param[0] == _mctrl_ram_sdram_elf_arg:
+            mctrl_ram_sdram_elf = param[1]
 
     leonsystem = LeonSystem("leon_system", 0)
-    leonsystem.store_elf( mctrl_prom_elf, mctrl_ram_sdram_elf, True)
+    leonsystem.store_elf(mctrl_prom_elf, mctrl_ram_sdram_elf, True)
     #leonsystem.store_elf("build/core/software/prom/sdram/sdram.prom", "build/quadcopter/test/test.sparc", True)
     # Fehlermeldung wenn store noch nciht existiert AHBMem/Memory!
     #microblazesystem = LeonSystem("microblaze_system", 1)

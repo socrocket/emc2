@@ -252,6 +252,15 @@ int sc_main(int argc, char** argv) {
 
 
     //gs::cnf::cnf_api *mApi = gs::cnf::GCnf_Api::getApiInstance(NULL);
+
+    std::string p_mctrl_prom_elf;
+    std::string p_mctrl_ram_sdram_elf;
+
+    static std::string _mctrl_prom_elf_arg = "conf.mctrl.prom.elf";
+    static std::string _mctrl_ram_sdram_elf_arg = "conf.mctrl.ram.sdram.elf";
+
+    // Set options for ram and prom
+
     if(vm.count("option")) {
         std::vector<std::string> vec = vm["option"].as< std::vector<std::string> >();
         for(std::vector<std::string>::iterator iter = vec.begin(); iter!=vec.end(); iter++) {
@@ -275,6 +284,15 @@ int sc_main(int argc, char** argv) {
 
            // Set parameter
            //mApi->setInitValue(parname, parvalue);
+           if (parname == _mctrl_prom_elf_arg) {
+             p_mctrl_prom_elf = parvalue;
+           }
+
+           if (parname == _mctrl_ram_sdram_elf_arg){
+             p_mctrl_ram_sdram_elf = parvalue;
+           }
+
+
         }
     }
 
@@ -502,7 +520,7 @@ int sc_main(int argc, char** argv) {
 
     // ELF loader from leon (Trap-Gen)
     //std::string p_mctrl_prom_elf = "/home/y0084866/emc2/build/core/software/prom/sdram/sdram.prom";
-    std::string p_mctrl_prom_elf;
+    //std::string p_mctrl_prom_elf;
     write_memory_stimuli writestimuli_rom ("writestimuli_rom",
                                       rom,
                                       p_mctrl_prom_addr,
@@ -560,7 +578,7 @@ int sc_main(int argc, char** argv) {
 
     // ELF loader from leon (Trap-Gen)
     //std::string p_mctrl_ram_sdram_elf = "/home/y0084866/emc2/build/core/software/trapgen/hanoi.sparc";
-    std::string p_mctrl_ram_sdram_elf;
+    //std::string p_mctrl_ram_sdram_elf;
     write_memory_stimuli writestimuli_sdram ( "writestimuli_sdram",
                                               sdram,
                                               p_mctrl_ram_addr,
