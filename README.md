@@ -1,6 +1,13 @@
 emc2 SoCRocket {#mainpage}
 ==============
 
+With Ubuntu 18.04:
+
+First install:
+
+- sudo apt install build-essential python2.7-dev libboost-dev libboost-thread-dev libboost-regex-dev libboost-program-options-dev libboost-filesystem-dev libreadline-dev libc6-i386 lib32z1 lib32ncurses5 swig gfortran libatlas-base-dev libhdf5-dev  python-pip
+- pip install virtualenv
+
 How to start:
 
 - *$* ./waf configure
