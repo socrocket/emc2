@@ -99,7 +99,7 @@ def configure(self):
             name    = name, 
             version = version,
             tar     = "%(base)s.tar.bz2",
-            tar_url = "http://www.gaisler.com/anonftp/bcc/bin/linux/%(base)s-1.0.50.tar.bz2",
+            tar_url = "https://www.gaisler.com/anonftp/bcc/bin/linux/%(base)s-1.0.50.tar.bz2",
         )
         # This works only for linux for other platforms (windows/mac) we need to find a different solution
         # There is a build for windows as well in bcc/bin/win/%(tar)s but no for MacOSX but we can get the sources

@@ -265,7 +265,7 @@ void Irqmp::incomming_irq(const std::pair<uint32_t, bool> &irq, const sc_time &t
   for(int32_t line = 0; line<32; line++) {
     if((1 << line) & irq.first) {
       // Performance counter increase
-      m_irq_counter[line] = m_irq_counter[line] + 1;
+      m_irq_counter[line] = m_irq_counter[line].getValue() + 1;
       v::debug << name() << "Interrupt line " << line << " triggered" << v::endl;
 
       // If the incomming interrupt is not listed in the broadcast register
@@ -351,7 +351,7 @@ void Irqmp::launch_irq() {
           v::debug << name() << "For CPU " << cpu << " really sent IRQ: " << high << v::endl;
           irq_req.write(1 << cpu, value);
 
-          m_cpu_counter[cpu]++;
+          m_cpu_counter[cpu] = m_cpu_counter[cpu].getValue() + 1;
         }
       } else if (irq_req.read(cpu).first != 0) {
         irq_req.write(1 << cpu, std::pair<uint32_t, bool>(0, false));

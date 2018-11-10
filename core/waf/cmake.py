@@ -56,11 +56,11 @@ def configure(self):
             find(self)
     except ConfigurationError as e:
         name    = "cmake"
-        version = "2.8.12"
+        version = "3.12.4"
         self.dep_build(
             name    = name, 
             version = version,
-            tar_url = "http://www.cmake.org/files/v2.8/%(base)s.tar.gz",
+            tar_url = "http://www.cmake.org/files/v3.12/%(base)s.tar.gz",
             config_cmd = "%(src)s/bootstrap --prefix=%(prefix)s",
         )
         self.find_program('cmake', var='CMAKE', mandatory=True, okmsg="ok",

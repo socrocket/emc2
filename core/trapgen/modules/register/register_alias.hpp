@@ -742,8 +742,8 @@ class RegisterAlias
 
   public:
   const char* name() const {
-    if (!this->m_name) return NULL;
-    return this->m_name.str();
+    if (!this->m_name.empty()) return NULL;
+    return this->m_name.c_str();
   }
 
   const char* kind() const { return "RegisterAlias"; }

@@ -18,6 +18,7 @@
 #define SR_SIGNAL_IFS_H
 
 #include <stdint.h>
+#include <cstring>
 #include <typeinfo>
 
 namespace sr_signal {

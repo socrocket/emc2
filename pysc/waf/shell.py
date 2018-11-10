@@ -26,12 +26,12 @@ packages = [
     "python-dateutil==2.1",
     "pyelftools",
 #    "pydot",
-    "tmuxp",
-    "numpy==1.9.1",
-    "scipy==0.12.1",
-    "numexpr==2.4",
-    "pandas==0.14.1",
-    "tables==3.4.2",
+    #"tmuxp",
+    #"numpy==1.9.1",
+    #"scipy==0.12.1",
+    #"numexpr==2.4",
+    #"pandas==0.14.1",
+    #"tables==3.4.2",
     "future"
 ]
 

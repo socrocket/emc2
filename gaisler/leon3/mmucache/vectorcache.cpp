@@ -282,7 +282,7 @@ bool vectorcache::mem_read(unsigned int address, unsigned int asi, unsigned char
       if (m_pow_mon) dyn_data_reads += (len - 1) >> 2;
 
       // Update debug information
-      rhits[cache_hit]++;
+      rhits[cache_hit] = rhits[cache_hit].getValue() + 1;
       CACHEREADHIT_SET(*debug, cache_hit);
 
     /// ------------------------------------------------------------------------
@@ -457,7 +457,7 @@ void vectorcache::mem_write(unsigned int address, unsigned int asi, unsigned cha
                               data, delay, debug, cacheable, is_dbg);
 
       // Update debug information
-      whits[cache_hit]++;
+      whits[cache_hit] = whits[cache_hit].getValue() + 1;
       CACHEWRITEHIT_SET(*debug, cache_hit);
 
     } // Cache hit
